@@ -6,3 +6,5 @@ export(Rwcs_p2s)
 useDynLib(Rwcs, .registration=TRUE)
 
 import(Rcpp)
+import(checkmate)
+import(celestial)
