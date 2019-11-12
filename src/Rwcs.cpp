@@ -14,11 +14,11 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
               double CD2_1 = 0, double CD2_2 = 1,
               double PV1 = 0, double PV2 = 0
               ){
-  
-  
+
   int ncoord = RA.length();
   int nelem = 2;
   int naxis = 2;
+
   //setup wcs
   struct wcsprm wcs;
   wcs.flag = -1;
@@ -47,7 +47,7 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
   //insert ctype
   strcpy(wcs.ctype[0], CTYPE1.get_cstring());
   strcpy(wcs.ctype[1], CTYPE2.get_cstring());
-  
+
   //insert wcs pv
   wcs.npv = 2;
   wcs.pv[0].value = PV1;
@@ -145,4 +145,3 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
   
   return(world_matrix);
 }
-  
