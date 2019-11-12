@@ -1,0 +1,5 @@
+#!/bin/sh
+
+cd src/wcslib
+CC=`"${R_HOME}/bin/R" CMD config CC`
+./configure --without-pgplot --disable-fortran --disable-utils --without-cfitsio CC=$CC

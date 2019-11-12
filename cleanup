@@ -1,0 +1,6 @@
+#!/bin/sh
+
+rm -f src/wcslib/*/*.o
+rm -f src/wcslib/*/*.a
+rm -f src/wcslib/config.log
+rm -f src/wcslib/config.status

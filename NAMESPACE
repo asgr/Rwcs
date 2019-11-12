@@ -1,0 +1,8 @@
+#exportPattern("^[[:alpha:]]+")
+
+export(Rwcs_s2p)
+export(Rwcs_p2s)
+
+useDynLib(Rwcs, .registration=TRUE)
+
+import(Rcpp)

@@ -1,0 +1,17 @@
+PKG_CPPFLAGS = -Iwcslib/C -Iwcslib
+PKG_LIBS = wcslib/C/libwcs-PIC.a
+
+.PHONY: all wcslib clean shlib-clean
+
+all: $(SHLIB)
+$(SHLIB): wcslib
+
+wcslib:
+	(cd wcslib && make all)
+
+shlib-clean: clean
+
+clean:
+	(cd wcslib; make clean)
+
+OBJECTS = RcppExports.o Rhello.o Rwcs.o
