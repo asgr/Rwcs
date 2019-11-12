@@ -36,14 +36,16 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
     PV2 = keyvalues$PV2
   )
 
-  colnames(output)=c('x','y')
   output[,1]=output[,1]-loc.diff[1]
   output[,2]=output[,2]-loc.diff[2]
   if(pixcen == 'R'){
     output[,1]=output[,1]-0.5
     output[,2]=output[,2]-0.5
   }
-  return(output)
+  
+  colnames(output)=c('x','y')
+  
+  return(as.data.frame(output))
 }
 
 Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), ...){
@@ -86,7 +88,8 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), ...){
   )
   
   colnames(output)=c('RA','Dec')
-  return(output)
+  
+  return(as.data.frame(output))
 }
 
 Rwcs_keypass=function(keyvalues=NULL, CRVAL1=0, CRVAL2=0, CRPIX1=0, CRPIX2=0, CD1_1=1,
