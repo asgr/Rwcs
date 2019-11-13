@@ -7,4 +7,5 @@ useDynLib(Rwcs, .registration=TRUE)
 
 import(Rcpp)
 import(checkmate)
-import(celestial)
+
+importFrom(celestial, hms2deg, dms2deg, deg2hms, deg2dms)
