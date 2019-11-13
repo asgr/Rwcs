@@ -1,5 +1,6 @@
-\name{Rwcs_s2p}
+\name{Rwcs}
 \alias{Rwcs_s2p}
+\alias{Rwcs_p2s}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 High Level WCSlib Interface

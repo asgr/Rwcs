@@ -2,8 +2,8 @@
 
 export(Rwcs_s2p)
 export(Rwcs_p2s)
-export(Cwcs_s2p)
-export(Cwcs_p2s)
+#export(Cwcs_s2p)
+#export(Cwcs_p2s)
 
 useDynLib(Rwcs, .registration=TRUE)
 
