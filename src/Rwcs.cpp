@@ -3,6 +3,8 @@
 #include <utility>
 #include <vector>
 #include <wcslib.h>
+#include <stdio.h> 
+#include <stdlib.h> 
 using namespace Rcpp;
 
 // [[Rcpp::export]]
@@ -14,7 +16,8 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
               double CD2_1 = 0, double CD2_2 = 1,
               double PV1 = 0, double PV2 = 0
               ){
-
+  int i,j;
+  
   int ncoord = RA.length();
   int nelem = 2;
   int naxis = 2;
@@ -52,25 +55,36 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
   wcs.npv = 2;
   wcs.pv[0].value = PV1;
   wcs.pv[1].value = PV2;
-
-  NumericMatrix world(nelem, ncoord);
-  for (int i = 0; i < ncoord; i++) {
-    world(0, i) = RA[i];
-    world(1, i) = Dec[i];
+  
+  wcs.lng = 0;
+  wcs.lat = 1;
+  
+  // double **world = (double **)calloc(ncoord, sizeof(double *));
+  // for(i=0; i < ncoord; i++) {
+  //   world[i] = (double *)calloc(nelem, sizeof(double));
+  // }
+  double world[ncoord][nelem];
+  for (i = 0; i < ncoord; i++) {
+    world[i][0] = RA[i];
+    world[i][1] = Dec[i];
   }
-  NumericVector phi(ncoord);
-  NumericVector theta(ncoord);
-  NumericMatrix img(nelem, ncoord);
-  IntegerVector stat(ncoord);
-  NumericMatrix pixel(nelem, ncoord);
-
-  wcss2p(&wcs, ncoord, nelem,
-         &(world[0]), &(phi[0]), &(theta[0]), &(img[0]),
-         &(pixel[0]), &(stat[0]));
-
-  // TODO: check stat
-
-  return(pixel);
+  double phi[ncoord];
+  double theta[ncoord];
+  double img[ncoord][nelem];
+  double pixel[ncoord][nelem];
+  int stat[ncoord];
+  
+  wcss2p(&wcs, ncoord, nelem, world[0], phi, theta, img[0], pixel[0], stat);
+  
+  NumericMatrix pixel_matrix(ncoord, naxis);
+  
+  for (i = 0; i < ncoord; i++) {
+    for (j = 0; j < nelem; j++) {
+      pixel_matrix(i,j) = pixel[i][j];
+    }
+  }
+  
+  return(pixel_matrix);
 }
 
 // [[Rcpp::export]]
@@ -81,8 +95,7 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
               double CD1_1 = 1, double CD1_2 = 0,
               double CD2_1 = 0, double CD2_2 = 1,
               double PV1 = 0, double PV2 = 0
-){
-  
+              ){
   int i,j;
   
   int ncoord = x.length();
@@ -122,20 +135,26 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
   wcs.pv[0].value = PV1;
   wcs.pv[1].value = PV2;
   
-  NumericMatrix pixel(nelem, ncoord);
-  for (int i = 0; i < ncoord; i++) {
-    pixel(0, i) = x[i];
-    pixel(1, i) = y[i];
+  double pixel[ncoord][nelem];
+  for (i = 0; i < ncoord; i++) {
+    pixel[i][0] = x[i];
+    pixel[i][1] = y[i];
   }
-  NumericVector phi(ncoord);
-  NumericVector theta(ncoord);
-  NumericMatrix img(nelem, ncoord);
-  IntegerVector stat(ncoord);
-  NumericMatrix world(nelem, ncoord);
+  double phi[ncoord];
+  double theta[ncoord];
+  double img[ncoord][nelem];
+  double world[ncoord][nelem];
+  int stat[ncoord];
   
-  wcsp2s(&wcs, ncoord, nelem,
-         &(pixel[0]), &(phi[0]), &(theta[0]), &(img[0]),
-         &(world[0]), &(stat[0]));
+  wcsp2s(&wcs, ncoord, nelem, pixel[0], phi, theta, img[0], world[0], stat);
   
-  return(world);
+  NumericMatrix world_matrix(ncoord, naxis);
+  
+  for (i = 0; i < ncoord; i++) {
+    for (j = 0; j < nelem; j++) {
+      world_matrix(i,j) = world[i][j];
+    }
+  }
+  
+  return(world_matrix);
 }

@@ -19,7 +19,7 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   
   keyvalues = Rwcs_keypass(keyvalues, ...)
   
-  output = t(Cwcs_s2p(
+  output = Cwcs_s2p(
     RA = RA,
     Dec = Dec,
     CTYPE1 = keyvalues$CTYPE1,
@@ -34,7 +34,7 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
     CD2_2 = keyvalues$CD2_2,
     PV1 = keyvalues$PV1,
     PV2 = keyvalues$PV2
-  ))
+  )
 
   output[,1]=output[,1]-loc.diff[1]
   output[,2]=output[,2]-loc.diff[2]
@@ -72,7 +72,7 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
   
   keyvalues = Rwcs_keypass(keyvalues, ...)
   
-  output = t(Cwcs_p2s(
+  output = Cwcs_p2s(
     x = x,
     y = y,
     CTYPE1 = keyvalues$CTYPE1,
@@ -87,7 +87,7 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
     CD2_2 = keyvalues$CD2_2,
     PV1 = keyvalues$PV1,
     PV2 = keyvalues$PV2
-  ))
+  )
   
   if(coord.type=='sex'){
     RAsex = deg2hms(output[,1], sep=sep)

@@ -80,12 +80,11 @@ CD1_2=-0.05, CD2_1=0.05, CD2_2=0.1)
 plot(exdata_start,cex=2)
 points(exdata_end,col='red')
 
-#The residuals should be very small (in the noice of double precision arithmetic):
+#The residuals should be very small (in the noise of double precision arithmetic):
 
 plot(density(exdata_start[,1]-exdata_end[,1]))
 lines(density(exdata_start[,2]-exdata_end[,2]),col='red')
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\concept{ WCS }% use one of  RShowDoc("KEYWORDS")
