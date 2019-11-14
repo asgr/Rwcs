@@ -17,8 +17,8 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
               double PV1 = 0, double PV2 = 0
               ){
   int i;
-  int ncoord = RA.length();
-  int naxis = 2;
+  const int ncoord = RA.length();
+  const int naxis = 2;
 
   //setup wcs
   struct wcsprm wcs;
@@ -68,7 +68,7 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
   double *pixel = (double *)calloc(ncoord * naxis, sizeof(double));
   int *stat = (int *)calloc(ncoord, sizeof(int));
   
-  wcss2p(&wcs, ncoord, naxis, &world[0], phi, theta, &img[0], &pixel[0], stat);
+  wcss2p(&wcs, ncoord, naxis, world, phi, theta, img, pixel, stat);
   
   NumericMatrix pixel_matrix(ncoord, naxis);
   
@@ -90,8 +90,8 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
               double PV1 = 0, double PV2 = 0
               ){
   int i;
-  int ncoord = x.length();
-  int naxis = 2;
+  const int ncoord = x.length();
+  const int naxis = 2;
   //setup wcs
   struct wcsprm wcs;
   wcs.flag = -1;
@@ -140,7 +140,7 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
   double *world = (double *)calloc(ncoord * naxis, sizeof(double));
   int *stat = (int *)calloc(ncoord, sizeof(int));
   
-  wcsp2s(&wcs, ncoord, naxis, pixel, phi, theta, &img[0], &world[0], stat);
+  wcsp2s(&wcs, ncoord, naxis, pixel, phi, theta, img, world, stat);
 
   NumericMatrix world_matrix(ncoord, naxis);
   
