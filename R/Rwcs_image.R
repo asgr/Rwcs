@@ -25,8 +25,6 @@ Rwcs_image=function(image, keyvalues, n, grid.col='grey', grid.lty=2, grid.lwd=0
     if(any(names(image)=='imDat') & missing(keyvalues)){
       keyvalues=image$keyvalues
       image=image$imDat
-    }else{
-      image=image$imDat
     }
     output=magimage(image, axes=FALSE, ...)
     box()

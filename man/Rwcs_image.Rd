@@ -106,7 +106,17 @@ By R convention the bottom-left part of the bottom-left pixel when plotting the 
 \code{\link{magimage}}, \code{\link{Rwcs}}
 }
 \examples{
-# None yet!
+\dontrun{
+library(Rfits)
+file_image=system.file('extdata', 'image.fits', package = "Rfits")
+temp_image=Rfits_read_image(file_image)
+Rwcs_image(temp_image)
+
+#we can see the curvature better if we ramp up the size of the image, but keep WCS:
+
+temp_mat=list(x=seq(1,1e5,len=356), y=seq(1,1e5,len=356), z=temp_image$imDat)
+Rwcs_image(temp_mat, keyvalues = temp_image$keyvalues)
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
