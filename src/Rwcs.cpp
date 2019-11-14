@@ -19,8 +19,7 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
   int i,j;
   
   int ncoord = RA.length();
-  int nelem = 2;
-  int naxis = 2;
+  int naxis = 2; //for RA/Dec and x/y
 
   //setup wcs
   struct wcsprm wcs;
@@ -61,25 +60,29 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
   
   // double **world = (double **)calloc(ncoord, sizeof(double *));
   // for(i=0; i < ncoord; i++) {
-  //   world[i] = (double *)calloc(nelem, sizeof(double));
+  //   world[i] = (double *)calloc(naxis, sizeof(double));
   // }
-  double world[ncoord][nelem];
+  double world[ncoord][naxis];
   for (i = 0; i < ncoord; i++) {
     world[i][0] = RA[i];
     world[i][1] = Dec[i];
   }
+  for (i = 0; i < ncoord; i++) {
+    Rcout << world[i][0] << '\n';
+    Rcout << world[i][1] << '\n';
+  }
   double phi[ncoord];
   double theta[ncoord];
-  double img[ncoord][nelem];
-  double pixel[ncoord][nelem];
+  double img[ncoord][naxis];
+  double pixel[ncoord][naxis];
   int stat[ncoord];
   
-  wcss2p(&wcs, ncoord, nelem, world[0], phi, theta, img[0], pixel[0], stat);
+  wcss2p(&wcs, ncoord, naxis, world[0], phi, theta, img[0], pixel[0], stat);
   
   NumericMatrix pixel_matrix(ncoord, naxis);
   
   for (i = 0; i < ncoord; i++) {
-    for (j = 0; j < nelem; j++) {
+    for (j = 0; j < naxis; j++) {
       pixel_matrix(i,j) = pixel[i][j];
     }
   }
@@ -99,8 +102,7 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
   int i,j;
   
   int ncoord = x.length();
-  int nelem = 2;
-  int naxis = 2;
+  int naxis = 2; //for RA/Dec and x/y
   //setup wcs
   struct wcsprm wcs;
   wcs.flag = -1;
@@ -135,23 +137,23 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
   wcs.pv[0].value = PV1;
   wcs.pv[1].value = PV2;
   
-  double pixel[ncoord][nelem];
+  double pixel[ncoord][naxis];
   for (i = 0; i < ncoord; i++) {
     pixel[i][0] = x[i];
     pixel[i][1] = y[i];
   }
   double phi[ncoord];
   double theta[ncoord];
-  double img[ncoord][nelem];
-  double world[ncoord][nelem];
+  double img[ncoord][naxis];
+  double world[ncoord][naxis];
   int stat[ncoord];
   
-  wcsp2s(&wcs, ncoord, nelem, pixel[0], phi, theta, img[0], world[0], stat);
+  wcsp2s(&wcs, ncoord, naxis, pixel[0], phi, theta, img[0], world[0], stat);
   
   NumericMatrix world_matrix(ncoord, naxis);
   
   for (i = 0; i < ncoord; i++) {
-    for (j = 0; j < nelem; j++) {
+    for (j = 0; j < naxis; j++) {
       world_matrix(i,j) = world[i][j];
     }
   }
