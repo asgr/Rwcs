@@ -10,7 +10,12 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
     Dec=RA[,2]
     RA=RA[,1]
   }
-  if(coord.type=='sex'){RA=hms2deg(RA,sep=sep); Dec=dms2deg(Dec,sep=sep)}
+  
+  if(coord.type=='sex'){
+    RA=hms2deg(RA,sep=sep)
+    Dec=dms2deg(Dec,sep=sep)
+  }
+  
   RA=as.numeric(RA)
   Dec=as.numeric(Dec)
   
@@ -35,9 +40,10 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
     PV1 = keyvalues$PV1,
     PV2 = keyvalues$PV2
   )
-
-  output[,1]=output[,1]-loc.diff[1]
-  output[,2]=output[,2]-loc.diff[2]
+  
+  if(loc.diff[1] != 0){output[,1] = output[,1] - loc.diff[1]}
+  if(loc.diff[2] != 0){output[,2] = output[,2] - loc.diff[2]}
+  
   if(pixcen == 'R'){
     output[,1]=output[,1]-0.5
     output[,2]=output[,2]-0.5
@@ -60,12 +66,14 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
     y = x[,2]
     x = x[,1]
   }
+  
   if(pixcen == 'R'){
     x = as.numeric(x) + 0.5
     y = as.numeric(y) + 0.5
   }
-  x = x + loc.diff[1]
-  y = y + loc.diff[2]
+  
+  if(loc.diff[1] != 0){x = x + loc.diff[1]}
+  if(loc.diff[2] != 0){y = y + loc.diff[2]}
   
   assertNumeric(x)
   assertNumeric(y, len = length(x))

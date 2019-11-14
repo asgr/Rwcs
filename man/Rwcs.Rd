@@ -1,4 +1,5 @@
 \name{Rwcs}
+\alias{Rwcs}
 \alias{Rwcs_s2p}
 \alias{Rwcs_p2s}
 %- Also NEED an '\alias' for EACH other topic documented here.
@@ -6,7 +7,7 @@
 High Level WCSlib Interface
 }
 \description{
-Offers basic high level access to the C \code{wcslib} library for projecting and deprojecting [x,y] and [RA,Dec] image data using a target WCS.
+Offers basic high level access to the C \code{wcslib} library for projecting and deprojecting [x,y] and [RA,Dec] image data using a target WCS. Slower than Cwcs functions, but safer and with more utility. Normal users should use these functions.
 }
 \usage{
 Rwcs_s2p(RA, Dec, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
@@ -29,7 +30,7 @@ Numeric vector/matrix; target x-pixel. If Matrix then the first column will be u
 Numeric vector; target y-pixel. Ignored if \option{x} is a matrix.
 }
   \item{keyvalues}{
-List; header values to be used for the WCS. the \option{\dots} can be used to over-ride any values for convenience.
+List; header values to be used for the WCS. The \option{\dots} can be used to over-ride any values for convenience.
 }
   \item{pixcen}{
 Character scalar; either 'FITS' (pixel centres are integer, e.g. the centre of the bottom-left pixel is [1,1]) of 'R' (pixel centres are half integer, e.g. the centre of the bottom-left pixel is [0.5,0.5]). The default is 'FITS', to be consistent with other programs, but within \code{R} images are usually interpretted with a half pixel offset, so for converting object image [x,y] positions to true WCS positions option 'R' should be used.
@@ -44,7 +45,7 @@ Character scalar; the format of the input/output RA and Dec. Allowed options are
 Character scalar; when coord.type='sex', \option{sep} defines the type of separator used for the HMS and DMS strings (i.e. H:M:S and D:M:S would be \option{sep}=':', which is the default). See \code{\link{hms2deg}} and \code{\link{dms2deg}} for more details.
 }
   \item{\dots}{
-Optional keyvalies the overwrite the option{keyvalues} entries with. CRVAL1=0, CRVAL2=0, CRPIX1=0, CRPIX2=0, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1, PV1=0, PV2=0, CTYPE1='RA---TAN', CTYPE2='DEC--TAN'
+Optional keyvalues to overwrite the \option{keyvalues} entries with. If not present, the defaults are CRVAL1=0, CRVAL2=0, CRPIX1=0, CRPIX2=0, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1, PV1=0, PV2=0, CTYPE1='RA---TAN', CTYPE2='DEC--TAN'.
 }
 }
 \details{
@@ -62,6 +63,9 @@ Calabretta, M.R., & Greisen, E.W., (2002), Astronomy & Astrophysics, 395, 1077-1
 \author{
 Aaron Robotham
 Rodrgio Tobar
+}
+\seealso{
+\code{\link{Rwcs}}
 }
 \examples{
 Rwcs_s2p(10:20, 20:30)

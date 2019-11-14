@@ -11,7 +11,8 @@ Authors@R: c(
 Maintainer: Aaron Robotham <aaron.robotham@uwa.edu.au>
 Description: Offers basic high level access to the C wcslib library for projecting and deprojecting [x,y] and [RA,Dec] image data using a target WCS.
 License: GPL (>= 2)
-Imports: Rcpp (>= 1.0.2), checkmate, celestial
+Imports: Rcpp (>= 1.0.2), checkmate, celestial, magicaxis
+Suggests: testthat
 Encoding: UTF-8
 LazyData: true
 SystemRequirements: C++11
