@@ -115,7 +115,14 @@ Rwcs_image(temp_image)
 #we can see the curvature better if we ramp up the size of the image, but keep WCS:
 
 temp_mat=list(x=seq(1,1e5,len=356), y=seq(1,1e5,len=356), z=temp_image$imDat)
-Rwcs_image(temp_mat, keyvalues = temp_image$keyvalues)
+Rwcs_image(temp_mat, temp_image$keyvalues)
+
+#Now let's try some other projections:
+
+tempkey=Rwcs_keypass(temp_image$keyvalues, CTYPE1 = 'RA---SIN', CTYPE2 = 'DEC--SIN')
+Rwcs_image(temp_mat, keyvalues = tempkey)
+tempkey=Rwcs_keypass(temp_image$keyvalues, CTYPE1 = 'RA---NCP', CTYPE2 = 'DEC--NCP')
+Rwcs_image(temp_mat, keyvalues = tempkey)
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
