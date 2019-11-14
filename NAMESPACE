@@ -2,9 +2,15 @@
 
 export(Rwcs_s2p)
 export(Rwcs_p2s)
+export(Cwcs_s2p)
+export(Cwcs_p2s)
 
 useDynLib(Rwcs, .registration=TRUE)
 
 import(Rcpp)
 import(checkmate)
-import(celestial)
+import(magicaxis)
+
+importFrom(celestial, hms2deg, dms2deg, deg2hms, deg2dms)
+importFrom("graphics", "arrows", "axis", "box", "lines", "mtext",
+               "par", "text")

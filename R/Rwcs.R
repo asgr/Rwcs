@@ -10,7 +10,12 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
     Dec=RA[,2]
     RA=RA[,1]
   }
-  if(coord.type=='sex'){RA=hms2deg(RA,sep=sep); Dec=dms2deg(Dec,sep=sep)}
+  
+  if(coord.type=='sex'){
+    RA=hms2deg(RA,sep=sep)
+    Dec=dms2deg(Dec,sep=sep)
+  }
+  
   RA=as.numeric(RA)
   Dec=as.numeric(Dec)
   
@@ -35,9 +40,10 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
     PV1 = keyvalues$PV1,
     PV2 = keyvalues$PV2
   )
-
-  output[,1]=output[,1]-loc.diff[1]
-  output[,2]=output[,2]-loc.diff[2]
+  
+  if(loc.diff[1] != 0){output[,1] = output[,1] - loc.diff[1]}
+  if(loc.diff[2] != 0){output[,2] = output[,2] - loc.diff[2]}
+  
   if(pixcen == 'R'){
     output[,1]=output[,1]-0.5
     output[,2]=output[,2]-0.5
@@ -45,25 +51,29 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   
   colnames(output)=c('x','y')
   
-  return(as.data.frame(output))
+  return(output)
 }
 
-Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), ...){
+Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', ...){
   
   assertList(keyvalues, null.ok = TRUE)
   assertChoice(pixcen, c('R','FITS'))
   assertNumeric(loc.diff, len=2)
+  assertChoice(coord.type, c('deg','sex'))
+  assertCharacter(sep, len=1)
   
   if(length(dim(x))==2){
     y = x[,2]
     x = x[,1]
   }
+  
   if(pixcen == 'R'){
     x = as.numeric(x) + 0.5
     y = as.numeric(y) + 0.5
   }
-  x = x + loc.diff[1]
-  y = y + loc.diff[2]
+  
+  if(loc.diff[1] != 0){x = x + loc.diff[1]}
+  if(loc.diff[2] != 0){y = y + loc.diff[2]}
   
   assertNumeric(x)
   assertNumeric(y, len = length(x))
@@ -87,9 +97,15 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), ...){
     PV2 = keyvalues$PV2
   )
   
+  if(coord.type=='sex'){
+    RAsex = deg2hms(output[,1], sep=sep)
+    Decsex = deg2dms(output[,2], sep=sep)
+    output = cbind(RAsex, Decsex)
+  }
+  
   colnames(output)=c('RA','Dec')
   
-  return(as.data.frame(output))
+  return(output)
 }
 
 Rwcs_keypass=function(keyvalues=NULL, CRVAL1=0, CRVAL2=0, CRPIX1=0, CRPIX2=0, CD1_1=1,

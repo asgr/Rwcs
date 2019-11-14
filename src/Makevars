@@ -14,4 +14,4 @@ shlib-clean: clean
 clean:
 	(cd wcslib; make clean)
 
-OBJECTS = RcppExports.o Rhello.o Rwcs.o
+OBJECTS = RcppExports.o Rwcs.o
