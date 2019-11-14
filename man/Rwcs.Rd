@@ -50,6 +50,38 @@ Optional keyvalues to overwrite the \option{keyvalues} entries with. If not pres
 }
 \details{
 The function input and output is deliberately simple. The important thing is to pass in a senesible WCS to the \option{keyvalues} argument. This would be the same \option{keyvalues} output supplied by the \code{Rfits} package when reading in an image.
+
+The following projections are supported:
+
+AZP: zenithal/azimuthal perspective
+SZP: slant zenithal perspective
+TAN: gnomonic
+STG: stereographic
+SIN: orthographic/synthesis
+NCP: unofficially supported SIN-like projection
+ARC: zenithal/azimuthal equidistant
+ZPN: zenithal/azimuthal polynomial
+ZEA: zenithal/azimuthal equal area
+AIR: Airy’s projection
+CYP: cylindrical perspective
+CEA: cylindrical equal area
+CAR: plate carrée
+MER: Mercator’s projection
+COP: conic perspective
+COE: conic equal area
+COD: conic equidistant
+COO: conic orthomorphic
+SFL: Sanson-Flamsteed (“global sinusoid”)
+PAR: parabolic
+MOL: Mollweide’s projection
+AIT: Hammer-Aitoff
+BON: Bonne’s projection
+PCO: polyconic
+TSC: tangential spherical cube
+CSC: COBE quadrilateralized spherical cube
+QSC: quadrilateralized spherical cube
+HPX: HEALPix
+XPH: HEALPix polar, aka “butterfly”
 }
 \value{
 \code{Rwcs_s2p} is the spherical to pixel (hence s2p) projection function, i.e. RA/Dec to x/y. The output is a two column numeric matrix containing [x,y] data.

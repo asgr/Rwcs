@@ -166,10 +166,50 @@ Rwcs_keypass=function(keyvalues=NULL, CTYPE1='RA---TAN', CTYPE2='DEC--TAN', CRVA
     keyvalues=list()
   }
   
+  allowed_proj=c(
+    "AZP", #zenithal/azimuthal perspective
+    "SZP", #slant zenithal perspective
+    "TAN", #gnomonic
+    "STG", #stereographic
+    "SIN", #orthographic/synthesis
+    "NCP", #unofficially supported SIN-like projection
+    "ARC", #zenithal/azimuthal equidistant
+    "ZPN", #zenithal/azimuthal polynomial
+    "ZEA", #zenithal/azimuthal equal area
+    "AIR", #Airy’s projection
+    "CYP", #cylindrical perspective
+    "CEA", #cylindrical equal area
+    "CAR", #plate carrée
+    "MER", #Mercator’s projection
+    "COP", #conic perspective
+    "COE", #conic equal area
+    "COD", #conic equidistant
+    "COO", #conic orthomorphic
+    "SFL", #Sanson-Flamsteed (“global sinusoid”)
+    "PAR", #parabolic
+    "MOL", #Mollweide’s projection
+    "AIT", #Hammer-Aitoff
+    "BON", #Bonne’s projection
+    "PCO", #polyconic
+    "TSC", #tangential spherical cube
+    "CSC", #COBE quadrilateralized spherical cube
+    "QSC", #quadrilateralized spherical cube
+    "HPX", #HEALPix
+    "XPH"  #HEALPix polar, aka “butterfly”
+  )
+  
+  grep_proj = paste(allowed_proj,collapse='|')
+  
   assertCharacter(CTYPE1, len=1)
   assertCharacter(CTYPE2, len=1)
   if(nchar(CTYPE1) != 8){stop('CTYPE1 must be 8 characters!')}
   if(nchar(CTYPE2) != 8){stop('CTYPE2 must be 8 characters!')}
+  if(length(grep(grep_proj, CTYPE1)) != 1){
+    stop(paste('CTYPE1 is not an allowed type! Must be one of:',paste(allowed_proj,collapse = ' ')))
+  }
+  if(length(grep(grep_proj, CTYPE2)) != 1){
+    stop(paste('CTYPE2 is not an allowed type! Must be one of:',paste(allowed_proj,collapse = ' ')))
+  }
   assertNumeric(CRVAL1, len=1)
   assertNumeric(CRVAL2, len=1)
   assertNumeric(CRPIX1, len=1)
@@ -195,4 +235,3 @@ Rwcs_keypass=function(keyvalues=NULL, CTYPE1='RA---TAN', CTYPE2='DEC--TAN', CRVA
   keyvalues$PV2 = PV2
   return(keyvalues)
 }
-
