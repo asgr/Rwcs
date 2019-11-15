@@ -12,7 +12,8 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
               double CRPIX1 = 0, double CRPIX2 = 0,
               double CD1_1 = 1, double CD1_2 = 0,
               double CD2_1 = 0, double CD2_2 = 1,
-              double PV1 = 0, double PV2 = 0
+              double PV1_1 = NA_REAL, double PV1_2 = NA_REAL,
+              double PV2_1 = NA_REAL, double PV2_2 = NA_REAL
 ){
   int i;
   const int ncoord = RA.length();
@@ -48,10 +49,36 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
   strcpy(wcs.ctype[1], CTYPE2.get_cstring());
   
   //insert wcs pv
-  wcs.npv = 2;
-  wcs.pv[0].value = PV1;
-  wcs.pv[1].value = PV2;
+  wcs.npv = 0;
+  if(R_IsNA(PV1_1)){wcs.npv++;}
+  if(R_IsNA(PV1_2)){wcs.npv++;}
+  if(R_IsNA(PV2_1)){wcs.npv++;}
+  if(R_IsNA(PV2_2)){wcs.npv++;}
   
+  int npvcount = 0;
+  
+  if(!R_IsNA(PV1_1)){
+    wcs.pv[npvcount].i = 1;
+    wcs.pv[npvcount].m = 1;
+    wcs.pv[npvcount].value = PV1_1;
+  }
+  if(!R_IsNA(PV1_2)){
+    wcs.pv[npvcount].i = 1;
+    wcs.pv[npvcount].m = 2;
+    wcs.pv[npvcount].value = PV1_2;
+  }
+  if(!R_IsNA(PV2_1)){
+    wcs.pv[npvcount].i = 2;
+    wcs.pv[npvcount].m = 1;
+    wcs.pv[npvcount].value = PV2_1;
+  }
+  if(!R_IsNA(PV2_2)){
+    wcs.pv[npvcount].i = 2;
+    wcs.pv[npvcount].m = 2;
+    wcs.pv[npvcount].value = PV2_2;
+  }
+  
+  //set long and lat axis positions
   wcs.lng = 0;
   wcs.lat = 1;
   
@@ -88,7 +115,8 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
               double CRPIX1 = 0, double CRPIX2 = 0,
               double CD1_1 = 1, double CD1_2 = 0,
               double CD2_1 = 0, double CD2_2 = 1,
-              double PV1 = 0, double PV2 = 0
+              double PV1_1 = NA_REAL, double PV1_2 = NA_REAL,
+              double PV2_1 = NA_REAL, double PV2_2 = NA_REAL
 ){
   int i;
   const int ncoord = x.length();
@@ -124,10 +152,36 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
   strcpy(wcs.ctype[1], CTYPE2.get_cstring());
   
   //insert wcs pv
-  wcs.npv = 2;
-  wcs.pv[0].value = PV1;
-  wcs.pv[1].value = PV2;
+  wcs.npv = 0;
+  if(R_IsNA(PV1_1)){wcs.npv++;}
+  if(R_IsNA(PV1_2)){wcs.npv++;}
+  if(R_IsNA(PV2_1)){wcs.npv++;}
+  if(R_IsNA(PV2_2)){wcs.npv++;}
   
+  int npvcount = 0;
+  
+  if(!R_IsNA(PV1_1)){
+    wcs.pv[npvcount].i = 1;
+    wcs.pv[npvcount].m = 1;
+    wcs.pv[npvcount].value = PV1_1;
+  }
+  if(!R_IsNA(PV1_2)){
+    wcs.pv[npvcount].i = 1;
+    wcs.pv[npvcount].m = 2;
+    wcs.pv[npvcount].value = PV1_2;
+  }
+  if(!R_IsNA(PV2_1)){
+    wcs.pv[npvcount].i = 2;
+    wcs.pv[npvcount].m = 1;
+    wcs.pv[npvcount].value = PV2_1;
+  }
+  if(!R_IsNA(PV2_2)){
+    wcs.pv[npvcount].i = 2;
+    wcs.pv[npvcount].m = 2;
+    wcs.pv[npvcount].value = PV2_2;
+  }
+  
+  //set long and lat axis positions
   wcs.lng = 0;
   wcs.lat = 1;
   

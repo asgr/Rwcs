@@ -121,6 +121,29 @@ points(exdata_end,col='red')
 
 plot(density(exdata_start[,1]-exdata_end[,1]))
 lines(density(exdata_start[,2]-exdata_end[,2]),col='red')
+
+#Different world projections (ones not listed here do not work well across large angles):
+
+library(magicaxis)
+
+world.grid=expand.grid(seq(0,360,by=10), seq(-90,90,by=10))
+
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---ARC', CTYPE2='DEC--ARC'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---ZEA', CTYPE2='DEC--ZEA'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---CYP', CTYPE2='DEC--CYP'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---CEA', CTYPE2='DEC--CEA'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---CAR', CTYPE2='DEC--CAR'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---MER', CTYPE2='DEC--MER'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---SFL', CTYPE2='DEC--SFL'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---PAR', CTYPE2='DEC--PAR'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---PCO', CTYPE2='DEC--PCO'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---MOL', CTYPE2='DEC--MOL'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---AIT', CTYPE2='DEC--AIT'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---TSC', CTYPE2='DEC--TSC'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---CSC', CTYPE2='DEC--CSC'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---QSC', CTYPE2='DEC--QSC'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---HPX', CTYPE2='DEC--HPX'), pch='.', cex=3)
+magplot(Rwcs_s2p(world.grid, CTYPE1='RA---XPH', CTYPE2='DEC--XPH'), pch='.', cex=3)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

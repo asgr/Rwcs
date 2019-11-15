@@ -11,9 +11,11 @@ Offers basic mid level access to the C \code{wcslib} library for projecting and 
 }
 \usage{
 Cwcs_s2p(RA, Dec, CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0,
-  CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, PV1 = 0, PV2 = 0)
+  CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, PV1_1 = NA,
+  PV1_2 = NA, PV2_1 = NA, PV2_2 = NA)
 Cwcs_p2s(x, y, CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0,
-  CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, PV1 = 0, PV2 = 0)
+  CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, PV1_1 = NA,
+  PV1_2 = NA, PV2_1 = NA, PV2_2 = NA)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -59,11 +61,17 @@ Numeric scalar; FITS header CD2_1 for the CTYPE2 projection system. Change in CT
   \item{CD2_2}{
 Numeric scalar; FITS header CD2_2 for the CTYPE2 projection system. Change in CTYPE2 in degrees along y-Axis.
 }
-  \item{PV1}{
-Numeric scalar; additional projection parameter 1.
+  \item{PV1_1}{
+Numeric scalar; additional axis 1 projection parameter 1.
 }
-  \item{PV2}{
-Numeric scalar; additional projection parameter 2.
+  \item{PV1_2}{
+Numeric scalar; additional axis 1 projection parameter 2.
+}
+  \item{PV2_1}{
+Numeric scalar; additional axis 1 projection parameter 1.
+}
+  \item{PV2_2}{
+Numeric scalar; additional axis 1 projection parameter 2.
 }
 }
 \details{
