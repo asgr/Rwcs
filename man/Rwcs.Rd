@@ -51,37 +51,64 @@ Optional keyvalues to overwrite the \option{keyvalues} entries with. If not pres
 \details{
 The function input and output is deliberately simple. The important thing is to pass in a senesible WCS to the \option{keyvalues} argument. This would be the same \option{keyvalues} output supplied by the \code{Rfits} package when reading in an image.
 
-The following projections are supported:
+The following axis types are supported:
 
-AZP: zenithal/azimuthal perspective
-SZP: slant zenithal perspective
-TAN: gnomonic
-STG: stereographic
-SIN: orthographic/synthesis
-NCP: unofficially supported SIN-like projection
-ARC: zenithal/azimuthal equidistant
-ZPN: zenithal/azimuthal polynomial
-ZEA: zenithal/azimuthal equal area
-AIR: Airy’s projection
-CYP: cylindrical perspective
-CEA: cylindrical equal area
-CAR: plate carrée
-MER: Mercator’s projection
-COP: conic perspective
-COE: conic equal area
-COD: conic equidistant
-COO: conic orthomorphic
-SFL: Sanson-Flamsteed (“global sinusoid”)
-PAR: parabolic
-MOL: Mollweide’s projection
-AIT: Hammer-Aitoff
-BON: Bonne’s projection
-PCO: polyconic
-TSC: tangential spherical cube
-CSC: COBE quadrilateralized spherical cube
-QSC: quadrilateralized spherical cube
-HPX: HEALPix
-XPH: HEALPix polar, aka “butterfly”
+\tabular{ll}{
+RA   \tab right ascension \cr 
+DEC  \tab declination \cr 
+GLON \tab galactic longitude \cr 
+GLAT \tab galactic latitude \cr 
+ELON \tab ecliptic longitude \cr 
+ELAT \tab ecliptic latitude \cr 
+HLON \tab helioecliptic longitude \cr 
+HLAT \tab helioecliptic latitude \cr 
+SLON \tab supergalactic longitude \cr 
+SLAT \tab supergalactic latitude
+}
+
+The following projection types are supported:
+
+\tabular{ll}{
+AZP  \tab zenithal/azimuthal perspective \cr
+SZP  \tab slant zenithal perspective \cr
+TAN  \tab gnomonic \cr
+STG  \tab stereographic \cr
+SIN  \tab orthographic/synthesis \cr
+NCP  \tab unofficially supported SIN-like projectio \cr
+ARC  \tab zenithal/azimuthal equidistant \cr
+ZPN  \tab zenithal/azimuthal polynomial \cr
+ZEA  \tab zenithal/azimuthal equal area \cr
+AIR  \tab Airy’s projection \cr
+CYP  \tab cylindrical perspective \cr
+CEA  \tab cylindrical equal area \cr
+CAR  \tab plate carrée \cr
+MER  \tab Mercator’s projection \cr
+COP  \tab conic perspective \cr
+COE  \tab conic equal area \cr
+COD  \tab conic equidistant \cr
+COO  \tab conic orthomorphic \cr
+SFL  \tab Sanson-Flamsteed (“global sinusoid”) \cr
+PAR  \tab parabolic \cr
+MOL  \tab Mollweide’s projection \cr
+AIT  \tab Hammer-Aitoff \cr
+BON  \tab Bonne’s projection \cr
+PCO  \tab polyconic \cr
+TSC  \tab tangential spherical cube \cr
+CSC  \tab COBE quadrilateralized spherical cube \cr
+QSC  \tab quadrilateralized spherical cube \cr
+HPX  \tab HEALPix \cr
+XPH  \tab HEALPix polar, aka “butterfly”
+}
+
+The following RA-DEC systems are supported:
+
+\tabular{ll}{
+ICRS  \tab  International Celestial Reference System \cr
+FK5   \tab  mean place, new (IAU 1984) system \cr
+FK4   \tab  mean place, old (Bessell-Newcomb) system \cr
+FK4-NO-E  \tab  mean place, old system but without e-terms \cr
+GAPPT \tab  geocentric apparent place,  IAU 1984 system
+}
 }
 \value{
 \code{Rwcs_s2p} is the spherical to pixel (hence s2p) projection function, i.e. RA/Dec to x/y. The output is a two column numeric matrix containing [x,y] data.
@@ -97,7 +124,7 @@ Aaron Robotham
 Rodrgio Tobar
 }
 \seealso{
-\code{\link{Rwcs}}
+\code{\link{Cwcs}}, \code{\link{Rwcs_keypass}}
 }
 \examples{
 Rwcs_s2p(10:20, 20:30)

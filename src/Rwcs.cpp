@@ -12,6 +12,7 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
               double CRPIX1 = 0, double CRPIX2 = 0,
               double CD1_1 = 1, double CD1_2 = 0,
               double CD2_1 = 0, double CD2_2 = 1,
+              Rcpp::String RADESYS = "ICRS", int EQUINOX = 2000,
               double PV1_1 = NA_REAL, double PV1_2 = NA_REAL,
               double PV2_1 = NA_REAL, double PV2_2 = NA_REAL
 ){
@@ -47,6 +48,10 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
   //insert ctype
   strcpy(wcs.ctype[0], CTYPE1.get_cstring());
   strcpy(wcs.ctype[1], CTYPE2.get_cstring());
+  
+  //insert radesys and equinox
+  strcpy(wcs.radesys, RADESYS.get_cstring());
+  wcs.equinox = EQUINOX;
   
   //insert wcs pv
   wcs.npv = 0;
@@ -115,6 +120,7 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
               double CRPIX1 = 0, double CRPIX2 = 0,
               double CD1_1 = 1, double CD1_2 = 0,
               double CD2_1 = 0, double CD2_2 = 1,
+              Rcpp::String RADESYS = "ICRS", int EQUINOX = 2000,
               double PV1_1 = NA_REAL, double PV1_2 = NA_REAL,
               double PV2_1 = NA_REAL, double PV2_2 = NA_REAL
 ){
@@ -150,6 +156,10 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
   //insert ctype
   strcpy(wcs.ctype[0], CTYPE1.get_cstring());
   strcpy(wcs.ctype[1], CTYPE2.get_cstring());
+  
+  //insert radesys and equinox
+  strcpy(wcs.radesys, RADESYS.get_cstring());
+  wcs.equinox = EQUINOX;
   
   //insert wcs pv
   wcs.npv = 0;

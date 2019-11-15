@@ -32,6 +32,8 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
     CD1_2 = keyvalues$CD1_2,
     CD2_1 = keyvalues$CD2_1,
     CD2_2 = keyvalues$CD2_2,
+    RADESYS = keyvalues$RADESYS,
+    EQUINOX = keyvalues$EQUINOX,
     PV1_1 = keyvalues$PV1_1,
     PV1_2 = keyvalues$PV1_2,
     PV2_1 = keyvalues$PV2_1,
@@ -55,6 +57,8 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
         CD1_2 = keyvalues$CD1_2,
         CD2_1 = keyvalues$CD2_1,
         CD2_2 = keyvalues$CD2_2,
+        RADESYS = keyvalues$RADESYS,
+        EQUINOX = keyvalues$EQUINOX,
         PV1_1 = keyvalues$PV1_1,
         PV1_2 = keyvalues$PV1_2,
         PV2_1 = keyvalues$PV2_1,
@@ -112,6 +116,8 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
     CD1_2 = keyvalues$CD1_2,
     CD2_1 = keyvalues$CD2_1,
     CD2_2 = keyvalues$CD2_2,
+    RADESYS = keyvalues$RADESYS,
+    EQUINOX = keyvalues$EQUINOX,
     PV1_1 = keyvalues$PV1_1,
     PV1_2 = keyvalues$PV1_2,
     PV2_1 = keyvalues$PV2_1,
@@ -135,6 +141,8 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
         CD1_2 = keyvalues$CD1_2,
         CD2_1 = keyvalues$CD2_1,
         CD2_2 = keyvalues$CD2_2,
+        RADESYS = keyvalues$RADESYS,
+        EQUINOX = keyvalues$EQUINOX,
         PV1_1 = keyvalues$PV1_1,
         PV1_2 = keyvalues$PV1_2,
         PV2_1 = keyvalues$PV2_1,
@@ -156,7 +164,8 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
 
 Rwcs_keypass=function(keyvalues=NULL, CTYPE1='RA---TAN', CTYPE2='DEC--TAN', CRVAL1=0,
                       CRVAL2=0, CRPIX1=0, CRPIX2=0, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1,
-                      PV1_1=NA,PV1_2=NA, PV2_1=NA, PV2_2=NA, ...){
+                      RADESYS='ICRS', EQUINOX='infer',
+                      PV1_1=NA, PV1_2=NA, PV2_1=NA, PV2_2=NA, ...){
   if(!is.null(keyvalues)){
     if(missing(CTYPE1)){if(!is.null(keyvalues$CTYPE1)){CTYPE1 = keyvalues$CTYPE1}else{message('CTYPE1 is not defined!')}}
     if(missing(CTYPE2)){if(!is.null(keyvalues$CTYPE2)){CTYPE2 = keyvalues$CTYPE2}else{message('CTYPE2 is not defined!')}}
@@ -164,10 +173,52 @@ Rwcs_keypass=function(keyvalues=NULL, CTYPE1='RA---TAN', CTYPE2='DEC--TAN', CRVA
     if(missing(CRVAL2)){if(!is.null(keyvalues$CRVAL2)){CRVAL2 = keyvalues$CRVAL2}else{message('CRVAL2 is not defined!')}}
     if(missing(CRPIX1)){if(!is.null(keyvalues$CRPIX1)){CRPIX1 = keyvalues$CRPIX1}else{message('CRPIX1 is not defined!')}}
     if(missing(CRPIX2)){if(!is.null(keyvalues$CRPIX2)){CRPIX2 = keyvalues$CRPIX2}else{message('CRPIX2 is not defined!')}}
-    if(missing(CD1_1)){if(!is.null(keyvalues$CD1_1)){CD1_1 = keyvalues$CD1_1}else{if(!is.null(keyvalues$CDELT1)){CD1_1 = keyvalues$CDELT1; CD1_2=0}else{message('CD1_1 is not defined!')}}}
+    if (missing(CD1_1)) {
+      if (!is.null(keyvalues$CD1_1)) {
+        CD1_1 = keyvalues$CD1_1
+      } else{
+        if (!is.null(keyvalues$CDELT1)) {
+          CD1_1 = keyvalues$CDELT1
+          CD1_2 = 0
+        } else{
+          message('CD1_1 is not defined!')
+        }
+      }
+    }
     if(missing(CD1_2)){if(!is.null(keyvalues$CD1_2)){CD1_2 = keyvalues$CD1_2}else{message('CD1_2 is not defined!')}}
-    if(missing(CD2_2)){if(!is.null(keyvalues$CD2_2)){CD2_2 = keyvalues$CD2_2}else{if(!is.null(keyvalues$CDELT2)){CD2_2 = keyvalues$CDELT2; CD2_1=0}else{message('CD2_2 is not defined!')}}}
+    if (missing(CD2_2)) {
+      if (!is.null(keyvalues$CD2_2)) {
+        CD2_2 = keyvalues$CD2_2
+      } else{
+        if (!is.null(keyvalues$CDELT2)) {
+          CD2_2 = keyvalues$CDELT2
+          CD2_1 = 0
+        } else{
+          message('CD2_2 is not defined!')
+        }
+      }
+    }
     if(missing(CD2_1)){if(!is.null(keyvalues$CD2_1)){CD2_1 = keyvalues$CD2_1}else{message('CD2_1 is not defined!')}}
+    if (missing(RADESYS)) {
+      if (!is.null(keyvalues$RADESYS)) {
+        RADESYS = keyvalues$RADESYS
+      } else{
+        if (!is.null(keyvalues$RADECSYS)) {
+          RADESYS = keyvalues$RADECSYS
+        }else{
+          message('RADESYS is not defined (also no RADECSYS)!')
+        }
+      }
+      if (!is.null(keyvalues$EQUINOX)) {
+        EQUINOX = keyvalues$EQUINOX
+      } else{
+        if (!is.null(keyvalues$EPOCH)) {
+          EQUINOX = keyvalues$EPOCH
+        }else{
+          message('EQUINOX is not defined (also no EPOCH)!')
+        }
+      }
+    }
     if(missing(PV1_1)){if(!is.null(keyvalues$PV1_1)){PV1_1 = keyvalues$PV1_1}}
     if(missing(PV1_2)){if(!is.null(keyvalues$PV1_2)){PV1_2 = keyvalues$PV1_2}}
     if(missing(PV2_1)){if(!is.null(keyvalues$PV2_1)){PV2_1 = keyvalues$PV2_1}}
@@ -176,7 +227,11 @@ Rwcs_keypass=function(keyvalues=NULL, CTYPE1='RA---TAN', CTYPE2='DEC--TAN', CRVA
     keyvalues=list()
   }
   
-  allowed_proj=c(
+  if(EQUINOX == 'infer'){
+    if(RADESYS %in% c('ICRS', 'FK5')){EQUINOX = 2000}else{EQUINOX = 1950}
+  }
+  
+  allowed_proj = c(
     "AZP", #zenithal/azimuthal perspective
     "SZP", #slant zenithal perspective
     "TAN", #gnomonic
@@ -207,19 +262,40 @@ Rwcs_keypass=function(keyvalues=NULL, CTYPE1='RA---TAN', CTYPE2='DEC--TAN', CRVA
     "HPX", #HEALPix
     "XPH"  #HEALPix polar, aka “butterfly”
   )
-  
-  grep_proj = paste(allowed_proj,collapse='|')
+
+  allowed_axes = c(
+    "RA", #right ascension
+    "DEC", #declination
+    "GLON", #galactic longitude
+    "GLAT", #galactic latitude
+    "ELON", #ecliptic longitude
+    "ELAT", #ecliptic latitude
+    "HLON", #helioecliptic longitude
+    "HLAT", #helioecliptic latitude
+    "SLON", #supergalactic longitude
+    "SLAT" #supergalactic latitude
+  )
+
+  allowed_rade = c(
+    "ICRS",
+    "FK5",
+    "FK4",
+    "FK4-NO-E",
+    "GAPPT"
+  )
   
   assertCharacter(CTYPE1, len=1)
   assertCharacter(CTYPE2, len=1)
   if(nchar(CTYPE1) != 8){stop('CTYPE1 must be 8 characters!')}
   if(nchar(CTYPE2) != 8){stop('CTYPE2 must be 8 characters!')}
-  if(length(grep(grep_proj, CTYPE1)) != 1){
-    stop(paste('CTYPE1 is not an allowed type! Must be one of:',paste(allowed_proj,collapse = ' ')))
-  }
-  if(length(grep(grep_proj, CTYPE2)) != 1){
-    stop(paste('CTYPE2 is not an allowed type! Must be one of:',paste(allowed_proj,collapse = ' ')))
-  }
+  split1=strsplit(CTYPE1, '-+')[[1]]
+  split2=strsplit(CTYPE2, '-+')[[1]]
+  assertCharacter(split1, len = 2)
+  assertCharacter(split2, len = 2)
+  assertChoice(split1[1], allowed_axes)
+  assertChoice(split2[1], allowed_axes)
+  assertChoice(split1[2], allowed_proj)
+  assertChoice(split2[2], allowed_proj)
   assertNumeric(CRVAL1, len=1)
   assertNumeric(CRVAL2, len=1)
   assertNumeric(CRPIX1, len=1)
@@ -228,6 +304,9 @@ Rwcs_keypass=function(keyvalues=NULL, CTYPE1='RA---TAN', CTYPE2='DEC--TAN', CRVA
   assertNumeric(CD1_2, len=1)
   assertNumeric(CD2_1, len=1)
   assertNumeric(CD2_2, len=1)
+  assertCharacter(RADESYS, len=1)
+  assertChoice(RADESYS, choices = allowed_rade)
+  assertChoice(EQUINOX, choices = c(1950, 2000))
   assertNumeric(PV1_1, len=1)
   assertNumeric(PV1_2, len=1)
   assertNumeric(PV2_2, len=1)
@@ -243,6 +322,8 @@ Rwcs_keypass=function(keyvalues=NULL, CTYPE1='RA---TAN', CTYPE2='DEC--TAN', CRVA
   keyvalues$CD1_2 = CD1_2
   keyvalues$CD2_1 = CD2_1
   keyvalues$CD2_2 = CD2_2
+  keyvalues$RADESYS = RADESYS
+  keyvalues$EQUINOX = EQUINOX
   keyvalues$PV1_1 = PV1_1
   keyvalues$PV1_2 = PV1_2
   keyvalues$PV2_1 = PV2_1
