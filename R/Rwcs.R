@@ -17,7 +17,12 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   assertNumeric(RA)
   assertNumeric(Dec, len = length(RA))
   
+  if(is.null(keyvalues) & length(list(...))==0){
+    keyvalues = options()$current_keyvalues
+  }
+  
   keyvalues = Rwcs_keypass(keyvalues, ...)
+  options(current_keyvalues = keyvalues)
   
   output = Cwcs_s2p(
     RA = RA,
@@ -101,7 +106,12 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
   assertNumeric(x)
   assertNumeric(y, len = length(x))
   
+  if(is.null(keyvalues) & length(list(...))==0){
+    keyvalues = options()$current_keyvalues
+  }
+  
   keyvalues = Rwcs_keypass(keyvalues, ...)
+  options(current_keyvalues = keyvalues)
   
   output = Cwcs_p2s(
     x = x,

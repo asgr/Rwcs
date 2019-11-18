@@ -11,21 +11,21 @@ WCS Image Decoration
 These functions add various WCS information to R images. It is particularly designed to work in unison with \option{magimage} package. Can handle all projections supported by \code{wcslib}, although some might need more tweaking to display well. See \code{\link{Rwcs}}.
 }
 \usage{
-Rwcs_image(image, keyvalues, n, grid.col = "grey", grid.lty = 2, grid.lwd = 0.5,
+Rwcs_image(image, keyvalues = NULL, n, grid.col = "grey", grid.lty = 2, grid.lwd = 0.5,
 lab.col = "green", coord.type = "sex", margin = TRUE, loc.diff = c(0, 0),
 xlab = "Right Ascension", ylab = "Declination", mgp = c(2, 0.5, 0), mtline = 2,
 position = "topright", com.col = "green", com.length = 0.05, coord.axis = 'auto',
 pretty = 'auto', ...)
 
-Rwcs_grid(keyvalues, n, grid.col = "grey", grid.lty = 2, grid.lwd = 0.5,
+Rwcs_grid(keyvalues = NULL, n, grid.col = "grey", grid.lty = 2, grid.lwd = 0.5,
 coord.type = "sex", loc.diff = c(0, 0), pretty= 'auto', ...)
 
-Rwcs_labels(keyvalues, n, lab.col = "green", coord.type = "sex", margin = TRUE,
+Rwcs_labels(keyvalues = NULL, n, lab.col = "green", coord.type = "sex", margin = TRUE,
 loc.diff = c(0, 0), xlab = "Right Ascension", ylab = "Declination", mgp = c(2, 0.5, 0),
 mtline = 2, coord.axis='auto', pretty= 'auto', ...)
 
-Rwcs_compass(keyvalues, position = "topright", com.col = "green", com.length = 0.05, 
-loc.diff = c(0, 0), ...)
+Rwcs_compass(keyvalues = NULL, position = "topright", com.col = "green",
+com.length = 0.05, loc.diff = c(0, 0), ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

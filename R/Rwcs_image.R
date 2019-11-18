@@ -1,4 +1,4 @@
-Rwcs_image=function(image, keyvalues, n, grid.col='grey', grid.lty=2, grid.lwd=0.5,
+Rwcs_image=function(image, keyvalues = NULL, n, grid.col='grey', grid.lty=2, grid.lwd=0.5,
                     lab.col='green', coord.type='sex', margin=TRUE, loc.diff=c(0,0),
                     xlab='Right Ascension', ylab='Declination', mgp=c(2,0.5,0), mtline=2,
                     position='topright', com.col="green", com.length=0.05,
@@ -22,7 +22,7 @@ Rwcs_image=function(image, keyvalues, n, grid.col='grey', grid.lty=2, grid.lwd=0
   }
   
   if(!missing(image)){
-    if(any(names(image)=='imDat') & missing(keyvalues)){
+    if(any(names(image)=='imDat') & is.null(keyvalues)){
       keyvalues=image$keyvalues
       image=image$imDat
     }
@@ -40,7 +40,7 @@ Rwcs_image=function(image, keyvalues, n, grid.col='grey', grid.lty=2, grid.lwd=0
   return=output
 }
 
-Rwcs_grid=function(keyvalues, n, grid.col='grey', grid.lty=2, grid.lwd=0.5, coord.type='sex',
+Rwcs_grid=function(keyvalues = NULL, n, grid.col='grey', grid.lty=2, grid.lwd=0.5, coord.type='sex',
                    loc.diff=c(0,0), pretty='auto', ...){
   
   xlo=min(par()$usr[1:2])
@@ -91,7 +91,7 @@ Rwcs_grid=function(keyvalues, n, grid.col='grey', grid.lty=2, grid.lwd=0.5, coor
   }
 }
 
-Rwcs_labels=function(keyvalues, n, lab.col='green', coord.type='sex', margin=TRUE,
+Rwcs_labels=function(keyvalues = NULL, n, lab.col='green', coord.type='sex', margin=TRUE,
                      loc.diff=c(0,0), xlab='Right Ascension', ylab='Declination',
                      mgp=c(2,0.5,0), mtline=2, coord.axis='auto', pretty='auto', ...){
   
@@ -214,7 +214,7 @@ Rwcs_labels=function(keyvalues, n, lab.col='green', coord.type='sex', margin=TRU
   }
 }
 
-Rwcs_compass=function(keyvalues, position='topright', com.col='green', com.length=0.05,
+Rwcs_compass=function(keyvalues = NULL, position='topright', com.col='green', com.length=0.05,
                       loc.diff=c(0,0), ...){
   xlo=min(par()$usr[1:2])
   xhi=max(par()$usr[1:2])
