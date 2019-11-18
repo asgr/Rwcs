@@ -45,11 +45,13 @@ Character scalar; the format of the input/output RA and Dec. Allowed options are
 Character scalar; when coord.type='sex', \option{sep} defines the type of separator used for the HMS and DMS strings (i.e. H:M:S and D:M:S would be \option{sep}=':', which is the default). See \code{\link{hms2deg}} and \code{\link{dms2deg}} for more details.
 }
   \item{\dots}{
-Optional keyvalues to overwrite the \option{keyvalues} entries with. If not present, the defaults are CRVAL1=0, CRVAL2=0, CRPIX1=0, CRPIX2=0, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1, PV1=0, PV2=0, CTYPE1='RA---TAN', CTYPE2='DEC--TAN'.
+Optional keyvalues to overwrite the \option{keyvalues} entries with. If not present, the defaults are CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0, CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS", EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV2_1 = NA, PV2_2 = NA.
 }
 }
 \details{
 The function input and output is deliberately simple. The important thing is to pass in a senesible WCS to the \option{keyvalues} argument. This would be the same \option{keyvalues} output supplied by the \code{Rfits} package when reading in an image.
+
+For convenience the last used \option{keyvalues} is written to options()$keyvalues. \code{Rwcs_s2p} and \code{Rwcs_p2s} will look for this object if neither \option{keyvalues} or any \dots are passed in (which in both cases will prevent this happening). The Examples shows an example of this being used in practice, where the \code{lines} functions after each all sky projection correctly pick up the last used WCS.
 
 The following axis types are supported:
 
@@ -149,28 +151,45 @@ points(exdata_end,col='red')
 plot(density(exdata_start[,1]-exdata_end[,1]))
 lines(density(exdata_start[,2]-exdata_end[,2]),col='red')
 
-#Different world projections (ones not listed here do not work well across large angles):
+#Different world projections (ones not listed here do not work well across large angles).
+#Note that the lines functions are picking up the last used WCS.
 
 library(magicaxis)
 
 world.grid=expand.grid(seq(0,360,by=10), seq(-90,90,by=10))
 
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---ARC', CTYPE2='DEC--ARC'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---ZEA', CTYPE2='DEC--ZEA'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---CYP', CTYPE2='DEC--CYP'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---CEA', CTYPE2='DEC--CEA'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---CAR', CTYPE2='DEC--CAR'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---MER', CTYPE2='DEC--MER'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---SFL', CTYPE2='DEC--SFL'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---PAR', CTYPE2='DEC--PAR'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---PCO', CTYPE2='DEC--PCO'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---MOL', CTYPE2='DEC--MOL'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---AIT', CTYPE2='DEC--AIT'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---TSC', CTYPE2='DEC--TSC'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---CSC', CTYPE2='DEC--CSC'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---QSC', CTYPE2='DEC--QSC'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---HPX', CTYPE2='DEC--HPX'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---XPH', CTYPE2='DEC--XPH'), pch='.', cex=3)
+lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

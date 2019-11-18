@@ -172,10 +172,17 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
   return(output)
 }
 
-Rwcs_keypass=function(keyvalues=NULL, CTYPE1='RA---TAN', CTYPE2='DEC--TAN', CRVAL1=0,
-                      CRVAL2=0, CRPIX1=0, CRPIX2=0, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1,
-                      RADESYS='ICRS', EQUINOX='infer',
-                      PV1_1=NA, PV1_2=NA, PV2_1=NA, PV2_2=NA, ...){
+Rwcs_keypass=function(keyvalues=NULL,
+                      CTYPE1='RA---TAN', CTYPE2='DEC--TAN',
+                      CRVAL1=0, CRVAL2=0,
+                      CRPIX1=0, CRPIX2=0,
+                      CD1_1=1, CD1_2=0,
+                      CD2_1=0, CD2_2=1,
+                      RADESYS='ICRS',
+                      EQUINOX='infer',
+                      PV1_1=NA, PV1_2=NA,
+                      PV2_1=NA, PV2_2=NA,
+                      ...){
   if(!is.null(keyvalues)){
     if(missing(CTYPE1)){if(!is.null(keyvalues$CTYPE1)){CTYPE1 = keyvalues$CTYPE1}else{message('CTYPE1 is not defined!')}}
     if(missing(CTYPE2)){if(!is.null(keyvalues$CTYPE2)){CTYPE2 = keyvalues$CTYPE2}else{message('CTYPE2 is not defined!')}}
