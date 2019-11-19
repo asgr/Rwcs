@@ -11,9 +11,9 @@ Offers basic high level access to the C \code{wcslib} library for projecting and
 }
 \usage{
 Rwcs_s2p(RA, Dec, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
-  coord.type = "deg", sep = ":", ...)
+  coord.type = "deg", sep = ":", header = NULL, ...)
 Rwcs_p2s(x, y, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
-  coord.type = "deg", sep = ":", ...)
+  coord.type = "deg", sep = ":", header = NULL, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -43,6 +43,9 @@ Character scalar; the format of the input/output RA and Dec. Allowed options are
 }
   \item{sep}{
 Character scalar; when coord.type='sex', \option{sep} defines the type of separator used for the HMS and DMS strings (i.e. H:M:S and D:M:S would be \option{sep}=':', which is the default). See \code{\link{hms2deg}} and \code{\link{dms2deg}} for more details.
+}
+  \item{header}{
+To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues} must be left as NULL in this case.
 }
   \item{\dots}{
 Optional keyvalues to overwrite the \option{keyvalues} entries with. If not present, the defaults are CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0, CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS", EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV2_1 = NA, PV2_2 = NA.

@@ -15,17 +15,17 @@ Rwcs_image(image, keyvalues = NULL, n, grid.col = "grey", grid.lty = 2, grid.lwd
 lab.col = "green", coord.type = "sex", margin = TRUE, loc.diff = c(0, 0),
 xlab = "Right Ascension", ylab = "Declination", mgp = c(2, 0.5, 0), mtline = 2,
 position = "topright", com.col = "green", com.length = 0.05, coord.axis = 'auto',
-pretty = 'auto', ...)
+pretty = 'auto', header = NULL, ...)
 
 Rwcs_grid(keyvalues = NULL, n, grid.col = "grey", grid.lty = 2, grid.lwd = 0.5,
-coord.type = "sex", loc.diff = c(0, 0), pretty= 'auto', ...)
+coord.type = "sex", loc.diff = c(0, 0), pretty= 'auto', header = NULL, ...)
 
 Rwcs_labels(keyvalues = NULL, n, lab.col = "green", coord.type = "sex", margin = TRUE,
 loc.diff = c(0, 0), xlab = "Right Ascension", ylab = "Declination", mgp = c(2, 0.5, 0),
-mtline = 2, coord.axis='auto', pretty= 'auto', ...)
+mtline = 2, coord.axis='auto', pretty= 'auto', header = NULL, ...)
 
 Rwcs_compass(keyvalues = NULL, position = "topright", com.col = "green",
-com.length = 0.05, loc.diff = c(0, 0), ...)
+com.length = 0.05, loc.diff = c(0, 0), header = NULL, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -85,6 +85,9 @@ Colour of the compass.
 }
   \item{com.length}{
 Length of the edges of the arrow head.
+}
+  \item{header}{
+To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues} must be left as NULL in this case.
 }
   \item{\dots}{
 These are parsed to \code{\link{magimage}}, (\code{Rwcs_image}), \code{\link{lines}} (\code{Rwcs_grid}), \code{\link{axis}} (\code{Rwcs_labels}) or \code{\link{arrows}} (\code{Rwcs_compass}).

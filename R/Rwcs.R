@@ -1,12 +1,12 @@
-Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', ...){
-  if(is.character(keyvalues)){
+Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', header=NULL, ...){
+  assertList(keyvalues, null.ok = TRUE)
+  if(is.character(header) & !is.null(keyvalues)){
     if(requireNamespace("Rfits", quietly = TRUE)){
-      keyvalues = Rfits::Rfits_hdr_to_keyvalues(keyvalues)
+      keyvalues = Rfits::Rfits_hdr_to_keyvalues(header)
     }else{
       stop("The Rfits package is need to process the header. Install from GitHub asgr/Rfits.")
     }
   }
-  assertList(keyvalues, null.ok = TRUE)
   assertChoice(pixcen, c('R','FITS'))
   assertNumeric(loc.diff, len=2)
   assertChoice(coord.type, c('deg','sex'))
@@ -90,15 +90,15 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   return(output)
 }
 
-Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', ...){
-  if(is.character(keyvalues)){
+Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', header=NULL, ...){
+  assertList(keyvalues, null.ok = TRUE)
+  if(is.character(header) & !is.null(keyvalues)){
     if(requireNamespace("Rfits", quietly = TRUE)){
-      keyvalues = Rfits::Rfits_hdr_to_keyvalues(keyvalues)
+      keyvalues = Rfits::Rfits_hdr_to_keyvalues(header)
     }else{
       stop("The Rfits package is need to process the header. Install from GitHub asgr/Rfits.")
     }
   }
-  assertList(keyvalues, null.ok = TRUE)
   assertChoice(pixcen, c('R','FITS'))
   assertNumeric(loc.diff, len=2)
   assertChoice(coord.type, c('deg','sex'))
