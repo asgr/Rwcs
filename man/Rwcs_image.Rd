@@ -110,9 +110,17 @@ By R convention the bottom-left part of the bottom-left pixel when plotting the 
 }
 \examples{
 \dontrun{
+#Recommended to use Rfits (will be supported longer term):
+
 library(Rfits)
 file_image=system.file('extdata', 'image.fits', package = "Rfits")
 temp_image=Rfits_read_image(file_image)
+Rwcs_image(temp_image)
+
+#This will also work for the time being (perhaps not in the future):
+
+library(FITSio)
+temp_image=readFITS(file_image)
 Rwcs_image(temp_image)
 
 #we can see the curvature better if we ramp up the size of the image, but keep WCS:
