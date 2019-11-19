@@ -11,21 +11,21 @@ WCS Image Decoration
 These functions add various WCS information to R images. It is particularly designed to work in unison with \option{magimage} package. Can handle all projections supported by \code{wcslib}, although some might need more tweaking to display well. See \code{\link{Rwcs}}.
 }
 \usage{
-Rwcs_image(image, keyvalues, n, grid.col = "grey", grid.lty = 2, grid.lwd = 0.5,
+Rwcs_image(image, keyvalues = NULL, n, grid.col = "grey", grid.lty = 2, grid.lwd = 0.5,
 lab.col = "green", coord.type = "sex", margin = TRUE, loc.diff = c(0, 0),
 xlab = "Right Ascension", ylab = "Declination", mgp = c(2, 0.5, 0), mtline = 2,
 position = "topright", com.col = "green", com.length = 0.05, coord.axis = 'auto',
-pretty = 'auto', ...)
+pretty = 'auto', header = NULL, ...)
 
-Rwcs_grid(keyvalues, n, grid.col = "grey", grid.lty = 2, grid.lwd = 0.5,
-coord.type = "sex", loc.diff = c(0, 0), pretty= 'auto', ...)
+Rwcs_grid(keyvalues = NULL, n, grid.col = "grey", grid.lty = 2, grid.lwd = 0.5,
+coord.type = "sex", loc.diff = c(0, 0), pretty= 'auto', header = NULL, ...)
 
-Rwcs_labels(keyvalues, n, lab.col = "green", coord.type = "sex", margin = TRUE,
+Rwcs_labels(keyvalues = NULL, n, lab.col = "green", coord.type = "sex", margin = TRUE,
 loc.diff = c(0, 0), xlab = "Right Ascension", ylab = "Declination", mgp = c(2, 0.5, 0),
-mtline = 2, coord.axis='auto', pretty= 'auto', ...)
+mtline = 2, coord.axis='auto', pretty= 'auto', header = NULL, ...)
 
-Rwcs_compass(keyvalues, position = "topright", com.col = "green", com.length = 0.05, 
-loc.diff = c(0, 0), ...)
+Rwcs_compass(keyvalues = NULL, position = "topright", com.col = "green",
+com.length = 0.05, loc.diff = c(0, 0), header = NULL, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -86,6 +86,9 @@ Colour of the compass.
   \item{com.length}{
 Length of the edges of the arrow head.
 }
+  \item{header}{
+To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues} must be left as NULL in this case.
+}
   \item{\dots}{
 These are parsed to \code{\link{magimage}}, (\code{Rwcs_image}), \code{\link{lines}} (\code{Rwcs_grid}), \code{\link{axis}} (\code{Rwcs_labels}) or \code{\link{arrows}} (\code{Rwcs_compass}).
 }
@@ -107,9 +110,17 @@ By R convention the bottom-left part of the bottom-left pixel when plotting the 
 }
 \examples{
 \dontrun{
+#Recommended to use Rfits (will be supported longer term):
+
 library(Rfits)
 file_image=system.file('extdata', 'image.fits', package = "Rfits")
 temp_image=Rfits_read_image(file_image)
+Rwcs_image(temp_image)
+
+#This will also work for the time being (perhaps not in the future):
+
+library(FITSio)
+temp_image=readFITS(file_image)
 Rwcs_image(temp_image)
 
 #we can see the curvature better if we ramp up the size of the image, but keep WCS:

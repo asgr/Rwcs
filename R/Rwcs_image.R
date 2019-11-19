@@ -1,8 +1,8 @@
-Rwcs_image=function(image, keyvalues, n, grid.col='grey', grid.lty=2, grid.lwd=0.5,
+Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.lwd=0.5,
                     lab.col='green', coord.type='sex', margin=TRUE, loc.diff=c(0,0),
                     xlab='Right Ascension', ylab='Declination', mgp=c(2,0.5,0), mtline=2,
                     position='topright', com.col="green", com.length=0.05,
-                    coord.axis='auto', pretty='auto', ...){
+                    coord.axis='auto', pretty='auto', header=NULL, ...){
   
   if(missing(xlab)){
     if(coord.type=='sex'){
@@ -22,8 +22,9 @@ Rwcs_image=function(image, keyvalues, n, grid.col='grey', grid.lty=2, grid.lwd=0
   }
   
   if(!missing(image)){
-    if(any(names(image)=='imDat') & missing(keyvalues)){
+    if(any(names(image)=='imDat') & is.null(keyvalues)){
       keyvalues=image$keyvalues
+      header=image$hdr
       image=image$imDat
     }
     output=magimage(image, axes=FALSE, ...)
@@ -31,17 +32,17 @@ Rwcs_image=function(image, keyvalues, n, grid.col='grey', grid.lty=2, grid.lwd=0
   }
   
   Rwcs_grid(keyvalues=keyvalues, n=n, grid.col=grid.col, grid.lty=grid.lty, 
-            grid.lwd=grid.lwd, coord.type=coord.type, loc.diff=loc.diff, pretty=pretty)
+            grid.lwd=grid.lwd, coord.type=coord.type, loc.diff=loc.diff, pretty=pretty, header=header)
   Rwcs_labels(keyvalues=keyvalues, n=n, lab.col=lab.col, coord.type=coord.type, 
               margin=margin, loc.diff=loc.diff, xlab=xlab, ylab=ylab, mgp=mgp, 
-              mtline=mtline, pretty=pretty)
+              mtline=mtline, pretty=pretty, header=header)
   Rwcs_compass(keyvalues=keyvalues, position=position, com.col=com.col,
-               com.length=com.length, loc.diff=loc.diff)
+               com.length=com.length, loc.diff=loc.diff, header=header)
   return=output
 }
 
-Rwcs_grid=function(keyvalues, n, grid.col='grey', grid.lty=2, grid.lwd=0.5, coord.type='sex',
-                   loc.diff=c(0,0), pretty='auto', ...){
+Rwcs_grid=function(keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.lwd=0.5, coord.type='sex',
+                   loc.diff=c(0,0), pretty='auto', header=NULL, ...){
   
   xlo=min(par()$usr[1:2])
   xhi=max(par()$usr[1:2])
@@ -49,10 +50,10 @@ Rwcs_grid=function(keyvalues, n, grid.col='grey', grid.lty=2, grid.lwd=0.5, coor
   yhi=max(par()$usr[3:4])
   
   coordlims=rbind(
-    Rwcs_p2s(xlo, ylo, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff),
-    Rwcs_p2s(xlo, yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff),
-    Rwcs_p2s(xhi, ylo, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff),
-    Rwcs_p2s(xhi, yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+    Rwcs_p2s(xlo, ylo, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header),
+    Rwcs_p2s(xlo, yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header),
+    Rwcs_p2s(xhi, ylo, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header),
+    Rwcs_p2s(xhi, yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
   )
   
   rarange=range(coordlims[,1])
@@ -77,23 +78,23 @@ Rwcs_grid=function(keyvalues, n, grid.col='grey', grid.lty=2, grid.lwd=0.5, coor
   
   for(ra in ragrid$tickat){
     tempxy=Rwcs_s2p(cbind(ra, seq(min(decgrid$tickat), max(decgrid$tickat), len=100)),
-                    keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+                    keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
     tempxy[,1]=tempxy[,1]-loc.diff[1]
     tempxy[,2]=tempxy[,2]-loc.diff[2]
     lines(tempxy, col=grid.col, lty=grid.lty, lwd=grid.lwd, ...)
   }
   for(dec in decgrid$tickat){
     tempxy=Rwcs_s2p(cbind(seq(min(ragrid$tickat), max(ragrid$tickat),len=100), dec),
-                    keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+                    keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
     tempxy[,1]=tempxy[,1]-loc.diff[1]
     tempxy[,2]=tempxy[,2]-loc.diff[2]
     lines(tempxy, col=grid.col, lty=grid.lty, lwd=grid.lwd, ...)
   }
 }
 
-Rwcs_labels=function(keyvalues, n, lab.col='green', coord.type='sex', margin=TRUE,
+Rwcs_labels=function(keyvalues=NULL, n, lab.col='green', coord.type='sex', margin=TRUE,
                      loc.diff=c(0,0), xlab='Right Ascension', ylab='Declination',
-                     mgp=c(2,0.5,0), mtline=2, coord.axis='auto', pretty='auto', ...){
+                     mgp=c(2,0.5,0), mtline=2, coord.axis='auto', pretty='auto', header=NULL, ...){
   
   if(missing(xlab)){
     if(coord.type=='sex'){
@@ -118,10 +119,10 @@ Rwcs_labels=function(keyvalues, n, lab.col='green', coord.type='sex', margin=TRU
   yhi=max(par()$usr[3:4])
   
   coordlims=rbind(
-    Rwcs_p2s(xlo, ylo, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff),
-    Rwcs_p2s(xlo, yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff),
-    Rwcs_p2s(xhi, ylo, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff),
-    Rwcs_p2s(xhi, yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+    Rwcs_p2s(xlo, ylo, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header),
+    Rwcs_p2s(xlo, yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header),
+    Rwcs_p2s(xhi, ylo, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header),
+    Rwcs_p2s(xhi, yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
   )
   
   if(coord.axis[1]=='auto'){
@@ -163,23 +164,23 @@ Rwcs_labels=function(keyvalues, n, lab.col='green', coord.type='sex', margin=TRU
   decpretty=decpretty[decpretty>min(decrange) & decpretty<max(decrange)]
   if(margin==FALSE){
     if(coord.type=='sex'){
-      tempxy=Rwcs_s2p(cbind(rapretty, coordlims[1,2]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+      tempxy=Rwcs_s2p(cbind(rapretty, coordlims[1,2]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(raaxis, at=tempxy[,raaxis], labels = deg2hms(rapretty, type='cat', digits=1), mgp=-mgp-3, tick=FALSE, col.axis=lab.col, ...)
       
-      tempxy=Rwcs_s2p(cbind(coordlims[1,1], decpretty[-1]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+      tempxy=Rwcs_s2p(cbind(coordlims[1,1], decpretty[-1]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(decaxis, at=tempxy[,decaxis], labels = deg2dms(decpretty[-1], type='cat', digits=0), mgp=-mgp-3, tick=FALSE, col.axis=lab.col, ...)
     }
     if(coord.type=='deg'){
-      tempxy=Rwcs_s2p(cbind(rapretty, coordlims[1,2]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+      tempxy=Rwcs_s2p(cbind(rapretty, coordlims[1,2]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(raaxis, at=tempxy[,raaxis], labels = rapretty, mgp=-mgp-3, tick=FALSE, col.axis=lab.col, ...)
       
-      tempxy=Rwcs_s2p(cbind(coordlims[1,1], decpretty[-1]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+      tempxy=Rwcs_s2p(cbind(coordlims[1,1], decpretty[-1]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(decaxis, at=tempxy[,decaxis], labels = decpretty[-1], mgp=-mgp-3, tick=FALSE, col.axis=lab.col, ...)
@@ -188,23 +189,23 @@ Rwcs_labels=function(keyvalues, n, lab.col='green', coord.type='sex', margin=TRU
     mtext(ylab, decaxis, line = -mtline, col=lab.col)
   }else{
     if(coord.type=='sex'){
-      tempxy=Rwcs_s2p(cbind(rapretty, coordlims[1,2]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+      tempxy=Rwcs_s2p(cbind(rapretty, coordlims[1,2]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(raaxis, tempxy[,raaxis], labels=deg2hms(rapretty, type='cat', digits=1), mgp=mgp, tick=FALSE, ...)
       
-      tempxy=Rwcs_s2p(cbind(coordlims[1,1], decpretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+      tempxy=Rwcs_s2p(cbind(coordlims[1,1], decpretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(decaxis, tempxy[,decaxis], labels=deg2dms(decpretty, type='cat', digits=0), mgp=mgp, tick=FALSE, ...)
     }
     if(coord.type=='deg'){
-      tempxy=Rwcs_s2p(cbind(rapretty, coordlims[1,2]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+      tempxy=Rwcs_s2p(cbind(rapretty, coordlims[1,2]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(raaxis, tempxy[,raaxis], labels=rapretty, mgp=mgp, tick=FALSE, ...)
       
-      tempxy=Rwcs_s2p(cbind(coordlims[1,1], decpretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+      tempxy=Rwcs_s2p(cbind(coordlims[1,1], decpretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(decaxis, tempxy[,decaxis], labels=decpretty, mgp=mgp, tick=FALSE, ...)
@@ -214,8 +215,8 @@ Rwcs_labels=function(keyvalues, n, lab.col='green', coord.type='sex', margin=TRU
   }
 }
 
-Rwcs_compass=function(keyvalues, position='topright', com.col='green', com.length=0.05,
-                      loc.diff=c(0,0), ...){
+Rwcs_compass=function(keyvalues = NULL, position='topright', com.col='green', com.length=0.05,
+                      loc.diff=c(0,0), header=NULL, ...){
   xlo=min(par()$usr[1:2])
   xhi=max(par()$usr[1:2])
   ylo=min(par()$usr[3:4])
@@ -225,41 +226,41 @@ Rwcs_compass=function(keyvalues, position='topright', com.col='green', com.lengt
   ydiff=diff(c(ylo, yhi))
   
   if(position=='centre'){
-    coord=Rwcs_p2s(xlo+xdiff*0.5, ylo+ydiff*0.5, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)[1,]
+    coord=Rwcs_p2s(xlo+xdiff*0.5, ylo+ydiff*0.5, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)[1,]
   }
   if(position=='bottom'){
-    coord=Rwcs_p2s(xlo+xdiff*0.5, ylo+ydiff*0.15, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)[1,]
+    coord=Rwcs_p2s(xlo+xdiff*0.5, ylo+ydiff*0.15, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)[1,]
   }
   if(position=='bottomleft'){
-    coord=Rwcs_p2s(xlo+xdiff*0.15, ylo+ydiff*0.15, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)[1,]
+    coord=Rwcs_p2s(xlo+xdiff*0.15, ylo+ydiff*0.15, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)[1,]
   }
   if(position=='left'){
-    coord=Rwcs_p2s(xlo+xdiff*0.15, ylo+ydiff*0.5, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)[1,]
+    coord=Rwcs_p2s(xlo+xdiff*0.15, ylo+ydiff*0.5, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)[1,]
   }
   if(position=='topleft'){
-    coord=Rwcs_p2s(xlo+xdiff*0.15, ylo+ydiff*0.85, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)[1,]
+    coord=Rwcs_p2s(xlo+xdiff*0.15, ylo+ydiff*0.85, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)[1,]
   }
   if(position=='top'){
-    coord=Rwcs_p2s(xlo+xdiff*0.5, ylo+ydiff*0.85, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)[1,]
+    coord=Rwcs_p2s(xlo+xdiff*0.5, ylo+ydiff*0.85, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)[1,]
   }
   if(position=='topright'){
-    coord=Rwcs_p2s(xlo+xdiff*0.85, ylo+ydiff*0.85, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)[1,]
+    coord=Rwcs_p2s(xlo+xdiff*0.85, ylo+ydiff*0.85, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)[1,]
   }
   if(position=='right'){
-    coord=Rwcs_p2s(xlo+xdiff*0.85, ylo+ydiff*0.5, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)[1,]
+    coord=Rwcs_p2s(xlo+xdiff*0.85, ylo+ydiff*0.5, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)[1,]
   }
   if(position=='bottomright'){
-    coord=Rwcs_p2s(xlo+xdiff*0.85, ylo+ydiff*0.15, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)[1,]
+    coord=Rwcs_p2s(xlo+xdiff*0.85, ylo+ydiff*0.15, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)[1,]
   }
   
   startra=coord[1]
   startdec=coord[2]
   
   coordlims=rbind(
-    Rwcs_p2s(xlo, ylo, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff),
-    Rwcs_p2s(xlo, yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff),
-    Rwcs_p2s(xhi, ylo, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff),
-    Rwcs_p2s(xhi, yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+    Rwcs_p2s(xlo, ylo, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header),
+    Rwcs_p2s(xlo, yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header),
+    Rwcs_p2s(xhi, ylo, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header),
+    Rwcs_p2s(xhi, yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
   )
   rarange=range(coordlims[,1])
   decrange=range(coordlims[,2])
@@ -267,9 +268,9 @@ Rwcs_compass=function(keyvalues, position='topright', com.col='green', com.lengt
   endra=startra+abs(rarange[2]-rarange[1])*0.05
   enddec=startdec+abs(decrange[2]-decrange[1])*0.05
   
-  startxy=Rwcs_s2p(startra, startdec, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
-  endxyN=Rwcs_s2p(startra, enddec, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
-  endxyE=Rwcs_s2p(endra, startdec, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+  startxy=Rwcs_s2p(startra, startdec, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+  endxyN=Rwcs_s2p(startra, enddec, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+  endxyE=Rwcs_s2p(endra, startdec, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
   
   arrows(startxy[1,1], startxy[1,2], endxyN[1,1], endxyN[1,2], length=com.length, col=com.col, ...)
   arrows(startxy[1,1], startxy[1,2], endxyE[1,1], endxyE[1,2], length=com.length, col=com.col, ...)
@@ -277,8 +278,8 @@ Rwcs_compass=function(keyvalues, position='topright', com.col='green', com.lengt
   endra=startra+abs(rarange[2]-rarange[1])*0.065
   enddec=startdec+abs(decrange[2]-decrange[1])*0.065
   
-  endxyN=Rwcs_s2p(startra, enddec, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
-  endxyE=Rwcs_s2p(endra, startdec, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff)
+  endxyN=Rwcs_s2p(startra, enddec, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+  endxyE=Rwcs_s2p(endra, startdec, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
   
   text(endxyN[1,1], endxyN[1,2], labels='N', col=com.col, adj=c(0.5,0.5))
   text(endxyE[1,1], endxyE[1,2], labels='E', col=com.col, adj=c(0.5,0.5))

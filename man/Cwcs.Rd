@@ -11,9 +11,11 @@ Offers basic mid level access to the C \code{wcslib} library for projecting and 
 }
 \usage{
 Cwcs_s2p(RA, Dec, CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0,
-  CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, PV1 = 0, PV2 = 0)
+  CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS",
+  EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV2_1 = NA, PV2_2 = NA)
 Cwcs_p2s(x, y, CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0,
-  CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, PV1 = 0, PV2 = 0)
+  CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS",
+  EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV2_1 = NA, PV2_2 = NA)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -30,10 +32,10 @@ Numeric vector; target x-pixel.
 Numeric vector; target y-pixel.
 }
   \item{CTYPE1}{
-Scalar character; the RA projection system type. Must be a WCS legal type and 8 characters long.
+Character scalar; the RA projection system type. Must be a WCS legal type (up to 4 letter axis followed by 3 letter projection padded as required with "-", e.g.: "RA---TAN") and 8 characters long. See Details.
 }
   \item{CTYPE2}{
-Scalar character; the Dec projection system type. Must be a WCS legal type and 8 characters long.
+Character scalar; the Dec projection system type. Must be a WCS legal type (up to 4 letter axis followed by 3 letter projection padded as required with "-", e.g.: "DEC--TAN") and 8 characters long. See Details.
 }
   \item{CRVAL1}{
 Numeric scalar; FITS header CRVAL1 for the CTYPE1 projection system. This is the RA in degrees at the location of CRPIX1.
@@ -59,15 +61,86 @@ Numeric scalar; FITS header CD2_1 for the CTYPE2 projection system. Change in CT
   \item{CD2_2}{
 Numeric scalar; FITS header CD2_2 for the CTYPE2 projection system. Change in CTYPE2 in degrees along y-Axis.
 }
-  \item{PV1}{
-Numeric scalar; additional projection parameter 1.
+  \item{RADESYS}{
+Character scalar; the RA-DEC system to use. See details.
 }
-  \item{PV2}{
-Numeric scalar; additional projection parameter 2.
+  \item{EQUINOX}{
+Character scalar; the equinox for the system. Usually 2000 for ICRS and FK5, and 1950 for all others. Historically used "EPOCH", but this is deprecated now (although this function will search for EPOCH if EQUINOX is missing and use that in place).
+}
+  \item{PV1_1}{
+Numeric scalar; additional axis 1 projection parameter 1.
+}
+  \item{PV1_2}{
+Numeric scalar; additional axis 1 projection parameter 2.
+}
+  \item{PV2_1}{
+Numeric scalar; additional axis 1 projection parameter 1.
+}
+  \item{PV2_2}{
+Numeric scalar; additional axis 1 projection parameter 2.
 }
 }
 \details{
 The function input and output is deliberately simple.
+
+The following axis types are supported:
+
+\tabular{ll}{
+RA   \tab right ascension \cr 
+DEC  \tab declination \cr 
+GLON \tab galactic longitude \cr 
+GLAT \tab galactic latitude \cr 
+ELON \tab ecliptic longitude \cr 
+ELAT \tab ecliptic latitude \cr 
+HLON \tab helioecliptic longitude \cr 
+HLAT \tab helioecliptic latitude \cr 
+SLON \tab supergalactic longitude \cr 
+SLAT \tab supergalactic latitude
+}
+
+The following projection types are supported:
+
+\tabular{ll}{
+AZP  \tab zenithal/azimuthal perspective \cr
+SZP  \tab slant zenithal perspective \cr
+TAN  \tab gnomonic \cr
+STG  \tab stereographic \cr
+SIN  \tab orthographic/synthesis \cr
+NCP  \tab unofficially supported SIN-like projectio \cr
+ARC  \tab zenithal/azimuthal equidistant \cr
+ZPN  \tab zenithal/azimuthal polynomial \cr
+ZEA  \tab zenithal/azimuthal equal area \cr
+AIR  \tab Airy’s projection \cr
+CYP  \tab cylindrical perspective \cr
+CEA  \tab cylindrical equal area \cr
+CAR  \tab plate carrée \cr
+MER  \tab Mercator’s projection \cr
+COP  \tab conic perspective \cr
+COE  \tab conic equal area \cr
+COD  \tab conic equidistant \cr
+COO  \tab conic orthomorphic \cr
+SFL  \tab Sanson-Flamsteed (“global sinusoid”) \cr
+PAR  \tab parabolic \cr
+MOL  \tab Mollweide’s projection \cr
+AIT  \tab Hammer-Aitoff \cr
+BON  \tab Bonne’s projection \cr
+PCO  \tab polyconic \cr
+TSC  \tab tangential spherical cube \cr
+CSC  \tab COBE quadrilateralized spherical cube \cr
+QSC  \tab quadrilateralized spherical cube \cr
+HPX  \tab HEALPix \cr
+XPH  \tab HEALPix polar, aka “butterfly”
+}
+
+The following RA-DEC systems are supported:
+
+\tabular{ll}{
+ICRS  \tab  International Celestial Reference System \cr
+FK5   \tab  mean place, new (IAU 1984) system \cr
+FK4   \tab  mean place, old (Bessell-Newcomb) system \cr
+FK4-NO-E  \tab  mean place, old system but without e-terms \cr
+GAPPT \tab  geocentric apparent place,  IAU 1984 system
+}
 }
 \value{
 \code{Cwcs_s2p} is the spherical to pixel (hence s2p) projection function, i.e. RA/Dec to x/y. The output is a two column numeric matrix containing [x,y] data.
