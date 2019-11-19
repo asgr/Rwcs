@@ -198,17 +198,26 @@ Rwcs_keypass=function(keyvalues=NULL, CTYPE1='RA---TAN', CTYPE2='DEC--TAN', CRVA
     "XPH"  #HEALPix polar, aka “butterfly”
   )
   
-  grep_proj = paste(allowed_proj,collapse='|')
+  allowed_axis=c("RA", "DEC", "GLON", "GLAT")
+  
+  grep_proj = paste(allowed_proj, collapse = '|')
+  grep_axis = paste(allowed_axis, collapse = '|')
   
   assertCharacter(CTYPE1, len=1)
   assertCharacter(CTYPE2, len=1)
   if(nchar(CTYPE1) != 8){stop('CTYPE1 must be 8 characters!')}
   if(nchar(CTYPE2) != 8){stop('CTYPE2 must be 8 characters!')}
   if(length(grep(grep_proj, CTYPE1)) != 1){
-    stop(paste('CTYPE1 is not an allowed type! Must be one of:',paste(allowed_proj,collapse = ' ')))
+    stop(paste('CTYPE1 is not an allowed projection type! Must be one of:',paste(allowed_proj,collapse = ' ')))
   }
   if(length(grep(grep_proj, CTYPE2)) != 1){
-    stop(paste('CTYPE2 is not an allowed type! Must be one of:',paste(allowed_proj,collapse = ' ')))
+    stop(paste('CTYPE2 is not an allowed projection type! Must be one of:',paste(allowed_proj,collapse = ' ')))
+  }
+  if(length(grep(grep_axis, CTYPE1)) != 1){
+    stop(paste('CTYPE1 is not an allowed axis type! Must be one of:',paste(allowed_axis,collapse = ' ')))
+  }
+  if(length(grep(grep_axis, CTYPE2)) != 1){
+    stop(paste('CTYPE2 is not an allowed axis type! Must be one of:',paste(allowed_axis,collapse = ' ')))
   }
   assertNumeric(CRVAL1, len=1)
   assertNumeric(CRVAL2, len=1)
