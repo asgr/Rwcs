@@ -1,5 +1,11 @@
 Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', ...){
-  
+  if(is.character(keyvalues)){
+    if(requireNamespace("Rfits", quietly = TRUE)){
+      keyvalues = Rfits::Rfits_hdr_to_keyvalues(keyvalues)
+    }else{
+      stop("The Rfits package is need to process the header. Install from GitHub asgr/Rfits.")
+    }
+  }
   assertList(keyvalues, null.ok = TRUE)
   assertChoice(pixcen, c('R','FITS'))
   assertNumeric(loc.diff, len=2)
@@ -85,7 +91,13 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
 }
 
 Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', ...){
-  
+  if(is.character(keyvalues)){
+    if(requireNamespace("Rfits", quietly = TRUE)){
+      keyvalues = Rfits::Rfits_hdr_to_keyvalues(keyvalues)
+    }else{
+      stop("The Rfits package is need to process the header. Install from GitHub asgr/Rfits.")
+    }
+  }
   assertList(keyvalues, null.ok = TRUE)
   assertChoice(pixcen, c('R','FITS'))
   assertNumeric(loc.diff, len=2)

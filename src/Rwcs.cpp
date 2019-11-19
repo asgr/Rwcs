@@ -214,7 +214,7 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
   
   wcsfree(&wcs);
   if(status > 0 || stat[0] > 0){
-    Rcout << "Failed s2p conversion!" << "\n";
+    Rcout << "Failed p2s conversion!" << "\n";
     return(stat);
   }else{
     return(transpose(world_matrix));
