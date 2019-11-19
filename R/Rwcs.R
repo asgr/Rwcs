@@ -1,6 +1,6 @@
 Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', header=NULL, ...){
   assertList(keyvalues, null.ok = TRUE)
-  if(is.character(header) & !is.null(keyvalues)){
+  if(is.character(header) & is.null(keyvalues)){
     if(requireNamespace("Rfits", quietly = TRUE)){
       keyvalues = Rfits::Rfits_hdr_to_keyvalues(header)
     }else{
@@ -92,7 +92,7 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
 
 Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', header=NULL, ...){
   assertList(keyvalues, null.ok = TRUE)
-  if(is.character(header) & !is.null(keyvalues)){
+  if(is.character(header) & is.null(keyvalues)){
     if(requireNamespace("Rfits", quietly = TRUE)){
       keyvalues = Rfits::Rfits_hdr_to_keyvalues(header)
     }else{
