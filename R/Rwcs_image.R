@@ -26,11 +26,21 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
       keyvalues=image$keyvalues
       header=image$hdr
       image=image$imDat
+    }else if(any(names(image)=='imDat') & !is.null(keyvalues)){
+      image = image$imDat
+    }
+    if(any(names(image) == "image") & is.null(keyvalues)){
+      keyvalues=image$keyvalues
+      header = image$header
+      image = image$image
+    }else if(any(names(image) == "image") & !is.null(keyvalues)){
+      image = image$image
     }
     output=magimage(image, axes=FALSE, ...)
     box()
   }
   
+  suppressMessages({
   Rwcs_grid(keyvalues=keyvalues, n=n, grid.col=grid.col, grid.lty=grid.lty, 
             grid.lwd=grid.lwd, coord.type=coord.type, loc.diff=loc.diff, pretty=pretty, header=header)
   Rwcs_labels(keyvalues=keyvalues, n=n, lab.col=lab.col, coord.type=coord.type, 
@@ -38,6 +48,7 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
               mtline=mtline, pretty=pretty, header=header)
   Rwcs_compass(keyvalues=keyvalues, position=position, com.col=com.col,
                com.length=com.length, loc.diff=loc.diff, header=header)
+  })
   return=output
 }
 

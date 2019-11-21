@@ -2,6 +2,7 @@
 \alias{Rwcs}
 \alias{Rwcs_s2p}
 \alias{Rwcs_p2s}
+\alias{Rwcs_pixscale}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 High Level WCSlib Interface
@@ -14,6 +15,7 @@ Rwcs_s2p(RA, Dec, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
   coord.type = "deg", sep = ":", header = NULL, ...)
 Rwcs_p2s(x, y, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
   coord.type = "deg", sep = ":", header = NULL, ...)
+Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, header = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -43,6 +45,18 @@ Character scalar; the format of the input/output RA and Dec. Allowed options are
 }
   \item{sep}{
 Character scalar; when coord.type='sex', \option{sep} defines the type of separator used for the HMS and DMS strings (i.e. H:M:S and D:M:S would be \option{sep}=':', which is the default). See \code{\link{hms2deg}} and \code{\link{dms2deg}} for more details.
+}
+  \item{CD1_1}{
+Numeric scalar; FITS header CD1_1 for the CTYPE1 projection system. Change in CTYPE1 in degrees along x-Axis.
+}
+  \item{CD1_2}{
+Numeric scalar; FITS header CD1_2 for the CTYPE1 projection system. Change in CTYPE1 in degrees along y-Axis.
+}
+  \item{CD2_1}{
+Numeric scalar; FITS header CD2_1 for the CTYPE2 projection system. Change in CTYPE2 in degrees along x-Axis.
+}
+  \item{CD2_2}{
+Numeric scalar; FITS header CD2_2 for the CTYPE2 projection system. Change in CTYPE2 in degrees along y-Axis.
 }
   \item{header}{
 To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues} must be left as NULL in this case.
@@ -119,6 +133,8 @@ GAPPT \tab  geocentric apparent place,  IAU 1984 system
 \code{Rwcs_s2p} is the spherical to pixel (hence s2p) projection function, i.e. RA/Dec to x/y. The output is a two column numeric matrix containing [x,y] data.
 
 \code{Rwcs_p2s} is the pixel to spherical (hence p2s) projection function, i.e. x/y to RA/Dec. The output is a two column numeric matrix containing [RA,Dec] data.
+
+\code{Rwcs_pixscale} is the image pixscale in asec/pixel (so typically a value of 0.1-0.5 for modern survey instruments).
 }
 \references{
 Greisen, E.W. & Calabretta, M.R. (2002), Astronomy & Astrophysics, 395, 1061-1075

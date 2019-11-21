@@ -3,6 +3,7 @@
 export(Rwcs_s2p)
 export(Rwcs_p2s)
 export(Rwcs_keypass)
+export(Rwcs_pixscale)
 
 export(Cwcs_s2p)
 export(Cwcs_p2s)
@@ -11,6 +12,8 @@ export(Rwcs_image)
 export(Rwcs_grid)
 export(Rwcs_labels)
 export(Rwcs_compass)
+
+export(Rwcs_warp)
 
 useDynLib(Rwcs, .registration=TRUE)
 

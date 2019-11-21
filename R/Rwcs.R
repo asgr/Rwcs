@@ -105,8 +105,15 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
   assertCharacter(sep, len=1)
   
   if(length(dim(x))==2){
-    y = x[,2]
-    x = x[,1]
+    if(dim(x)[2]==2){
+      y = x[,2]
+      x = x[,1]
+    }else{
+      x = expand.grid(1:dim(x)[1], 1:dim(x)[2])
+      y = x[,2] - 0.5
+      x = x[,1] - 0.5
+      pixcen = 'R'
+    }
   }
   if(pixcen == 'R'){
     x = as.numeric(x) + 0.5
@@ -358,4 +365,26 @@ Rwcs_keypass=function(keyvalues=NULL,
   keyvalues$PV2_1 = PV2_1
   keyvalues$PV2_2 = PV2_2
   return(keyvalues)
+}
+
+Rwcs_pixscale = function(keyvalues=NULL, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1, header=NULL){
+  assertList(keyvalues, null.ok = TRUE)
+  if(is.character(header) & is.null(keyvalues)){
+    if(requireNamespace("Rfits", quietly = TRUE)){
+      keyvalues = Rfits::Rfits_hdr_to_keyvalues(header)
+    }else{
+      stop("The Rfits package is need to process the header. Install from GitHub asgr/Rfits.")
+    }
+  }
+  if(!is.null(keyvalues)){
+    CD1_1 = keyvalues$CD1_1
+    CD1_2 = keyvalues$CD1_2
+    CD2_1 = keyvalues$CD2_1
+    CD2_2 = keyvalues$CD2_2
+  }
+  assertNumeric(CD1_1, len=1)
+  assertNumeric(CD1_2, len=1)
+  assertNumeric(CD2_1, len=1)
+  assertNumeric(CD2_2, len=1)
+  return(3600*(sqrt(CD1_1^2+CD1_2^2)+sqrt(CD2_1^2+CD2_2^2))/2)
 }
