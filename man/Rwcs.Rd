@@ -209,6 +209,13 @@ magplot(Rwcs_s2p(world.grid, CTYPE1='RA---HPX', CTYPE2='DEC--HPX'), pch='.', cex
 lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 magplot(Rwcs_s2p(world.grid, CTYPE1='RA---XPH', CTYPE2='DEC--XPH'), pch='.', cex=3)
 lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
+
+#check pixscale
+
+library(Rfits)
+file_image=system.file('extdata', 'image.fits', package = "Rfits")
+image=Rfits_read_image(file_image)
+Rwcs_pixscale(image$keyvalues)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
