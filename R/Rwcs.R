@@ -298,7 +298,7 @@ Rwcs_keypass=function(keyvalues=NULL,
     "HPX", #HEALPix
     "XPH"  #HEALPix polar, aka “butterfly”
   )
-
+  
   allowed_axes = c(
     "RA", #right ascension
     "DEC", #declination
@@ -311,7 +311,7 @@ Rwcs_keypass=function(keyvalues=NULL,
     "SLON", #supergalactic longitude
     "SLAT" #supergalactic latitude
   )
-
+  
   allowed_rade = c(
     "ICRS",
     "FK5",
