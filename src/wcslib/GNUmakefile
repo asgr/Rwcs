@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-# GNU makefile for building WCSLIB 6.4
+# GNU makefile for building WCSLIB 7.1
 #
 # Summary of the main targets
 # ---------------------------
@@ -32,7 +32,7 @@
 #
 # Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
 # http://www.atnf.csiro.au/people/Mark.Calabretta
-# $Id: GNUmakefile,v 6.4 2019/08/15 09:30:18 mcalabre Exp $
+# $Id: GNUmakefile,v 7.1 2019/12/31 13:25:19 mcalabre Exp $
 #-----------------------------------------------------------------------------
 # Get configure settings.
 SUBDIR := .
@@ -104,12 +104,12 @@ install :
 	   $(INSTALL) -m 444 wcslib.pc $(LIBDIR)/pkgconfig/wcslib.pc
 
 clean cleaner :
-	   for DIR in $(SUBDIRS); do \
+	   for DIR in $(SUBDIRS) doxygen ; do \
 	     $(MAKE) -C $$DIR $@ ; \
 	   done
 
 cleanest distclean realclean :
-	   for DIR in $(SUBDIRS); do \
+	   for DIR in $(SUBDIRS) doxygen ; do \
 	     $(MAKE) -C $$DIR $@ ; \
 	   done
 	-  $(RM) *.log
@@ -162,12 +162,13 @@ config.status : configure
 .PHONY : dist
 
 dist :
-	   $(MAKE) -C cleanest build
+	   $(MAKE) -C doxygen cleanest build
 	   $(MAKE) -C utils man
 	   $(MAKE) distclean
 	-@ echo $(WCSLIBPKG)/C/RCS        >  wcslib.X
 	-@ echo $(WCSLIBPKG)/C/flexed/RCS >> wcslib.X
 	-@ echo $(WCSLIBPKG)/C/test/RCS   >> wcslib.X
+	-@ echo $(WCSLIBPKG)/doxygen/RCS  >> wcslib.X
 	-@ echo $(WCSLIBPKG)/Fortran/RCS  >> wcslib.X
 	-@ echo $(WCSLIBPKG)/Fortran/test/RCS >> wcslib.X
 	-@ echo $(WCSLIBPKG)/makedefs     >> wcslib.X
