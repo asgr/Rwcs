@@ -16,3 +16,16 @@
 /src/wcslib/wcsconfig_tests.h
 /src/wcslib/wcsconfig_utils.h
 /src/wcslib/wcslib.pc
+
+.DS_Store
+/src/.DS_Store
+/src/wcslib/.DS_Store
+/src/wcslib/C/.DS_Store
+
+wcslib.Rproj
+.Rproj.user
+.Rhistory
+.Rbuildignore
+.gitignore
+
+src/wcslib/C_old

@@ -6,19 +6,19 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     stop("The imager package is needed for this function to work. Please install it from CRAN.", 
          call. = FALSE)
   }
-  if(any(names(image)=='imDat') & is.null(keyvalues)){
-    keyvalues=image$keyvalues
-    header=image$hdr
-    image=image$imDat
-  }else if(any(names(image)=='imDat') & !is.null(keyvalues)){
-    image = image$imDat
+  if(any(names(image_in) == 'imDat') & is.null(keyvalues_in)){
+    keyvalues_in = image_in$keyvalues
+    header_in = image_in$hdr
+    image_in = image_in$imDat
+  }else if(any(names(image_in) == 'imDat') & !is.null(keyvalues_in)){
+    image_in = image_in$imDat
   }
-  if(any(names(image) == "image") & is.null(keyvalues)){
-    keyvalues=image$keyvalues
-    header = image$header
-    image = image$image
-  }else if(any(names(image) == "image") & !is.null(keyvalues)){
-    image = image$image
+  if(any(names(image_in) == "image") & is.null(keyvalues_in)){
+    keyvalues_in = image_in$keyvalues
+    header_in = image_in$header
+    image_in = image_in$image
+  }else if(any(names(image) == "image") & !is.null(keyvalues_in)){
+    image_in = image_in$image
   }
   if(is.character(header_out) & is.null(keyvalues_out)){
     if(requireNamespace("Rfits", quietly = TRUE)){
