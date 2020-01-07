@@ -3,7 +3,7 @@
 *.a
 *.dylib
 /src/wcslib/C/fitshdr.c
-/src/wcslib/C/libwcs.so.6.4
+/src/wcslib/C/libwcs.so.*
 /src/wcslib/C/wcsbth.c
 /src/wcslib/C/wcspih.c
 /src/wcslib/C/wcsulex.c
