@@ -104,12 +104,12 @@ install :
 	   $(INSTALL) -m 444 wcslib.pc $(LIBDIR)/pkgconfig/wcslib.pc
 
 clean cleaner :
-	   for DIR in $(SUBDIRS) doxygen ; do \
+	   for DIR in $(SUBDIRS) ; do \
 	     $(MAKE) -C $$DIR $@ ; \
 	   done
 
 cleanest distclean realclean :
-	   for DIR in $(SUBDIRS) doxygen ; do \
+	   for DIR in $(SUBDIRS) ; do \
 	     $(MAKE) -C $$DIR $@ ; \
 	   done
 	-  $(RM) *.log
@@ -162,13 +162,12 @@ config.status : configure
 .PHONY : dist
 
 dist :
-	   $(MAKE) -C doxygen cleanest build
+	   $(MAKE) -C cleanest build
 	   $(MAKE) -C utils man
 	   $(MAKE) distclean
 	-@ echo $(WCSLIBPKG)/C/RCS        >  wcslib.X
 	-@ echo $(WCSLIBPKG)/C/flexed/RCS >> wcslib.X
 	-@ echo $(WCSLIBPKG)/C/test/RCS   >> wcslib.X
-	-@ echo $(WCSLIBPKG)/doxygen/RCS  >> wcslib.X
 	-@ echo $(WCSLIBPKG)/Fortran/RCS  >> wcslib.X
 	-@ echo $(WCSLIBPKG)/Fortran/test/RCS >> wcslib.X
 	-@ echo $(WCSLIBPKG)/makedefs     >> wcslib.X
