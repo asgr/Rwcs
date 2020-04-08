@@ -68,8 +68,13 @@ Rwcs_grid=function(keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.lwd=0.5,
   )
   
   rarange=range(coordlims[,1])
+  if(abs(diff(rarange))>180){
+    rarange[rarange>180]=rarange[rarange>180]-360
+    rarange=sort(rarange)
+  }else{
+    rarange=rarange %% 360
+  }
   decrange=range(coordlims[,2])
-  rarange=rarange %% 360
   decrange=(decrange+90) %% 180 - 90
   
   if(pretty=='auto'){
@@ -150,8 +155,13 @@ Rwcs_labels=function(keyvalues=NULL, n, lab.col='green', coord.type='sex', margi
   }
   
   rarange=range(coordlims[,1])
+  if(abs(diff(rarange))>180){
+    rarange[rarange>180]=rarange[rarange>180]-360
+    rarange=sort(rarange)
+  }else{
+    rarange=rarange %% 360
+  }
   decrange=range(coordlims[,2])
-  rarange=rarange %% 360
   decrange=(decrange+90) %% 180 - 90
   
   if(pretty=='auto'){
@@ -171,6 +181,7 @@ Rwcs_labels=function(keyvalues=NULL, n, lab.col='green', coord.type='sex', margi
   
   rapretty=ragrid$tickat
   rapretty=rapretty[rapretty>min(rarange) & rapretty<max(rarange)]
+  rapretty = rapretty %% 360
   decpretty=decgrid$tickat
   decpretty=decpretty[decpretty>min(decrange) & decpretty<max(decrange)]
   if(margin==FALSE){
@@ -273,8 +284,16 @@ Rwcs_compass=function(keyvalues = NULL, position='topright', com.col='green', co
     Rwcs_p2s(xhi, ylo, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header),
     Rwcs_p2s(xhi, yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
   )
+  
   rarange=range(coordlims[,1])
+  if(abs(diff(rarange))>180){
+    rarange[rarange>180]=rarange[rarange>180]-360
+    rarange=sort(rarange)
+  }else{
+    rarange=rarange %% 360
+  }
   decrange=range(coordlims[,2])
+  decrange=(decrange+90) %% 180 - 90
   
   endra=startra+abs(rarange[2]-rarange[1])*0.05
   enddec=startdec+abs(decrange[2]-decrange[1])*0.05
