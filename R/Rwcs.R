@@ -322,6 +322,8 @@ Rwcs_keypass=function(keyvalues=NULL,
   
   assertCharacter(CTYPE1, len=1)
   assertCharacter(CTYPE2, len=1)
+  if(grepl('-SIP', CTYPE1)){message('SIP not supported for CTYPE1 and ignored!'); CTYPE1=gsub('-SIP', '', CTYPE1)}
+  if(grepl('-SIP', CTYPE2)){message('SIP not supported for CTYPE2 and ignored!'); CTYPE2=gsub('-SIP', '', CTYPE2)}
   if(nchar(CTYPE1) != 8){stop('CTYPE1 must be 8 characters!')}
   if(nchar(CTYPE2) != 8){stop('CTYPE2 must be 8 characters!')}
   split1=strsplit(CTYPE1, '-+')[[1]]

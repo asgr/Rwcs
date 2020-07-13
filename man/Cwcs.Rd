@@ -152,8 +152,9 @@ Greisen, E.W. & Calabretta, M.R. (2002), Astronomy & Astrophysics, 395, 1061-107
 Calabretta, M.R., & Greisen, E.W., (2002), Astronomy & Astrophysics, 395, 1077-1122
 }
 \author{
-Aaron Robotham
-Rodrgio Tobar
+Aaron Robotham \cr
+Rodrgio Tobar \cr
+Mark Calabretta (main \code{wcslib} author, not responsible for mistakes in the \code{Rwcs} package)
 }
 \seealso{
 \code{\link{Cwcs}}
