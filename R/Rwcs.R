@@ -209,31 +209,37 @@ Rwcs_keypass=function(keyvalues=NULL,
     if(missing(CRVAL2)){if(!is.null(keyvalues$CRVAL2)){CRVAL2 = keyvalues$CRVAL2}else{message('CRVAL2 is not defined!')}}
     if(missing(CRPIX1)){if(!is.null(keyvalues$CRPIX1)){CRPIX1 = keyvalues$CRPIX1}else{message('CRPIX1 is not defined!')}}
     if(missing(CRPIX2)){if(!is.null(keyvalues$CRPIX2)){CRPIX2 = keyvalues$CRPIX2}else{message('CRPIX2 is not defined!')}}
-    if (missing(CD1_1)) {
-      if (!is.null(keyvalues$CD1_1)) {
+    if(missing(CD1_1)){
+      if(!is.null(keyvalues$CD1_1)){
         CD1_1 = keyvalues$CD1_1
-      } else{
-        if (!is.null(keyvalues$CDELT1)) {
+      }else{
+        if((!is.null(keyvalues$CDELT1)) & (is.null(keyvalues$CROTA2))){
           CD1_1 = keyvalues$CDELT1
-          CD1_2 = 0
-        } else{
+          CD2_1 = 0 #for clarity
+        }else if((!is.null(keyvalues$CDELT1)) & (!is.null(keyvalues$CROTA2))){
+          CD1_1 = keyvalues$CDELT1 * cos(keyvalues$CROTA2*pi/180)
+          CD2_1 = keyvalues$CDELT1 * sin(keyvalues$CROTA2*pi/180)
+        }else{
           message('CD1_1 is not defined!')
         }
       }
     }
-    if(missing(CD1_2)){if(!is.null(keyvalues$CD1_2)){CD1_2 = keyvalues$CD1_2}else{message('CD1_2 is not defined!')}}
-    if (missing(CD2_2)) {
-      if (!is.null(keyvalues$CD2_2)) {
+    if(missing(CD2_2)){
+      if(!is.null(keyvalues$CD2_2)) {
         CD2_2 = keyvalues$CD2_2
-      } else{
-        if (!is.null(keyvalues$CDELT2)) {
+      }else{
+        if((!is.null(keyvalues$CDELT2)) & (is.null(keyvalues$CROTA2))){
           CD2_2 = keyvalues$CDELT2
-          CD2_1 = 0
-        } else{
+          CD1_2 = 0 #for clarity
+        }else if((!is.null(keyvalues$CDELT2)) & (!is.null(keyvalues$CROTA2))){
+          CD2_2 = keyvalues$CDELT2 * cos(keyvalues$CROTA2*pi/180)
+          CD1_2 = -keyvalues$CDELT2 * sin(keyvalues$CROTA2*pi/180)
+        }else{
           message('CD2_2 is not defined!')
         }
       }
     }
+    if(missing(CD1_2)){if(!is.null(keyvalues$CD1_2)){CD1_2 = keyvalues$CD1_2}else{message('CD1_2 is not defined!')}}
     if(missing(CD2_1)){if(!is.null(keyvalues$CD2_1)){CD2_1 = keyvalues$CD2_1}else{message('CD2_1 is not defined!')}}
     if (missing(RADESYS)) {
       if (!is.null(keyvalues$RADESYS)) {
