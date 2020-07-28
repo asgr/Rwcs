@@ -19,4 +19,3 @@ SystemRequirements: C++11
 LinkingTo: Rcpp
 NeedsCompilation: yes
 OS_type: unix
-Additional_repositories: https://github.com/asgr
