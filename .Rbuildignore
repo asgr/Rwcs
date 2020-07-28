@@ -1,3 +1,4 @@
 src/wcslib/C/libwcs.so.*
 ^.*\.Rproj$
 ^\.Rproj\.user$
+.github
