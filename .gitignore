@@ -25,6 +25,5 @@
 wcslib.Rproj
 .Rproj.user
 .Rhistory
-.Rbuildignore
 
 src/wcslib/C_old6p4/

@@ -1,7 +1,25 @@
+// While including system headrs, avoid clashes with the old wcsset POXIS
+// function that is still exposed in Windows headers.
+//
+// This old function is *not* exposed if one defines the NO_OLDNAMES
+// (MinGW-64bit) or _NO_OLDNAMES (MinGW-32bit) macros. In fact, that's what we
+// do for the compilation of wcslib itself. However, these macros cause other
+// names to be hidden, and make the C++ system headers internally incompatible,
+// turning this into an unfeasible option for compiling this module.
+#if defined(_WIN32) || defined(_MSC_VER) || defined(__MINGW32__) || defined (__MINGW64__)
+#define wcsset wcsset_
+#endif
+
 #include <Rcpp.h>
 #include <algorithm>
 #include <utility>
 #include <vector>
+
+// End the hack above
+#if defined(_WIN32) || defined(_MSC_VER) || defined(__MINGW32__) || defined (__MINGW64__)
+#undef wcsset
+#endif
+
 #include <wcslib.h>
 using namespace Rcpp;
 

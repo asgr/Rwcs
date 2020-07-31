@@ -4,14 +4,9 @@ PKG_LIBS = wcslib/C/libwcs-PIC.a
 .PHONY: all wcslib clean shlib-clean
 
 all: $(SHLIB)
-$(SHLIB): wcslib
+$(SHLIB): wcslib/C/libwcs-PIC.a
 
-wcslib:
-	(cd wcslib && make all)
-
-shlib-clean: clean
-
-clean:
-	(cd wcslib; make clean)
+wcslib/C/libwcs-PIC.a:
+	(cd wcslib/C; $(MAKE) libwcs-PIC.a AR="$(AR)")
 
 OBJECTS = RcppExports.o Rwcs.o
