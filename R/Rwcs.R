@@ -220,7 +220,7 @@ Rwcs_keypass=function(keyvalues=NULL,
           CD1_1 = keyvalues$CDELT1 * cos(keyvalues$CROTA2*pi/180)
           CD2_1 = keyvalues$CDELT1 * sin(keyvalues$CROTA2*pi/180)
         }else{
-          message('CD1_1 is not defined!')
+          stop('CD1_1 is not definable!')
         }
       }
     }
@@ -235,12 +235,26 @@ Rwcs_keypass=function(keyvalues=NULL,
           CD2_2 = keyvalues$CDELT2 * cos(keyvalues$CROTA2*pi/180)
           CD1_2 = -keyvalues$CDELT2 * sin(keyvalues$CROTA2*pi/180)
         }else{
-          message('CD2_2 is not defined!')
+          stop('CD2_2 is not definable!')
         }
       }
     }
-    if(missing(CD1_2)){if(!is.null(keyvalues$CD1_2)){CD1_2 = keyvalues$CD1_2}else{message('CD1_2 is not defined!')}}
-    if(missing(CD2_1)){if(!is.null(keyvalues$CD2_1)){CD2_1 = keyvalues$CD2_1}else{message('CD2_1 is not defined!')}}
+    if(missing(CD1_2)){
+      if(!is.null(keyvalues$CD1_2)){
+        CD1_2 = keyvalues$CD1_2
+      }else{
+        CD1_2 = 0
+        message('CD1_2 is not definable, setting to 0!')
+      }
+    }
+    if(missing(CD2_1)){
+      if(!is.null(keyvalues$CD2_1)){
+        CD2_1 = keyvalues$CD2_1
+      }else{
+        CD2_1 = 0
+        message('CD2_1 is not definable, setting to 0!')
+      }
+    }
     if (missing(RADESYS)) {
       if (!is.null(keyvalues$RADESYS)) {
         RADESYS = keyvalues$RADESYS
