@@ -1,6 +1,21 @@
 #!/bin/sh
 
 cd src/wcslib
-CC=`"${R_HOME}/bin/R" CMD config CC`
-CFLAGS=`"${R_HOME}/bin/R" CMD config CFLAGS`
+CC=`"${R_HOME}/bin${R_ARCH_BIN}/R" CMD config CC`
+CFLAGS=`"${R_HOME}/bin${R_ARCH_BIN}/R" CMD config CFLAGS`
+OS=`uname -s`
+
+echo "- Running configure on `uname -s`"
+echo "- R_HOME: $R_HOME"
+echo "- R_ARCH: $R_ARCH"
+echo "- R_ARCH_BIN: $R_ARCH_BIN"
+echo "- CC: $CC"
+echo "- CFLAGS: $CFLAGS"
+echo "- AR: $AR"
+
+case "$OS" in
+	MINGW*)  CFLAGS+=" -DNO_OLDNAMES -D_NO_OLDNAMES";;
+	MSYS*)  CFLAGS+=" -DNO_OLDNAMES -D_NO_OLDNAMES";;
+esac
+
 ./configure --without-pgplot --disable-fortran --disable-utils --without-cfitsio CC="$CC" CFLAGS="$CFLAGS"

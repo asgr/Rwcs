@@ -7,6 +7,6 @@ all: $(SHLIB)
 $(SHLIB): wcslib/C/libwcs-PIC.a
 
 wcslib/C/libwcs-PIC.a:
-	(cd wcslib/C; $(MAKE) libwcs-PIC.a)
+	(cd wcslib/C; $(MAKE) libwcs-PIC.a AR="$(AR)")
 
 OBJECTS = RcppExports.o Rwcs.o
