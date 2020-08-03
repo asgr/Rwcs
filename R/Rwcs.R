@@ -399,6 +399,7 @@ Rwcs_pixscale = function(keyvalues=NULL, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1, hea
     }
   }
   if(!is.null(keyvalues)){
+    keyvalues = Rwcs_keypass(keyvalues)
     CD1_1 = keyvalues$CD1_1
     CD1_2 = keyvalues$CD1_2
     CD2_1 = keyvalues$CD2_1
