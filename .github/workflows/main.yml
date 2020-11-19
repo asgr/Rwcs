@@ -48,13 +48,13 @@ jobs:
           sudo hdiutil detach /Volumes/XQuartz-2.7.11
           rm XQuartz-2.7.11.dmg
 
-      - name: Cache R packages
-        if: runner.os != 'Windows'
-        uses: actions/cache@v1
-        with:
-          path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-
+          #- name: Cache R packages
+          #  if: runner.os != 'Windows'
+          #  uses: actions/cache@v1
+          #  with:
+          #    path: ${{ env.R_LIBS_USER }}
+          #    key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-${{ hashFiles('.github/depends.Rds') }}
+          #    restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-
 
       - name: Install system dependencies
         if: runner.os == 'Linux'
@@ -71,7 +71,7 @@ jobs:
         run: |
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
-          remotes::install_github("asgr/Rfits", ref='github-actions')
+          remotes::install_github("asgr/Rfits", ref='master')
         shell: Rscript {0}
 
       - name: Check
