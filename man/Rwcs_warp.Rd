@@ -39,7 +39,7 @@ boundary conditions: "dirichlet", "neumann", "periodic" (default "dirichlet"), s
 Logical; if TRUE (default) then the image is scaled by the relative change in the pixel scale. This is usually what you want when converting images between different WCS (since we really want to make sure we conserve overall flux). If FALSE then nothing is done to rescale the image. This is useful when the input \option{image_in} is something like a segmentation map, where the actual values matter.
 }
   \item{plot}{
-Logical; should a \code{\link{magimageWCS}} plot of the output be generated? 
+Logical; should a \code{\link{Rwcs_image}} plot of the output be generated? 
 }
   \item{header_out}{
 To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues_out} must be left as NULL in this case.

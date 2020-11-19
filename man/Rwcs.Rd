@@ -35,10 +35,10 @@ Numeric vector; target y-pixel. Ignored if \option{x} is a matrix.
 List; header values to be used for the WCS. The \option{\dots} can be used to over-ride any values for convenience.
 }
   \item{pixcen}{
-Character scalar; either 'FITS' (pixel centres are integer, e.g. the centre of the bottom-left pixel is [1,1]) of 'R' (pixel centres are half integer, e.g. the centre of the bottom-left pixel is [0.5,0.5]). The default is 'FITS', to be consistent with other programs, but within \code{R} images are usually interpretted with a half pixel offset, so for converting object image [x,y] positions to true WCS positions option 'R' should be used.
+Character scalar; either 'FITS' (pixel centres are integer, e.g. the centre of the bottom-left pixel is [1,1]) or 'R' (pixel centres are half integer, e.g. the centre of the bottom-left pixel is [0.5,0.5]). The default is 'FITS', to be consistent with other programs, but within \code{R} images are usually interpretted with a half pixel offset, so for converting object image [x,y] positions to true WCS positions option 'R' should be used.
 }
   \item{loc.diff}{
-Numeric vector; additional [x,y] pixel offset to apply (useful if using a cutout from a larger image when the WCS has not been fixed).
+Numeric vector; additional [x,y] pixel offset to apply. For \code{Rwcs_p2s} the input \option{x} is seen internally as x + \option{loc.diff}[1]. For \code{Rwcs_s2p} the output \option{x} is given as  x - \option{loc.diff}[1]. This is useful if using a cutout from a larger image when the WCS has not been fixed.
 }
   \item{coord.type}{
 Character scalar; the format of the input/output RA and Dec. Allowed options are 'deg' for degress (default) and 'sex' for sexigesimal (i.e. HMS for RA and DMS for Deg).
@@ -134,7 +134,7 @@ GAPPT \tab  geocentric apparent place,  IAU 1984 system
 
 \code{Rwcs_p2s} is the pixel to spherical (hence p2s) projection function, i.e. x/y to RA/Dec. The output is a two column numeric matrix containing [RA,Dec] data.
 
-\code{Rwcs_pixscale} is the image pixscale in asec/pixel (so typically a value of 0.1-0.5 for modern survey instruments).
+\code{Rwcs_pixscale} is the scalar image pixscale in asec/pixel (so typically a value of 0.1-0.5 for modern survey instruments).
 }
 \references{
 Greisen, E.W. & Calabretta, M.R. (2002), Astronomy & Astrophysics, 395, 1061-1075
