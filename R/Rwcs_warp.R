@@ -55,16 +55,13 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_in, header = header_in)
     return = list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset)
   }
-  image_out = matrix(0, max(dim(image_in)[1], dim_out[1]),max(dim(image_in)[2], dim_out[2]))
+  image_out = matrix(NA, max(dim(image_in)[1], dim_out[1]),max(dim(image_in)[2], dim_out[2]))
   image_out[1:dim(image_in)[1], 1:dim(image_in)[2]] = image_in
   pixscale_in = Rwcs_pixscale(keyvalues=keyvalues_in, header=header_in)
   pixscale_out = Rwcs_pixscale(keyvalues=keyvalues_out, header=header_out)
-  if (doscale) {
-    scale = pixscale_out^2/pixscale_in^2
-  }
-  else {
-    scale = 1L
-  }
+  
+  norm = matrix(1, max(dim(image_in)[1], dim_out[1]),max(dim(image_in)[2], dim_out[2]))
+  
   if (direction == "auto") {
     if (pixscale_in < pixscale_out) {
       direction = "forward"
@@ -77,14 +74,26 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     out = imager::imwarp(im = imager::as.cimg(image_out), 
                          map = .warpfunc_in2out, direction = direction, coordinates = "absolute", 
                          boundary = boundary, interpolation = interpolation)
+    if(doscale){
+      renorm = imager::imwarp(im = imager::as.cimg(norm), 
+                           map = .warpfunc_in2out, direction = direction, coordinates = "absolute", 
+                           boundary = boundary, interpolation = interpolation)
+      out = out / renorm
+    }
   }
   if (direction == "backward") {
     out = imager::imwarp(im = imager::as.cimg(image_out), 
                          map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
                          boundary = boundary, interpolation = interpolation)
+    if(doscale){
+      renorm = imager::imwarp(im = imager::as.cimg(norm), 
+                           map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
+                           boundary = boundary, interpolation = interpolation)
+      out = out / renorm
+    }
   }
-  output = list(image = as.matrix(out)[1:dim_out[1], 1:dim_out[2]] * 
-                  scale, keyvalues = keyvalues_out, header = header_out)
+  output = list(image = as.matrix(out)[1:dim_out[1], 1:dim_out[2]],
+                keyvalues = keyvalues_out, header = header_out)
   if (plot) {
     Rwcs_image(output, ...)
   }

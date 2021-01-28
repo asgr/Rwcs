@@ -36,7 +36,7 @@ boundary conditions: "dirichlet", "neumann", "periodic" (default "dirichlet"), s
 "nearest", "linear", "cubic" (default "linear"), see \code{imwarp}
 }
   \item{doscale}{
-Logical; if TRUE (default) then the image is scaled by the relative change in the pixel scale. This is usually what you want when converting images between different WCS (since we really want to make sure we conserve overall flux). If FALSE then nothing is done to rescale the image. This is useful when the input \option{image_in} is something like a segmentation map, where the actual values matter.
+Logical; if TRUE (default) then the image is scaled by the relative change the change in flux per pixel found in a refernece normalisation image. This is usually what you want when converting images between different WCS (since we really want to make sure we conserve overall flux). If FALSE then nothing is done to rescale the image. This is useful when the input \option{image_in} is something like a segmentation map, where the actual values matter.
 }
   \item{plot}{
 Logical; should a \code{\link{Rwcs_image}} plot of the output be generated? 
