@@ -12,10 +12,12 @@ Offers basic mid level access to the C \code{wcslib} library for projecting and 
 \usage{
 Cwcs_s2p(RA, Dec, CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0,
   CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS",
-  EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV2_1 = NA, PV2_2 = NA)
+  EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV1_3 = NA, PV2_1 = NA, PV2_2 = NA, PV2_3 = NA,
+  PV2_4 = NA, PV2_5 = NA)
 Cwcs_p2s(x, y, CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0,
   CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS",
-  EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV2_1 = NA, PV2_2 = NA)
+  EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV1_3 = NA, PV2_1 = NA, PV2_2 = NA, PV2_3 = NA,
+  PV2_4 = NA, PV2_5 = NA)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -73,11 +75,23 @@ Numeric scalar; additional axis 1 projection parameter 1.
   \item{PV1_2}{
 Numeric scalar; additional axis 1 projection parameter 2.
 }
+  \item{PV1_3}{
+Numeric scalar; additional axis 1 projection parameter 3.
+}
   \item{PV2_1}{
-Numeric scalar; additional axis 1 projection parameter 1.
+Numeric scalar; additional axis 2 projection parameter 1.
 }
   \item{PV2_2}{
-Numeric scalar; additional axis 1 projection parameter 2.
+Numeric scalar; additional axis 2 projection parameter 2.
+}
+  \item{PV2_3}{
+Numeric scalar; additional axis 2 projection parameter 3.
+}
+  \item{PV2_4}{
+Numeric scalar; additional axis 2 projection parameter 4.
+}
+  \item{PV2_5}{
+Numeric scalar; additional axis 2 projection parameter 5.
 }
 }
 \details{

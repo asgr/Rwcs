@@ -31,8 +31,9 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
               double CD1_1 = 1, double CD1_2 = 0,
               double CD2_1 = 0, double CD2_2 = 1,
               Rcpp::String RADESYS = "ICRS", int EQUINOX = 2000,
-              double PV1_1 = NA_REAL, double PV1_2 = NA_REAL,
-              double PV2_1 = NA_REAL, double PV2_2 = NA_REAL
+              double PV1_1 = NA_REAL, double PV1_2 = NA_REAL, double PV1_3 = NA_REAL,
+              double PV2_1 = NA_REAL, double PV2_2 = NA_REAL, double PV2_3 = NA_REAL,
+              double PV2_4 = NA_REAL, double PV2_5 = NA_REAL
 ){
   int i;
   const int ncoord = RA.length();
@@ -73,10 +74,14 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
   
   //insert wcs pv
   wcs.npv = 0;
-  if(R_IsNA(PV1_1)){wcs.npv++;}
-  if(R_IsNA(PV1_2)){wcs.npv++;}
-  if(R_IsNA(PV2_1)){wcs.npv++;}
-  if(R_IsNA(PV2_2)){wcs.npv++;}
+  if(!R_IsNA(PV1_1)){wcs.npv++;}
+  if(!R_IsNA(PV1_2)){wcs.npv++;}
+  if(!R_IsNA(PV1_3)){wcs.npv++;}
+  if(!R_IsNA(PV2_1)){wcs.npv++;}
+  if(!R_IsNA(PV2_2)){wcs.npv++;}
+  if(!R_IsNA(PV2_3)){wcs.npv++;}
+  if(!R_IsNA(PV2_4)){wcs.npv++;}
+  if(!R_IsNA(PV2_5)){wcs.npv++;}
   
   int npvcount = 0;
   
@@ -84,21 +89,49 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
     wcs.pv[npvcount].i = 1;
     wcs.pv[npvcount].m = 1;
     wcs.pv[npvcount].value = PV1_1;
+    npvcount++;
   }
   if(!R_IsNA(PV1_2)){
     wcs.pv[npvcount].i = 1;
     wcs.pv[npvcount].m = 2;
     wcs.pv[npvcount].value = PV1_2;
+    npvcount++;
+  }
+  if(!R_IsNA(PV1_3)){
+    wcs.pv[npvcount].i = 1;
+    wcs.pv[npvcount].m = 3;
+    wcs.pv[npvcount].value = PV1_3;
+    npvcount++;
   }
   if(!R_IsNA(PV2_1)){
     wcs.pv[npvcount].i = 2;
     wcs.pv[npvcount].m = 1;
     wcs.pv[npvcount].value = PV2_1;
+    npvcount++;
   }
   if(!R_IsNA(PV2_2)){
     wcs.pv[npvcount].i = 2;
     wcs.pv[npvcount].m = 2;
     wcs.pv[npvcount].value = PV2_2;
+    npvcount++;
+  }
+  if(!R_IsNA(PV2_3)){
+    wcs.pv[npvcount].i = 2;
+    wcs.pv[npvcount].m = 3;
+    wcs.pv[npvcount].value = PV2_3;
+    npvcount++;
+  }
+  if(!R_IsNA(PV2_4)){
+    wcs.pv[npvcount].i = 2;
+    wcs.pv[npvcount].m = 4;
+    wcs.pv[npvcount].value = PV2_4;
+    npvcount++;
+  }
+  if(!R_IsNA(PV2_5)){
+    wcs.pv[npvcount].i = 2;
+    wcs.pv[npvcount].m = 5;
+    wcs.pv[npvcount].value = PV2_5;
+    npvcount++;
   }
   
   //set long and lat axis positions
@@ -139,8 +172,9 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
               double CD1_1 = 1, double CD1_2 = 0,
               double CD2_1 = 0, double CD2_2 = 1,
               Rcpp::String RADESYS = "ICRS", int EQUINOX = 2000,
-              double PV1_1 = NA_REAL, double PV1_2 = NA_REAL,
-              double PV2_1 = NA_REAL, double PV2_2 = NA_REAL
+              double PV1_1 = NA_REAL, double PV1_2 = NA_REAL, double PV1_3 = NA_REAL,
+              double PV2_1 = NA_REAL, double PV2_2 = NA_REAL, double PV2_3 = NA_REAL,
+              double PV2_4 = NA_REAL, double PV2_5 = NA_REAL
 ){
   int i;
   const int ncoord = x.length();
@@ -181,10 +215,14 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
   
   //insert wcs pv
   wcs.npv = 0;
-  if(R_IsNA(PV1_1)){wcs.npv++;}
-  if(R_IsNA(PV1_2)){wcs.npv++;}
-  if(R_IsNA(PV2_1)){wcs.npv++;}
-  if(R_IsNA(PV2_2)){wcs.npv++;}
+  if(!R_IsNA(PV1_1)){wcs.npv++;}
+  if(!R_IsNA(PV1_2)){wcs.npv++;}
+  if(!R_IsNA(PV1_3)){wcs.npv++;}
+  if(!R_IsNA(PV2_1)){wcs.npv++;}
+  if(!R_IsNA(PV2_2)){wcs.npv++;}
+  if(!R_IsNA(PV2_3)){wcs.npv++;}
+  if(!R_IsNA(PV2_4)){wcs.npv++;}
+  if(!R_IsNA(PV2_5)){wcs.npv++;}
   
   int npvcount = 0;
   
@@ -192,21 +230,49 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
     wcs.pv[npvcount].i = 1;
     wcs.pv[npvcount].m = 1;
     wcs.pv[npvcount].value = PV1_1;
+    npvcount++;
   }
   if(!R_IsNA(PV1_2)){
     wcs.pv[npvcount].i = 1;
     wcs.pv[npvcount].m = 2;
     wcs.pv[npvcount].value = PV1_2;
+    npvcount++;
+  }
+  if(!R_IsNA(PV1_3)){
+    wcs.pv[npvcount].i = 1;
+    wcs.pv[npvcount].m = 3;
+    wcs.pv[npvcount].value = PV1_3;
+    npvcount++;
   }
   if(!R_IsNA(PV2_1)){
     wcs.pv[npvcount].i = 2;
     wcs.pv[npvcount].m = 1;
     wcs.pv[npvcount].value = PV2_1;
+    npvcount++;
   }
   if(!R_IsNA(PV2_2)){
     wcs.pv[npvcount].i = 2;
     wcs.pv[npvcount].m = 2;
     wcs.pv[npvcount].value = PV2_2;
+    npvcount++;
+  }
+  if(!R_IsNA(PV2_3)){
+    wcs.pv[npvcount].i = 2;
+    wcs.pv[npvcount].m = 3;
+    wcs.pv[npvcount].value = PV2_3;
+    npvcount++;
+  }
+  if(!R_IsNA(PV2_4)){
+    wcs.pv[npvcount].i = 2;
+    wcs.pv[npvcount].m = 4;
+    wcs.pv[npvcount].value = PV2_4;
+    npvcount++;
+  }
+  if(!R_IsNA(PV2_5)){
+    wcs.pv[npvcount].i = 2;
+    wcs.pv[npvcount].m = 5;
+    wcs.pv[npvcount].value = PV2_5;
+    npvcount++;
   }
   
   //set long and lat axis positions
