@@ -216,14 +216,14 @@ Rwcs_labels=function(keyvalues=NULL, n, lab.col='green', coord.type='sex', margi
   
   if(margin==FALSE){
     if(coord.type=='sex'){
-      tempxy=Rwcs_s2p(cbind(rapretty, dec_at_rapretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
-      tempxy[,1]=tempxy[,1]-loc.diff[1]
-      tempxy[,2]=tempxy[,2]-loc.diff[2]
+      tempxy = Rwcs_s2p(cbind(rapretty, dec_at_rapretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy[,1] = tempxy[,1]-loc.diff[1]
+      tempxy[,2] = tempxy[,2]-loc.diff[2]
       axis(raaxis, at=tempxy[,raaxis], labels = deg2hms(rapretty, type='cat', digits=1), mgp=-mgp-3, tick=FALSE, col.axis=lab.col, ...)
       
-      tempxy=Rwcs_s2p(cbind(ra_at_decpretty, decpretty[-1]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
-      tempxy[,1]=tempxy[,1]-loc.diff[1]
-      tempxy[,2]=tempxy[,2]-loc.diff[2]
+      tempxy = Rwcs_s2p(cbind(ra_at_decpretty[-1], decpretty[-1]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy[,1] = tempxy[,1]-loc.diff[1]
+      tempxy[,2] = tempxy[,2]-loc.diff[2]
       axis(decaxis, at=tempxy[,decaxis], labels = deg2dms(decpretty[-1], type='cat', digits=0), mgp=-mgp-3, tick=FALSE, col.axis=lab.col, ...)
     }
     if(coord.type=='deg'){
@@ -232,34 +232,34 @@ Rwcs_labels=function(keyvalues=NULL, n, lab.col='green', coord.type='sex', margi
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(raaxis, at=tempxy[,raaxis], labels = rapretty, mgp=-mgp-3, tick=FALSE, col.axis=lab.col, ...)
       
-      tempxy=Rwcs_s2p(cbind(ra_at_decpretty, decpretty[-1]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
-      tempxy[,1]=tempxy[,1]-loc.diff[1]
-      tempxy[,2]=tempxy[,2]-loc.diff[2]
+      tempxy = Rwcs_s2p(cbind(ra_at_decpretty[-1], decpretty[-1]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy[,1] = tempxy[,1]-loc.diff[1]
+      tempxy[,2] = tempxy[,2]-loc.diff[2]
       axis(decaxis, at=tempxy[,decaxis], labels = decpretty[-1], mgp=-mgp-3, tick=FALSE, col.axis=lab.col, ...)
     }
     mtext(xlab, raaxis, line = -mtline, col=lab.col)
     mtext(ylab, decaxis, line = -mtline, col=lab.col)
   }else{
     if(coord.type=='sex'){
-      tempxy=Rwcs_s2p(cbind(rapretty, dec_at_rapretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
-      tempxy[,1]=tempxy[,1]-loc.diff[1]
-      tempxy[,2]=tempxy[,2]-loc.diff[2]
+      tempxy = Rwcs_s2p(cbind(rapretty, dec_at_rapretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy[,1] = tempxy[,1]-loc.diff[1]
+      tempxy[,2] = tempxy[,2]-loc.diff[2]
       axis(raaxis, tempxy[,raaxis], labels=deg2hms(rapretty, type='cat', digits=1), mgp=mgp, tick=FALSE, ...)
       
-      tempxy=Rwcs_s2p(cbind(ra_at_decpretty, decpretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
-      tempxy[,1]=tempxy[,1]-loc.diff[1]
-      tempxy[,2]=tempxy[,2]-loc.diff[2]
+      tempxy = Rwcs_s2p(cbind(ra_at_decpretty, decpretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy[,1] = tempxy[,1]-loc.diff[1]
+      tempxy[,2] = tempxy[,2]-loc.diff[2]
       axis(decaxis, tempxy[,decaxis], labels=deg2dms(decpretty, type='cat', digits=0), mgp=mgp, tick=FALSE, ...)
     }
     if(coord.type=='deg'){
-      tempxy=Rwcs_s2p(cbind(rapretty, dec_at_rapretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
-      tempxy[,1]=tempxy[,1]-loc.diff[1]
-      tempxy[,2]=tempxy[,2]-loc.diff[2]
+      tempxy = Rwcs_s2p(cbind(rapretty, dec_at_rapretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy[,1] = tempxy[,1]-loc.diff[1]
+      tempxy[,2] = tempxy[,2]-loc.diff[2]
       axis(raaxis, tempxy[,raaxis], labels=rapretty, mgp=mgp, tick=FALSE, ...)
       
-      tempxy=Rwcs_s2p(cbind(ra_at_decpretty, decpretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
-      tempxy[,1]=tempxy[,1]-loc.diff[1]
-      tempxy[,2]=tempxy[,2]-loc.diff[2]
+      tempxy = Rwcs_s2p(cbind(ra_at_decpretty, decpretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy[,1] = tempxy[,1]-loc.diff[1]
+      tempxy[,2] = tempxy[,2]-loc.diff[2]
       axis(decaxis, tempxy[,decaxis], labels=decpretty, mgp=mgp, tick=FALSE, ...)
     }
     mtext(xlab, raaxis, line = mtline)
