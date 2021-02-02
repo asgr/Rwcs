@@ -134,6 +134,9 @@ Rwcs_labels=function(keyvalues=NULL, n, lab.col='green', coord.type='sex', margi
   ylo=min(par()$usr[3:4])
   yhi=max(par()$usr[3:4])
   
+  lenx = abs(xhi - xlo) + 1L
+  leny = abs(yhi - ylo) + 1L
+  
   coordlims=rbind(
     Rwcs_p2s(xlo, ylo, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header),
     Rwcs_p2s(xlo, yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header),
@@ -179,30 +182,57 @@ Rwcs_labels=function(keyvalues=NULL, n, lab.col='green', coord.type='sex', margi
     decgrid=maglab(decrange, n=n)
   }
   
-  rapretty=ragrid$tickat
-  rapretty=rapretty[rapretty>min(rarange) & rapretty<max(rarange)]
+  rapretty = ragrid$tickat
+  rapretty = rapretty[rapretty>min(rarange) & rapretty<max(rarange)]
   rapretty = rapretty %% 360
-  decpretty=decgrid$tickat
-  decpretty=decpretty[decpretty>min(decrange) & decpretty<max(decrange)]
+  decpretty = decgrid$tickat
+  decpretty = decpretty[decpretty>min(decrange) & decpretty<max(decrange)]
+  
+  dec_at_rapretty={}
+  ra_at_decpretty={}
+  
+  coord_on_xaxis = Rwcs_p2s(xlo:xhi, rep(ylo,lenx), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+  coord_on_yaxis = Rwcs_p2s(rep(xlo,leny), ylo:yhi, keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+  
+  if(raaxis==1){
+    for(ra in rapretty){
+      dec_add = coord_on_xaxis[which.min(abs(coord_on_xaxis[,1] - ra)),2]
+      dec_at_rapretty = c(dec_at_rapretty, dec_add)
+    }
+    for(dec in decpretty){
+      ra_add = coord_on_yaxis[which.min(abs(coord_on_yaxis[,2] - dec)),1]
+      ra_at_decpretty = c(ra_at_decpretty, ra_add)
+    }
+  }else{
+    for(ra in rapretty){
+      dec_add = coord_on_yaxis[which.min(abs(coord_on_yaxis[,1] - ra)),2]
+      dec_at_rapretty = c(dec_at_rapretty, dec_add)
+    }
+    for(dec in decpretty){
+      ra_add = coord_on_xaxis[which.min(abs(coord_on_xaxis[,2] - dec)),1]
+      ra_at_decpretty = c(ra_at_decpretty, ra_add)
+    }
+  }
+  
   if(margin==FALSE){
     if(coord.type=='sex'){
-      tempxy=Rwcs_s2p(cbind(rapretty, coordlims[1,2]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy=Rwcs_s2p(cbind(rapretty, dec_at_rapretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(raaxis, at=tempxy[,raaxis], labels = deg2hms(rapretty, type='cat', digits=1), mgp=-mgp-3, tick=FALSE, col.axis=lab.col, ...)
       
-      tempxy=Rwcs_s2p(cbind(coordlims[1,1], decpretty[-1]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy=Rwcs_s2p(cbind(ra_at_decpretty, decpretty[-1]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(decaxis, at=tempxy[,decaxis], labels = deg2dms(decpretty[-1], type='cat', digits=0), mgp=-mgp-3, tick=FALSE, col.axis=lab.col, ...)
     }
     if(coord.type=='deg'){
-      tempxy=Rwcs_s2p(cbind(rapretty, coordlims[1,2]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy=Rwcs_s2p(cbind(rapretty, dec_at_rapretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(raaxis, at=tempxy[,raaxis], labels = rapretty, mgp=-mgp-3, tick=FALSE, col.axis=lab.col, ...)
       
-      tempxy=Rwcs_s2p(cbind(coordlims[1,1], decpretty[-1]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy=Rwcs_s2p(cbind(ra_at_decpretty, decpretty[-1]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(decaxis, at=tempxy[,decaxis], labels = decpretty[-1], mgp=-mgp-3, tick=FALSE, col.axis=lab.col, ...)
@@ -211,23 +241,23 @@ Rwcs_labels=function(keyvalues=NULL, n, lab.col='green', coord.type='sex', margi
     mtext(ylab, decaxis, line = -mtline, col=lab.col)
   }else{
     if(coord.type=='sex'){
-      tempxy=Rwcs_s2p(cbind(rapretty, coordlims[1,2]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy=Rwcs_s2p(cbind(rapretty, dec_at_rapretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(raaxis, tempxy[,raaxis], labels=deg2hms(rapretty, type='cat', digits=1), mgp=mgp, tick=FALSE, ...)
       
-      tempxy=Rwcs_s2p(cbind(coordlims[1,1], decpretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy=Rwcs_s2p(cbind(ra_at_decpretty, decpretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(decaxis, tempxy[,decaxis], labels=deg2dms(decpretty, type='cat', digits=0), mgp=mgp, tick=FALSE, ...)
     }
     if(coord.type=='deg'){
-      tempxy=Rwcs_s2p(cbind(rapretty, coordlims[1,2]), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy=Rwcs_s2p(cbind(rapretty, dec_at_rapretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(raaxis, tempxy[,raaxis], labels=rapretty, mgp=mgp, tick=FALSE, ...)
       
-      tempxy=Rwcs_s2p(cbind(coordlims[1,1], decpretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
+      tempxy=Rwcs_s2p(cbind(ra_at_decpretty, decpretty), keyvalues=keyvalues, pixcen='R', loc.diff=loc.diff, header=header)
       tempxy[,1]=tempxy[,1]-loc.diff[1]
       tempxy[,2]=tempxy[,2]-loc.diff[2]
       axis(decaxis, tempxy[,decaxis], labels=decpretty, mgp=mgp, tick=FALSE, ...)
