@@ -304,3 +304,48 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
     return(transpose(world_matrix));
   }
 }
+
+// [[Rcpp::export]]
+SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String header, 
+                  int nkeyrec){
+  int i;
+  const int ncoord = x.length();
+  const int naxis = 2;
+  int nreject, nwcs;
+  
+  //setup wcs
+  struct wcsprm* wcs;
+  
+  wcsini(1, naxis, wcs);
+  
+  int status = wcspih((char *)header.get_cstring(), nkeyrec, 0, 0, &nreject, &nwcs, &wcs);
+  
+  //Rcout << wcs.ctype[0] << "\n";
+  
+  if(status > 0){
+    Rcout << "Failed WCS header read!" << "\n";
+  }
+  
+  NumericMatrix pixel(naxis, ncoord);
+  for (i = 0; i < ncoord; i++) {
+    pixel(0, i) = x[i];
+    pixel(1, i) = y[i];
+  }
+  NumericVector phi(ncoord);
+  NumericVector theta(ncoord);
+  NumericMatrix img(naxis, ncoord);
+  IntegerVector stat(ncoord);
+  NumericMatrix world_matrix(naxis, ncoord);
+  
+  status = wcsp2s(wcs, ncoord, naxis,
+                  &(pixel[0]), &(img[0]), &(phi[0]), &(theta[0]),
+                  &(world_matrix[0]), &(stat[0]));
+  
+  wcsfree(wcs);
+  if(status > 0 || stat[0] > 0){
+    Rcout << "Failed p2s conversion!" << "\n";
+    return(stat);
+  }else{
+    return(transpose(world_matrix));
+  }
+}

@@ -69,10 +69,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// Cwcs_head_p2s
+SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String header, int nkeyrec);
+RcppExport SEXP _Rwcs_Cwcs_head_p2s(SEXP xSEXP, SEXP ySEXP, SEXP headerSEXP, SEXP nkeyrecSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type header(headerSEXP);
+    Rcpp::traits::input_parameter< int >::type nkeyrec(nkeyrecSEXP);
+    rcpp_result_gen = Rcpp::wrap(Cwcs_head_p2s(x, y, header, nkeyrec));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_Rwcs_Cwcs_s2p", (DL_FUNC) &_Rwcs_Cwcs_s2p, 22},
     {"_Rwcs_Cwcs_p2s", (DL_FUNC) &_Rwcs_Cwcs_p2s, 22},
+    {"_Rwcs_Cwcs_head_p2s", (DL_FUNC) &_Rwcs_Cwcs_head_p2s, 4},
     {NULL, NULL, 0}
 };
 

@@ -7,6 +7,7 @@ export(Rwcs_pixscale)
 
 export(Cwcs_s2p)
 export(Cwcs_p2s)
+export(Cwcs_head_p2s)
 
 export(Rwcs_image)
 export(Rwcs_grid)
