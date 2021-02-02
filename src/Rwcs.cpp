@@ -316,7 +316,7 @@ SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String he
   //setup wcs
   struct wcsprm* wcs;
   
-  wcsini(1, naxis, wcs);
+  //wcsini(1, naxis, wcs);
   
   int status = wcspih((char *)header.get_cstring(), nkeyrec, 0, 0, &nreject, &nwcs, &wcs);
   
@@ -337,6 +337,7 @@ SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String he
   IntegerVector stat(ncoord);
   NumericMatrix world_matrix(naxis, ncoord);
   
+  Rcout << "HERE\n";
   status = wcsp2s(wcs, ncoord, naxis,
                   &(pixel[0]), &(img[0]), &(phi[0]), &(theta[0]),
                   &(world_matrix[0]), &(stat[0]));
