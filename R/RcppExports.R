@@ -13,3 +13,7 @@ Cwcs_head_p2s <- function(x, y, header, nkeyrec) {
     .Call(`_Rwcs_Cwcs_head_p2s`, x, y, header, nkeyrec)
 }
 
+Cwcs_head_s2p <- function(RA, Dec, header, nkeyrec) {
+    .Call(`_Rwcs_Cwcs_head_s2p`, RA, Dec, header, nkeyrec)
+}
+

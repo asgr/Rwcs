@@ -2,6 +2,8 @@
 \alias{Cwcs}
 \alias{Cwcs_s2p}
 \alias{Cwcs_p2s}
+\alias{Cwcs_head_s2p}
+\alias{Cwcs_head_p2s}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Mid Level WCSlib Interface
@@ -18,6 +20,8 @@ Cwcs_p2s(x, y, CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0,
   CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS",
   EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV1_3 = NA, PV2_1 = NA, PV2_2 = NA, PV2_3 = NA,
   PV2_4 = NA, PV2_5 = NA)
+Cwcs_head_s2p(RA, Dec, header, nkeyrec)
+Cwcs_head_p2s(x, y, header, nkeyrec)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -93,6 +97,12 @@ Numeric scalar; additional axis 2 projection parameter 4.
   \item{PV2_5}{
 Numeric scalar; additional axis 2 projection parameter 5.
 }
+  \item{header}{
+Character scalar; a fully concatenated form of long header (where each key takes up exactly 80 characters) as produced by \code{Rfits_read_header_raw}.  
+}
+  \item{nkeyrec}{
+Integer scalar; the exact number of keys present in \option{header}.
+}
 }
 \details{
 The function input and output is deliberately simple.
@@ -160,6 +170,10 @@ GAPPT \tab  geocentric apparent place,  IAU 1984 system
 \code{Cwcs_s2p} is the spherical to pixel (hence s2p) projection function, i.e. RA/Dec to x/y. The output is a two column numeric matrix containing [x,y] data.
 
 \code{Cwcs_p2s} is the pixel to spherical (hence p2s) projection function, i.e. x/y to RA/Dec. The output is a two column numeric matrix containing [RA,Dec] data.
+
+\code{Cwcs_head_s2p} is the spherical to pixel (hence s2p) projection function, i.e. RA/Dec to x/y. The output is a two column numeric matrix containing [x,y] data. This uses and processes the full FITS header, so in principle can deal with more complex WCS systems, however what it is doing is largely obfuscated and this is probably for more confident/advanced users.
+
+\code{Cwcs_head_p2s} is the pixel to spherical (hence p2s) projection function, i.e. x/y to RA/Dec. The output is a two column numeric matrix containing [RA,Dec] data. This uses and processes the full FITS header, so in principle can deal with more complex WCS systems, however what it is doing is largely obfuscated and this is probably for more confident/advanced users.
 }
 \references{
 Greisen, E.W. & Calabretta, M.R. (2002), Astronomy & Astrophysics, 395, 1061-1075
