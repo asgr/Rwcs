@@ -25,12 +25,6 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   assertNumeric(RA)
   assertNumeric(Dec, len = length(RA))
   
-  if(is.null(keyvalues) & length(list(...))==0){
-    keyvalues = options()$current_keyvalues
-  }
-  
-  keyvalues = Rwcs_keypass(keyvalues, ...)
-  
   if(is.null(keyvalues) & is.null(header) & length(list(...))==0){
     keyvalues = options()$current_keyvalues
   }
@@ -56,6 +50,10 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
       }
     }
   }else{
+    
+    keyvalues = Rwcs_keypass(keyvalues, ...)
+    options(current_keyvalues = keyvalues)
+    
     output = Cwcs_s2p(
       RA = RA,
       Dec = Dec,
@@ -249,8 +247,8 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
   }
   
   if(coord.type=='sex'){
-    RAsex = deg2hms(output[,1], sep=sep)
-    Decsex = deg2dms(output[,2], sep=sep)
+    RAsex = deg2hms(output[,1], type='cat', sep=sep)
+    Decsex = deg2dms(output[,2], type='cat', sep=sep)
     output = cbind(RAsex, Decsex)
   }
   

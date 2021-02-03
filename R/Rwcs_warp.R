@@ -21,17 +21,21 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     image_in = image_in$image
   }
   if(is.character(header_out) & is.null(keyvalues_out)){
-    if(requireNamespace("Rfits", quietly = TRUE)){
-      keyvalues_out = Rfits::Rfits_hdr_to_keyvalues(header_out)
-    }else{
-      stop("The Rfits package is need to process the header_out. Install from GitHub asgr/Rfits.")
+    if(length(header_out) > 1){
+      if(requireNamespace("Rfits", quietly = TRUE)){
+        keyvalues_out = Rfits::Rfits_hdr_to_keyvalues(header_out)
+      }else{
+        stop("The Rfits package is need to process the header_out. Install from GitHub asgr/Rfits.")
+      }
     }
   }
   if(is.character(header_in) & is.null(keyvalues_in)){
-    if(requireNamespace("Rfits", quietly = TRUE)){
-      keyvalues_in = Rfits::Rfits_hdr_to_keyvalues(header_in)
-    }else{
-      stop("The Rfits package is need to process the header_in. Install from GitHub asgr/Rfits.")
+    if(length(header_out) > 1){
+      if(requireNamespace("Rfits", quietly = TRUE)){
+        keyvalues_in = Rfits::Rfits_hdr_to_keyvalues(header_in)
+      }else{
+        stop("The Rfits package is need to process the header_in. Install from GitHub asgr/Rfits.")
+      }
     }
   }
   if (!is.null(keyvalues_out) & is.null(dim_out)){
