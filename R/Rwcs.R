@@ -1,10 +1,12 @@
 Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', header=NULL, ...){
   assertList(keyvalues, null.ok = TRUE)
   if(is.character(header) & is.null(keyvalues)){
-    if(requireNamespace("Rfits", quietly = TRUE)){
-      keyvalues = Rfits::Rfits_hdr_to_keyvalues(header)
-    }else{
-      stop("The Rfits package is need to process the header. Install from GitHub asgr/Rfits.")
+    if(length(header) > 1){
+      if(requireNamespace("Rfits", quietly = TRUE)){
+        keyvalues = Rfits::Rfits_hdr_to_keyvalues(header)
+      }else{
+        stop("The Rfits package is need to process the header. Install from GitHub asgr/Rfits.")
+      }
     }
   }
   assertChoice(pixcen, c('R','FITS'))
@@ -23,66 +25,89 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   assertNumeric(RA)
   assertNumeric(Dec, len = length(RA))
   
-  if(is.null(keyvalues) & length(list(...))==0){
+  if(is.null(keyvalues) & is.null(header) & length(list(...))==0){
     keyvalues = options()$current_keyvalues
   }
   
-  keyvalues = Rwcs_keypass(keyvalues, ...)
-  options(current_keyvalues = keyvalues)
-  
-  output = Cwcs_s2p(
-    RA = RA,
-    Dec = Dec,
-    CTYPE1 = keyvalues$CTYPE1,
-    CTYPE2 = keyvalues$CTYPE2,
-    CRVAL1 = keyvalues$CRVAL1,
-    CRVAL2 = keyvalues$CRVAL2,
-    CRPIX1 = keyvalues$CRPIX1,
-    CRPIX2 = keyvalues$CRPIX2,
-    CD1_1 = keyvalues$CD1_1,
-    CD1_2 = keyvalues$CD1_2,
-    CD2_1 = keyvalues$CD2_1,
-    CD2_2 = keyvalues$CD2_2,
-    RADESYS = keyvalues$RADESYS,
-    EQUINOX = keyvalues$EQUINOX,
-    PV1_1 = keyvalues$PV1_1,
-    PV1_2 = keyvalues$PV1_2,
-    PV1_3 = keyvalues$PV1_3,
-    PV2_1 = keyvalues$PV2_1,
-    PV2_2 = keyvalues$PV2_2,
-    PV2_3 = keyvalues$PV2_3,
-    PV2_4 = keyvalues$PV2_4,
-    PV2_5 = keyvalues$PV2_5
-  )
-  
-  if(is.null(dim(output))){
-    good = which(output == 0)
-    output = matrix(NA, length(RA), 2)
-    if(length(good)>0){
-      output[good,] = Cwcs_s2p(
-        RA = RA[good],
-        Dec = Dec[good],
-        CTYPE1 = keyvalues$CTYPE1,
-        CTYPE2 = keyvalues$CTYPE2,
-        CRVAL1 = keyvalues$CRVAL1,
-        CRVAL2 = keyvalues$CRVAL2,
-        CRPIX1 = keyvalues$CRPIX1,
-        CRPIX2 = keyvalues$CRPIX2,
-        CD1_1 = keyvalues$CD1_1,
-        CD1_2 = keyvalues$CD1_2,
-        CD2_1 = keyvalues$CD2_1,
-        CD2_2 = keyvalues$CD2_2,
-        RADESYS = keyvalues$RADESYS,
-        EQUINOX = keyvalues$EQUINOX,
-        PV1_1 = keyvalues$PV1_1,
-        PV1_2 = keyvalues$PV1_2,
-        PV1_3 = keyvalues$PV1_3,
-        PV2_1 = keyvalues$PV2_1,
-        PV2_2 = keyvalues$PV2_2,
-        PV2_3 = keyvalues$PV2_3,
-        PV2_4 = keyvalues$PV2_4,
-        PV2_5 = keyvalues$PV2_5
-      )
+  if(is.null(keyvalues) & length(header)==1){
+    output = Cwcs_head_s2p(
+      RA = RA,
+      Dec = Dec,
+      header = header,
+      nkeyrec = nchar(header)/80
+    )
+    
+    if(is.null(dim(output))){
+      good = which(output == 0)
+      output = matrix(NA, length(RA), 2)
+      if(length(good) > 0){
+        output[good,] = Cwcs_head_s2p(
+          RA = RA[good],
+          Dec = Dec[good],
+          header = header,
+          nkeyrec = nchar(header)/80
+        )
+      }
+    }
+  }else{
+    
+    keyvalues = Rwcs_keypass(keyvalues, ...)
+    options(current_keyvalues = keyvalues)
+    
+    output = Cwcs_s2p(
+      RA = RA,
+      Dec = Dec,
+      CTYPE1 = keyvalues$CTYPE1,
+      CTYPE2 = keyvalues$CTYPE2,
+      CRVAL1 = keyvalues$CRVAL1,
+      CRVAL2 = keyvalues$CRVAL2,
+      CRPIX1 = keyvalues$CRPIX1,
+      CRPIX2 = keyvalues$CRPIX2,
+      CD1_1 = keyvalues$CD1_1,
+      CD1_2 = keyvalues$CD1_2,
+      CD2_1 = keyvalues$CD2_1,
+      CD2_2 = keyvalues$CD2_2,
+      RADESYS = keyvalues$RADESYS,
+      EQUINOX = keyvalues$EQUINOX,
+      PV1_1 = keyvalues$PV1_1,
+      PV1_2 = keyvalues$PV1_2,
+      PV1_3 = keyvalues$PV1_3,
+      PV2_1 = keyvalues$PV2_1,
+      PV2_2 = keyvalues$PV2_2,
+      PV2_3 = keyvalues$PV2_3,
+      PV2_4 = keyvalues$PV2_4,
+      PV2_5 = keyvalues$PV2_5
+    )
+    
+    if(is.null(dim(output))){
+      good = which(output == 0)
+      output = matrix(NA, length(RA), 2)
+      if(length(good)>0){
+        output[good,] = Cwcs_s2p(
+          RA = RA[good],
+          Dec = Dec[good],
+          CTYPE1 = keyvalues$CTYPE1,
+          CTYPE2 = keyvalues$CTYPE2,
+          CRVAL1 = keyvalues$CRVAL1,
+          CRVAL2 = keyvalues$CRVAL2,
+          CRPIX1 = keyvalues$CRPIX1,
+          CRPIX2 = keyvalues$CRPIX2,
+          CD1_1 = keyvalues$CD1_1,
+          CD1_2 = keyvalues$CD1_2,
+          CD2_1 = keyvalues$CD2_1,
+          CD2_2 = keyvalues$CD2_2,
+          RADESYS = keyvalues$RADESYS,
+          EQUINOX = keyvalues$EQUINOX,
+          PV1_1 = keyvalues$PV1_1,
+          PV1_2 = keyvalues$PV1_2,
+          PV1_3 = keyvalues$PV1_3,
+          PV2_1 = keyvalues$PV2_1,
+          PV2_2 = keyvalues$PV2_2,
+          PV2_3 = keyvalues$PV2_3,
+          PV2_4 = keyvalues$PV2_4,
+          PV2_5 = keyvalues$PV2_5
+        )
+      }
     }
   }
 
@@ -101,10 +126,12 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
 Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', header=NULL, ...){
   assertList(keyvalues, null.ok = TRUE)
   if(is.character(header) & is.null(keyvalues)){
-    if(requireNamespace("Rfits", quietly = TRUE)){
-      keyvalues = Rfits::Rfits_hdr_to_keyvalues(header)
-    }else{
-      stop("The Rfits package is need to process the header. Install from GitHub asgr/Rfits.")
+    if(length(header) > 1){
+      if(requireNamespace("Rfits", quietly = TRUE)){
+        keyvalues = Rfits::Rfits_hdr_to_keyvalues(header)
+      }else{
+        stop("The Rfits package is need to process the header. Install from GitHub asgr/Rfits.")
+      }
     }
   }
   assertChoice(pixcen, c('R','FITS'))
@@ -133,72 +160,95 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
   assertNumeric(x)
   assertNumeric(y, len = length(x))
   
-  if(is.null(keyvalues) & length(list(...))==0){
+  if(is.null(keyvalues) & is.null(header) & length(list(...))==0){
     keyvalues = options()$current_keyvalues
   }
   
-  keyvalues = Rwcs_keypass(keyvalues, ...)
-  options(current_keyvalues = keyvalues)
-  
-  output = Cwcs_p2s(
-    x = x,
-    y = y,
-    CTYPE1 = keyvalues$CTYPE1,
-    CTYPE2 = keyvalues$CTYPE2,
-    CRVAL1 = keyvalues$CRVAL1,
-    CRVAL2 = keyvalues$CRVAL2,
-    CRPIX1 = keyvalues$CRPIX1,
-    CRPIX2 = keyvalues$CRPIX2,
-    CD1_1 = keyvalues$CD1_1,
-    CD1_2 = keyvalues$CD1_2,
-    CD2_1 = keyvalues$CD2_1,
-    CD2_2 = keyvalues$CD2_2,
-    RADESYS = keyvalues$RADESYS,
-    EQUINOX = keyvalues$EQUINOX,
-    PV1_1 = keyvalues$PV1_1,
-    PV1_2 = keyvalues$PV1_2,
-    PV1_3 = keyvalues$PV1_3,
-    PV2_1 = keyvalues$PV2_1,
-    PV2_2 = keyvalues$PV2_2,
-    PV2_3 = keyvalues$PV2_3,
-    PV2_4 = keyvalues$PV2_4,
-    PV2_5 = keyvalues$PV2_5
-  )
-  
-  if(is.null(dim(output))){
-    good = which(output == 0)
-    output = matrix(NA, length(x), 2)
-    if(length(good)>0){
-      output[good,] = Cwcs_p2s(
-        x = x[good],
-        y = y[good],
-        CTYPE1 = keyvalues$CTYPE1,
-        CTYPE2 = keyvalues$CTYPE2,
-        CRVAL1 = keyvalues$CRVAL1,
-        CRVAL2 = keyvalues$CRVAL2,
-        CRPIX1 = keyvalues$CRPIX1,
-        CRPIX2 = keyvalues$CRPIX2,
-        CD1_1 = keyvalues$CD1_1,
-        CD1_2 = keyvalues$CD1_2,
-        CD2_1 = keyvalues$CD2_1,
-        CD2_2 = keyvalues$CD2_2,
-        RADESYS = keyvalues$RADESYS,
-        EQUINOX = keyvalues$EQUINOX,
-        PV1_1 = keyvalues$PV1_1,
-        PV1_2 = keyvalues$PV1_2,
-        PV1_3 = keyvalues$PV1_3,
-        PV2_1 = keyvalues$PV2_1,
-        PV2_2 = keyvalues$PV2_2,
-        PV2_3 = keyvalues$PV2_3,
-        PV2_4 = keyvalues$PV2_4,
-        PV2_5 = keyvalues$PV2_5
-      )
+  if(is.null(keyvalues) & length(header)==1){
+    output = Cwcs_head_p2s(
+      x = x,
+      y = y,
+      header = header,
+      nkeyrec = nchar(header)/80
+    )
+    
+    if(is.null(dim(output))){
+      good = which(output == 0)
+      output = matrix(NA, length(x), 2)
+      if(length(good) > 0){
+        output[good,] = Cwcs_head_p2s(
+          x = x[good],
+          y = y[good],
+          header = header,
+          nkeyrec = nchar(header)/80
+        )
+      }
+    }
+  }else{
+    
+    keyvalues = Rwcs_keypass(keyvalues, ...)
+    options(current_keyvalues = keyvalues)
+    
+    output = Cwcs_p2s(
+      x = x,
+      y = y,
+      CTYPE1 = keyvalues$CTYPE1,
+      CTYPE2 = keyvalues$CTYPE2,
+      CRVAL1 = keyvalues$CRVAL1,
+      CRVAL2 = keyvalues$CRVAL2,
+      CRPIX1 = keyvalues$CRPIX1,
+      CRPIX2 = keyvalues$CRPIX2,
+      CD1_1 = keyvalues$CD1_1,
+      CD1_2 = keyvalues$CD1_2,
+      CD2_1 = keyvalues$CD2_1,
+      CD2_2 = keyvalues$CD2_2,
+      RADESYS = keyvalues$RADESYS,
+      EQUINOX = keyvalues$EQUINOX,
+      PV1_1 = keyvalues$PV1_1,
+      PV1_2 = keyvalues$PV1_2,
+      PV1_3 = keyvalues$PV1_3,
+      PV2_1 = keyvalues$PV2_1,
+      PV2_2 = keyvalues$PV2_2,
+      PV2_3 = keyvalues$PV2_3,
+      PV2_4 = keyvalues$PV2_4,
+      PV2_5 = keyvalues$PV2_5
+    )
+    
+    if(is.null(dim(output))){
+      good = which(output == 0)
+      output = matrix(NA, length(x), 2)
+      if(length(good) > 0){
+        output[good,] = Cwcs_p2s(
+          x = x[good],
+          y = y[good],
+          CTYPE1 = keyvalues$CTYPE1,
+          CTYPE2 = keyvalues$CTYPE2,
+          CRVAL1 = keyvalues$CRVAL1,
+          CRVAL2 = keyvalues$CRVAL2,
+          CRPIX1 = keyvalues$CRPIX1,
+          CRPIX2 = keyvalues$CRPIX2,
+          CD1_1 = keyvalues$CD1_1,
+          CD1_2 = keyvalues$CD1_2,
+          CD2_1 = keyvalues$CD2_1,
+          CD2_2 = keyvalues$CD2_2,
+          RADESYS = keyvalues$RADESYS,
+          EQUINOX = keyvalues$EQUINOX,
+          PV1_1 = keyvalues$PV1_1,
+          PV1_2 = keyvalues$PV1_2,
+          PV1_3 = keyvalues$PV1_3,
+          PV2_1 = keyvalues$PV2_1,
+          PV2_2 = keyvalues$PV2_2,
+          PV2_3 = keyvalues$PV2_3,
+          PV2_4 = keyvalues$PV2_4,
+          PV2_5 = keyvalues$PV2_5
+        )
+      }
     }
   }
   
   if(coord.type=='sex'){
-    RAsex = deg2hms(output[,1], sep=sep)
-    Decsex = deg2dms(output[,2], sep=sep)
+    RAsex = deg2hms(output[,1], type='cat', sep=sep)
+    Decsex = deg2dms(output[,2], type='cat', sep=sep)
     output = cbind(RAsex, Decsex)
   }
   

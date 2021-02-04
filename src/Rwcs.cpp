@@ -304,3 +304,89 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
     return(transpose(world_matrix));
   }
 }
+
+// [[Rcpp::export]]
+SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String header, 
+                  int nkeyrec){
+  int i;
+  const int ncoord = x.length();
+  const int naxis = 2;
+  int nreject, nwcs;
+  
+  //setup wcs
+  struct wcsprm* wcs;
+  
+  //pass header into wcs
+  int status = wcspih((char *)header.get_cstring(), nkeyrec, WCSHDR_all, 2, &nreject, &nwcs, &wcs);
+  
+  if(status > 0){
+    Rcout << "Failed WCS header read!" << "\n";
+  }
+  
+  NumericMatrix pixel(naxis, ncoord);
+  for (i = 0; i < ncoord; i++) {
+    pixel(0, i) = x[i];
+    pixel(1, i) = y[i];
+  }
+  NumericVector phi(ncoord);
+  NumericVector theta(ncoord);
+  NumericMatrix img(naxis, ncoord);
+  IntegerVector stat(ncoord);
+  NumericMatrix world_matrix(naxis, ncoord);
+  
+  status = wcsp2s(wcs, ncoord, naxis,
+                  &(pixel[0]), &(img[0]), &(phi[0]), &(theta[0]),
+                  &(world_matrix[0]), &(stat[0]));
+  
+  wcsvfree(&nwcs, &wcs);
+  if(status > 0 || stat[0] > 0){
+    Rcout << "Failed p2s conversion!" << "\n";
+    //fprintf(stderr, "ERROR %d from wcsset(): %s.\n", status, wcs_errmsg[status]);
+    return(stat);
+  }else{
+    return(transpose(world_matrix));
+  }
+}
+
+// [[Rcpp::export]]
+SEXP Cwcs_head_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec, Rcpp::String header, 
+                   int nkeyrec){
+  int i;
+  const int ncoord = RA.length();
+  const int naxis = 2;
+  int nreject, nwcs;
+  
+  //setup wcs
+  struct wcsprm* wcs;
+  
+  //pass header into wcs
+  int status = wcspih((char *)header.get_cstring(), nkeyrec, WCSHDR_all, 2, &nreject, &nwcs, &wcs);
+  
+  if(status > 0){
+    Rcout << "Failed WCS header read!" << "\n";
+  }
+  
+  NumericMatrix world(naxis, ncoord);
+  for (i = 0; i < ncoord; i++) {
+    world(0, i) = RA[i];
+    world(1, i) = Dec[i];
+  }
+  NumericVector phi(ncoord);
+  NumericVector theta(ncoord);
+  NumericMatrix img(naxis, ncoord);
+  IntegerVector stat(ncoord);
+  NumericMatrix pixel_matrix(naxis, ncoord);
+  
+  status = wcss2p(wcs, ncoord, naxis,
+                  &(world[0]), &(phi[0]), &(theta[0]), &(img[0]),
+                  &(pixel_matrix[0]), &(stat[0]));
+  
+  wcsvfree(&nwcs, &wcs);
+  if(status > 0 || stat[0] > 0){
+    Rcout << "Failed s2p conversion!" << "\n";
+    //fprintf(stderr, "ERROR %d from wcsset(): %s.\n", status, wcs_errmsg[status]);
+    return(stat);
+  }else{
+    return(transpose(pixel_matrix));
+  }
+}

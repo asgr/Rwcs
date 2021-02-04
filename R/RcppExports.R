@@ -9,3 +9,11 @@ Cwcs_p2s <- function(x, y, CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0,
     .Call(`_Rwcs_Cwcs_p2s`, x, y, CTYPE1, CTYPE2, CRVAL1, CRVAL2, CRPIX1, CRPIX2, CD1_1, CD1_2, CD2_1, CD2_2, RADESYS, EQUINOX, PV1_1, PV1_2, PV1_3, PV2_1, PV2_2, PV2_3, PV2_4, PV2_5)
 }
 
+Cwcs_head_p2s <- function(x, y, header, nkeyrec) {
+    .Call(`_Rwcs_Cwcs_head_p2s`, x, y, header, nkeyrec)
+}
+
+Cwcs_head_s2p <- function(RA, Dec, header, nkeyrec) {
+    .Call(`_Rwcs_Cwcs_head_s2p`, RA, Dec, header, nkeyrec)
+}
+

@@ -59,7 +59,7 @@ Numeric scalar; FITS header CD2_1 for the CTYPE2 projection system. Change in CT
 Numeric scalar; FITS header CD2_2 for the CTYPE2 projection system. Change in CTYPE2 in degrees along y-Axis.
 }
   \item{header}{
-To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues} must be left as NULL in this case.
+To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues} must be left as NULL in this case. If you want to use all distortion terms you can also pass in the raw header output of \code{Rfits_read_header_raw}.
 }
   \item{\dots}{
 Optional keyvalues to overwrite the \option{keyvalues} entries with. If not present, the defaults are CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0, CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS", EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV2_1 = NA, PV2_2 = NA.
@@ -217,6 +217,24 @@ library(Rfits)
 file_image=system.file('extdata', 'image.fits', package = "Rfits")
 image=Rfits_read_image(file_image)
 Rwcs_pixscale(image$keyvalues)
+
+#Rwcs also supports more complex distortion headers (e.g. SIP)
+#but this removes user control
+
+#Read example image with SIP distortion terms
+file_image = system.file('extdata', 'sipsample.fits', package = "Rwcs")
+temp_image = Rfits_read_image(file_image)
+
+#Using it this way the SIP terms are being ignored. If we pass the raw header
+#these can be used:
+
+longhead = Rfits_read_header_raw(file_image)
+
+#The difference from the version where we ignore the terms is very small! It is more
+#obvious when inspecting the same pixel:
+
+Rwcs_p2s(1, 1, temp_image$keyvalues, coord.type='sex')
+Rwcs_p2s(1, 1, header=longhead, coord.type='sex')
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
