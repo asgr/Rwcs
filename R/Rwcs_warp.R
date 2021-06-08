@@ -7,15 +7,19 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
          call. = FALSE)
   }
   if(any(names(image_in) == 'imDat') & is.null(keyvalues_in)){
-    keyvalues_in = image_in$keyvalues
-    header_in = image_in$hdr
+    if(is.null(header_in)){
+      keyvalues_in = image_in$keyvalues
+      header_in = image_in$hdr
+    }
     image_in = image_in$imDat
   }else if(any(names(image_in) == 'imDat') & !is.null(keyvalues_in)){
     image_in = image_in$imDat
   }
   if(any(names(image_in) == "image") & is.null(keyvalues_in)){
-    keyvalues_in = image_in$keyvalues
-    header_in = image_in$header
+    if(is.null(header_in)){
+      keyvalues_in = image_in$keyvalues
+      header_in = image_in$header
+    }
     image_in = image_in$image
   }else if(any(names(image) == "image") & !is.null(keyvalues_in)){
     image_in = image_in$image
@@ -41,7 +45,13 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   if (!is.null(keyvalues_out) & is.null(dim_out)){
     dim_out = c(keyvalues_out$NAXIS1, keyvalues_out$NAXIS2)
   }else{
-    stop('Missing NAXIS1 / NAXIS2 in header keyvalues! Specify dim_out.')
+    NAXIS1 = options()$current_keyvalues$NAXIS1
+    NAXIS2 = options()$current_keyvalues$NAXIS2
+    if(!is.null(NAXIS1) & !is.null(NAXIS2)){
+      dim_out = c(NAXIS1, NAXIS2)
+    }else{
+      stop('Missing NAXIS1 / NAXIS2 in header keyvalues! Specify dim_out.')
+    }
   }
   if (interpolation == "nearest") {
     warpoffset = 0.5
@@ -59,7 +69,7 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_in, header = header_in)
     return = list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset)
   }
-  image_out = matrix(NA, max(dim(image_in)[1], dim_out[1]),max(dim(image_in)[2], dim_out[2]))
+  image_out = matrix(NA, max(dim(image_in)[1], dim_out[1]), max(dim(image_in)[2], dim_out[2]))
   image_out[1:dim(image_in)[1], 1:dim(image_in)[2]] = image_in
   pixscale_in = Rwcs_pixscale(keyvalues=keyvalues_in, header=header_in)
   pixscale_out = Rwcs_pixscale(keyvalues=keyvalues_out, header=header_out)

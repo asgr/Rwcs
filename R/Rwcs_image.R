@@ -2,7 +2,7 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
                     lab.col='green', coord.type='sex', margin=TRUE, loc.diff=c(0,0),
                     xlab='Right Ascension', ylab='Declination', mgp=c(2,0.5,0), mtline=2,
                     position='topright', com.col="green", com.length=0.05,
-                    coord.axis='auto', pretty='auto', header=NULL, ...){
+                    coord.axis='auto', pretty='auto', header=NULL, add=FALSE, ...){
   
   if(missing(xlab)){
     if(coord.type=='sex'){
@@ -22,34 +22,64 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
   }
   
   if(!missing(image)){
+    
+    if(add){
+      image = Rwcs_warp(image)
+    }
+    
     if(any(names(image)=='imDat') & is.null(keyvalues)){
-      keyvalues=image$keyvalues
-      header=image$hdr
-      image=image$imDat
+      if(is.null(header)){
+        keyvalues = image$keyvalues
+        header = image$hdr
+      }else{
+        keyvalues = NULL
+      }
+      image = image$imDat
     }else if(any(names(image)=='imDat') & !is.null(keyvalues)){
       image = image$imDat
     }
     if(any(names(image) == "image") & is.null(keyvalues)){
-      keyvalues=image$keyvalues
-      header = image$header
+      if(is.null(header)){
+        keyvalues = image$keyvalues
+        header = image$header
+      }else{
+        keyvalues = NULL
+      }
       image = image$image
     }else if(any(names(image) == "image") & !is.null(keyvalues)){
       image = image$image
     }
-    output=magimage(image, axes=FALSE, ...)
-    box()
+    output = magimage(image, axes=FALSE, add=add, ...)
+    if(add == FALSE){
+      box()
+    }
   }
   
-  suppressMessages({
-  Rwcs_grid(keyvalues=keyvalues, n=n, grid.col=grid.col, grid.lty=grid.lty, 
-            grid.lwd=grid.lwd, coord.type=coord.type, loc.diff=loc.diff, pretty=pretty, header=header)
-  Rwcs_labels(keyvalues=keyvalues, n=n, lab.col=lab.col, coord.type=coord.type, 
-              margin=margin, loc.diff=loc.diff, xlab=xlab, ylab=ylab, mgp=mgp, 
-              mtline=mtline, pretty=pretty, header=header)
-  Rwcs_compass(keyvalues=keyvalues, position=position, com.col=com.col,
-               com.length=com.length, loc.diff=loc.diff, header=header)
-  })
-  return=output
+  if(add == FALSE){
+    suppressMessages({
+    Rwcs_grid(keyvalues=keyvalues, n=n, grid.col=grid.col, grid.lty=grid.lty, 
+              grid.lwd=grid.lwd, coord.type=coord.type, loc.diff=loc.diff, pretty=pretty, header=header)
+      
+    Rwcs_labels(keyvalues=keyvalues, n=n, lab.col=lab.col, coord.type=coord.type, 
+                margin=margin, loc.diff=loc.diff, xlab=xlab, ylab=ylab, mgp=mgp, 
+                mtline=mtline, pretty=pretty, header=header)
+    
+    Rwcs_compass(keyvalues=keyvalues, position=position, com.col=com.col,
+                 com.length=com.length, loc.diff=loc.diff, header=header)
+    })
+    
+    if(!is.null(header)){
+      options(header = header)
+      options(current_keyvalues = NULL)
+    }else if(!is.null(keyvalues)){
+      options(header = NULL)
+      options(current_keyvalues = keyvalues)
+    }else{
+      options(header = NULL)
+      options(current_keyvalues = NULL)
+    }
+  }
+  return(invisible(output))
 }
 
 Rwcs_grid=function(keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.lwd=0.5, coord.type='sex',

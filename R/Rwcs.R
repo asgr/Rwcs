@@ -25,11 +25,18 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   assertNumeric(RA)
   assertNumeric(Dec, len = length(RA))
   
+  if(is.null(header) & length(list(...))==0){
+    header = options()$header
+  }
+  
   if(is.null(keyvalues) & is.null(header) & length(list(...))==0){
     keyvalues = options()$current_keyvalues
   }
   
   if(is.null(keyvalues) & length(header)==1){
+    
+    #options(header = header)
+
     output = Cwcs_head_s2p(
       RA = RA,
       Dec = Dec,
@@ -52,7 +59,8 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   }else{
     
     keyvalues = Rwcs_keypass(keyvalues, ...)
-    options(current_keyvalues = keyvalues)
+    #options(current_keyvalues = keyvalues)
+    #options(header = NULL)
     
     output = Cwcs_s2p(
       RA = RA,
@@ -160,11 +168,18 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
   assertNumeric(x)
   assertNumeric(y, len = length(x))
   
+  if(is.null(header) & length(list(...))==0){
+    header = options()$header
+  }
+  
   if(is.null(keyvalues) & is.null(header) & length(list(...))==0){
     keyvalues = options()$current_keyvalues
   }
   
   if(is.null(keyvalues) & length(header)==1){
+    
+    #options(header = header)
+    
     output = Cwcs_head_p2s(
       x = x,
       y = y,
@@ -187,7 +202,8 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
   }else{
     
     keyvalues = Rwcs_keypass(keyvalues, ...)
-    options(current_keyvalues = keyvalues)
+    #options(current_keyvalues = keyvalues)
+    #options(header = NULL)
     
     output = Cwcs_p2s(
       x = x,
@@ -469,6 +485,15 @@ Rwcs_keypass=function(keyvalues=NULL,
 
 Rwcs_pixscale = function(keyvalues=NULL, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1, header=NULL){
   assertList(keyvalues, null.ok = TRUE)
+  
+  if(is.null(header)){
+    header = options()$header
+  }
+  
+  if(is.null(keyvalues) & is.null(header)){
+    keyvalues = options()$current_keyvalues
+  }
+  
   if(is.character(header) & is.null(keyvalues)){
     if(requireNamespace("Rfits", quietly = TRUE)){
       keyvalues = Rfits::Rfits_hdr_to_keyvalues(header)
@@ -476,6 +501,7 @@ Rwcs_pixscale = function(keyvalues=NULL, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1, hea
       stop("The Rfits package is need to process the header. Install from GitHub asgr/Rfits.")
     }
   }
+  
   if(!is.null(keyvalues)){
     keyvalues = Rwcs_keypass(keyvalues)
     CD1_1 = keyvalues$CD1_1
