@@ -30,7 +30,11 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
     if(any(names(image)=='imDat') & is.null(keyvalues)){
       if(is.null(header)){
         keyvalues = image$keyvalues
-        header = image$hdr
+        if(is.null(image$raw)){
+          header = image$hdr
+        }else{
+          header = image$raw
+        }
       }else{
         keyvalues = NULL
       }

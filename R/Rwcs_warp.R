@@ -71,8 +71,8 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   }
   image_out = matrix(NA, max(dim(image_in)[1], dim_out[1]), max(dim(image_in)[2], dim_out[2]))
   image_out[1:dim(image_in)[1], 1:dim(image_in)[2]] = image_in
-  pixscale_in = Rwcs_pixscale(keyvalues=keyvalues_in, header=header_in)
-  pixscale_out = Rwcs_pixscale(keyvalues=keyvalues_out, header=header_out)
+  pixscale_in = Rwcs_pixscale(keyvalues=keyvalues_in)
+  pixscale_out = Rwcs_pixscale(keyvalues=keyvalues_out)
   
   norm = matrix(1, max(dim(image_in)[1], dim_out[1]),max(dim(image_in)[2], dim_out[2]))
   

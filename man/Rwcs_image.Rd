@@ -144,19 +144,26 @@ Rwcs_image(temp_mat, keyvalues = tempkey)
 #Read example image with SIP distortion terms
 file_image = system.file('extdata', 'sipsample.fits', package = "Rwcs")
 temp_image = Rfits_read_image(file_image)
-Rwcs_image(temp_image)
+Rwcs_image(temp_image$imDat, keyvalues=temp_image$keyvalues)
 
 #Using it this way the SIP terms are being ignored. If we pass the raw header
 #these can be used:
 
-longhead = Rfits_read_header_raw(file_image)
-Rwcs_image(temp_image$imDat, header=longhead)
+Rwcs_image(temp_image$imDat, header=temp_image$raw)
+
+#This is now done by default
+
+Rwcs_image(temp_image)
+
+#It also stores and inherits the current WCS from options(), so this works:
+
+Rwcs_image(temp_image$imDat)
 
 #The difference from the version where we ignore the terms is very small! It is more
 #obvious when inspecting the same pixel:
 
 Rwcs_p2s(1, 1, temp_image$keyvalues, coord.type='sex')
-Rwcs_p2s(1, 1, header=longhead, coord.type='sex')
+Rwcs_p2s(1, 1, header=temp_image$raw, coord.type='sex')
 
 #So we are looking at differences of about 1/10th of an arcsecond.
 }

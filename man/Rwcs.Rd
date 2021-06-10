@@ -12,10 +12,10 @@ Offers basic high level access to the C \code{wcslib} library for projecting and
 }
 \usage{
 Rwcs_s2p(RA, Dec, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
-  coord.type = "deg", sep = ":", header = NULL, ...)
+  coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, ...)
 Rwcs_p2s(x, y, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
-  coord.type = "deg", sep = ":", header = NULL, ...)
-Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, header = NULL)
+  coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, ...)
+Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -60,6 +60,9 @@ Numeric scalar; FITS header CD2_2 for the CTYPE2 projection system. Change in CT
 }
   \item{header}{
 To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues} must be left as NULL in this case. If you want to use all distortion terms you can also pass in the raw header output of \code{Rfits_read_header_raw}.
+}
+  \item{inherit}{
+Logical; manual over-ride for inheriting the current WCS. This is usually only an issue of no options are passed in (see first Examples).
 }
   \item{\dots}{
 Optional keyvalues to overwrite the \option{keyvalues} entries with. If not present, the defaults are CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0, CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS", EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV2_1 = NA, PV2_2 = NA.
@@ -148,20 +151,20 @@ Rodrgio Tobar
 \code{\link{Cwcs}}, \code{\link{Rwcs_keypass}}
 }
 \examples{
-Rwcs_s2p(10:20, 20:30)
-Rwcs_p2s(Rwcs_s2p(10:20, 20:30))
-Rwcs_p2s(Rwcs_s2p(10:20, 20:30, CTYPE1='RA---SIN', CTYPE2='DEC--SIN'), CTYPE1='RA---SIN', 
-CTYPE2='DEC--SIN')
+Rwcs_s2p(10:20, 20:30, inherit=FALSE)
+Rwcs_p2s(Rwcs_s2p(10:20, 20:30, inherit=FALSE), inherit=FALSE)
+Rwcs_p2s(Rwcs_s2p(10:20, 20:30, CTYPE1='RA---SIN', CTYPE2='DEC--SIN'), CTYPE1='RA---SIN',
+  CTYPE2='DEC--SIN')
 
 #A more complicated example, where we transform and rotate large amounts:
 
 exdata_start=expand.grid(1:10,21:30)
 plot(exdata_start)
 exradec=Rwcs_s2p(exdata_start, CRVAL1=20, CRPIX1=100, CRVAL2=30, CRPIX2=130, CD1_1=0.1,
-CD1_2=-0.05, CD2_1=0.05, CD2_2=0.1)
+CD1_2=-0.05, CD2_1=0.05, CD2_2=0.1, inherit=FALSE)
 plot(exradec)
 exdata_end=Rwcs_p2s(exradec, CRVAL1=20, CRPIX1=100, CRVAL2=30, CRPIX2=130, CD1_1=0.1,
-CD1_2=-0.05, CD2_1=0.05, CD2_2=0.1)
+CD1_2=-0.05, CD2_1=0.05, CD2_2=0.1, inherit=FALSE)
 plot(exdata_start,cex=2)
 points(exdata_end,col='red')
 
