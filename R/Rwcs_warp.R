@@ -6,24 +6,48 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     stop("The imager package is needed for this function to work. Please install it from CRAN.", 
          call. = FALSE)
   }
-  if(any(names(image_in) == 'imDat') & is.null(keyvalues_in)){
-    if(is.null(header_in)){
+  
+  # if(any(names(image_in) == 'imDat') & is.null(keyvalues_in)){
+  #   if(is.null(header_in)){
+  #     keyvalues_in = image_in$keyvalues
+  #     header_in = image_in$hdr
+  #   }
+  #   image_in = image_in$imDat
+  # }else if(any(names(image_in) == 'imDat') & !is.null(keyvalues_in)){
+  #   image_in = image_in$imDat
+  # }
+  # if(any(names(image_in) == "image") & is.null(keyvalues_in)){
+  #   if(is.null(header_in)){
+  #     keyvalues_in = image_in$keyvalues
+  #     header_in = image_in$header
+  #   }
+  #   image_in = image_in$image
+  # }else if(any(names(image) == "image") & !is.null(keyvalues_in)){
+  #   image_in = image_in$image
+  # }
+  
+  if(any(names(image_in)=='imDat') | any(names(image_in)=='image')){
+    if(is.null(keyvalues_in)){
       keyvalues_in = image_in$keyvalues
-      header_in = image_in$hdr
     }
-    image_in = image_in$imDat
-  }else if(any(names(image_in) == 'imDat') & !is.null(keyvalues_in)){
-    image_in = image_in$imDat
-  }
-  if(any(names(image_in) == "image") & is.null(keyvalues_in)){
+    
     if(is.null(header_in)){
-      keyvalues_in = image_in$keyvalues
-      header_in = image_in$header
+      if(is.null(image_in$raw)){
+        header_in = image_in$hdr
+      }else{
+        header_in = image_in$raw
+      }
     }
-    image_in = image_in$image
-  }else if(any(names(image) == "image") & !is.null(keyvalues_in)){
-    image_in = image_in$image
+    
+    if(any(names(image_in)=='imDat')){
+      image_in = image_in$imDat
+    }
+    
+    if(any(names(image_in)=='image')){
+      image_in = image_in$image
+    }
   }
+  
   if(is.character(header_out) & is.null(keyvalues_out)){
     if(length(header_out) > 1){
       if(requireNamespace("Rfits", quietly = TRUE)){
@@ -42,37 +66,43 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
       }
     }
   }
+  
+  if(is.null(keyvalues_out) & is.null(header_out)){
+    keyvalues_out = options()$current_keyvalues
+    header_out = options()$current_header
+  }
+  
   if (!is.null(keyvalues_out) & is.null(dim_out)){
     dim_out = c(keyvalues_out$NAXIS1, keyvalues_out$NAXIS2)
-  }else{
-    NAXIS1 = options()$current_keyvalues$NAXIS1
-    NAXIS2 = options()$current_keyvalues$NAXIS2
-    if(!is.null(NAXIS1) & !is.null(NAXIS2)){
-      dim_out = c(NAXIS1, NAXIS2)
-    }else{
-      stop('Missing NAXIS1 / NAXIS2 in header keyvalues! Specify dim_out.')
-    }
   }
+  
+  if(is.null(dim_out)){
+    stop('Missing NAXIS1 / NAXIS2 in header keyvalues! Specify dim_out.')
+  }
+  
   if (interpolation == "nearest") {
     warpoffset = 0.5
-  }
-  else {
+  }else{
     warpoffset = 0
   }
+  
   .warpfunc_in2out = function(x, y) {
     radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_in, header = header_in)
     xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_out, header = header_out)
-    return = list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset)
+    return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
   }
   .warpfunc_out2in = function(x, y) {
     radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_out, header = header_out)
     xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_in, header = header_in)
-    return = list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset)
+    return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
   }
   image_out = matrix(NA, max(dim(image_in)[1], dim_out[1]), max(dim(image_in)[2], dim_out[2]))
   image_out[1:dim(image_in)[1], 1:dim(image_in)[2]] = image_in
-  pixscale_in = Rwcs_pixscale(keyvalues=keyvalues_in)
-  pixscale_out = Rwcs_pixscale(keyvalues=keyvalues_out)
+  
+  suppressMessages({
+    pixscale_in = Rwcs_pixscale(keyvalues=keyvalues_in)
+    pixscale_out = Rwcs_pixscale(keyvalues=keyvalues_out)
+  })
   
   norm = matrix(1, max(dim(image_in)[1], dim_out[1]),max(dim(image_in)[2], dim_out[2]))
   
@@ -106,10 +136,22 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
       out = out / renorm
     }
   }
+  if(requireNamespace("Rfits", quietly = TRUE)){
+    hdr = Rfits::Rfits_keyvalues_to_hdr(keyvalues_out)
+    header = Rfits::Rfits_keyvalues_to_header(keyvalues_out)
+    raw = Rfits::Rfits_header_to_raw(header)
+  }else{
+    stop("The Rfits package is needed!")
+  }
+  
   output = list(image = as.matrix(out)[1:dim_out[1], 1:dim_out[2]],
-                keyvalues = keyvalues_out, header = header_out)
+                keyvalues = keyvalues_out,
+                hdr = hdr,
+                header = header,
+                raw = raw
+                )
   if (plot) {
     Rwcs_image(output, ...)
   }
-  return = output
+  return(invisible(output))
 }

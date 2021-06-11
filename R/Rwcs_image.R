@@ -24,35 +24,57 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
   if(!missing(image)){
     
     if(add){
-      image = Rwcs_warp(image)
+      image = Rwcs_warp(image, keyvalues_in=keyvalues, header_in=header)
     }
     
-    if(any(names(image)=='imDat') & is.null(keyvalues)){
-      if(is.null(header)){
+    if(any(names(image)=='imDat') | any(names(image)=='image')){
+      if(is.null(keyvalues)){
         keyvalues = image$keyvalues
+      }
+      
+      if(is.null(header)){
         if(is.null(image$raw)){
           header = image$hdr
         }else{
           header = image$raw
         }
-      }else{
-        keyvalues = NULL
       }
-      image = image$imDat
-    }else if(any(names(image)=='imDat') & !is.null(keyvalues)){
-      image = image$imDat
-    }
-    if(any(names(image) == "image") & is.null(keyvalues)){
-      if(is.null(header)){
-        keyvalues = image$keyvalues
-        header = image$header
-      }else{
-        keyvalues = NULL
+      
+      if(any(names(image)=='imDat')){
+        image = image$imDat
       }
-      image = image$image
-    }else if(any(names(image) == "image") & !is.null(keyvalues)){
-      image = image$image
+      
+      if(any(names(image)=='image')){
+        image = image$image
+      }
     }
+    
+    # if(any(names(image)=='imDat') & is.null(keyvalues)){
+    #   if(is.null(header)){
+    #     if(is.null(image$raw)){
+    #       header = image$hdr
+    #     }else{
+    #       header = image$raw
+    #     }
+    #   }
+    #   keyvalues = image$keyvalues
+    #   image = image$imDat
+    # }else if(any(names(image)=='imDat') & !is.null(keyvalues)){
+    #   image = image$imDat
+    # }
+    # if(any(names(image) == "image") & is.null(keyvalues)){
+    #   if(is.null(header)){
+    #     header = image$header
+    #   }else{
+    #     
+    #   }
+    #   keyvalues = image$keyvalues
+    #   image = image$image
+    # }else if(any(names(image) == "image") & !is.null(keyvalues)){
+    #   image = image$image
+    # }
+    
+    
     output = magimage(image, axes=FALSE, add=add, ...)
     if(add == FALSE){
       box()
@@ -61,25 +83,26 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
   
   if(add == FALSE){
     suppressMessages({
-    Rwcs_grid(keyvalues=keyvalues, n=n, grid.col=grid.col, grid.lty=grid.lty, 
-              grid.lwd=grid.lwd, coord.type=coord.type, loc.diff=loc.diff, pretty=pretty, header=header)
+      Rwcs_grid(keyvalues=keyvalues, n=n, grid.col=grid.col, grid.lty=grid.lty, 
+                grid.lwd=grid.lwd, coord.type=coord.type, loc.diff=loc.diff, pretty=pretty, header=header)
+        
+      Rwcs_labels(keyvalues=keyvalues, n=n, lab.col=lab.col, coord.type=coord.type, 
+                  margin=margin, loc.diff=loc.diff, xlab=xlab, ylab=ylab, mgp=mgp, 
+                  mtline=mtline, pretty=pretty, header=header)
       
-    Rwcs_labels(keyvalues=keyvalues, n=n, lab.col=lab.col, coord.type=coord.type, 
-                margin=margin, loc.diff=loc.diff, xlab=xlab, ylab=ylab, mgp=mgp, 
-                mtline=mtline, pretty=pretty, header=header)
-    
-    Rwcs_compass(keyvalues=keyvalues, position=position, com.col=com.col,
-                 com.length=com.length, loc.diff=loc.diff, header=header)
+      Rwcs_compass(keyvalues=keyvalues, position=position, com.col=com.col,
+                   com.length=com.length, loc.diff=loc.diff, header=header)
     })
     
     if(!is.null(header)){
-      options(header = header)
-      options(current_keyvalues = NULL)
-    }else if(!is.null(keyvalues)){
-      options(header = NULL)
+      options(current_header = header)
+    }else{
+      options(current_header = NULL)
+    }
+      
+    if(!is.null(keyvalues)){
       options(current_keyvalues = keyvalues)
     }else{
-      options(header = NULL)
       options(current_keyvalues = NULL)
     }
   }

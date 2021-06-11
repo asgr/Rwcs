@@ -27,7 +27,7 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   
   if(inherit){
     if(is.null(keyvalues) & is.null(header) & length(list(...))==0){
-      header = options()$header
+      header = options()$current_header
     }
     
     if(is.null(keyvalues) & is.null(header) & length(list(...))==0){
@@ -168,7 +168,7 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
   
   if(inherit){
     if(is.null(keyvalues) & is.null(header) & length(list(...))==0){
-      header = options()$header
+      header = options()$current_header
     }
     
     if(is.null(keyvalues) & is.null(header) & length(list(...))==0){
