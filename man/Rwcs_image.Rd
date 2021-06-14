@@ -15,7 +15,7 @@ Rwcs_image(image, keyvalues = NULL, n, grid.col = "grey", grid.lty = 2, grid.lwd
 lab.col = "green", coord.type = "sex", margin = TRUE, loc.diff = c(0, 0),
 xlab = "Right Ascension", ylab = "Declination", mgp = c(2, 0.5, 0), mtline = 2,
 position = "topright", com.col = "green", com.length = 0.05, coord.axis = 'auto',
-pretty = 'auto', header = NULL, add = FALSE, ...)
+pretty = 'auto', header = NULL, add = FALSE, direction = 'auto', ...)
 
 Rwcs_grid(keyvalues = NULL, n, grid.col = "grey", grid.lty = 2, grid.lwd = 0.5,
 coord.type = "sex", loc.diff = c(0, 0), pretty= 'auto', header = NULL, ...)
@@ -91,6 +91,9 @@ To aid backwards compatibility, you can also pass in a 1D character vector of he
 }
   \item{add}{
 Logical; should the target image be added to the current sky view?  
+}
+\item{direction}{
+Character scalar; "auto" (default), "forward" or "backward", see \code{imwarp}. Since it is usally better to go from the higher resolution image and map this onto the lower resolution grid, "auto" selects the better direction given the pixel scales recovered from the header information. This is passed to \code{\link{Rwcs_warp}} when using the option \option{add} = TRUE to add an image to the current WCS view.
 }
   \item{\dots}{
 These are parsed to \code{\link{magimage}}, (\code{Rwcs_image}), \code{\link{lines}} (\code{Rwcs_grid}), \code{\link{axis}} (\code{Rwcs_labels}) or \code{\link{arrows}} (\code{Rwcs_compass}).

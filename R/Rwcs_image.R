@@ -2,7 +2,7 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
                     lab.col='green', coord.type='sex', margin=TRUE, loc.diff=c(0,0),
                     xlab='Right Ascension', ylab='Declination', mgp=c(2,0.5,0), mtline=2,
                     position='topright', com.col="green", com.length=0.05,
-                    coord.axis='auto', pretty='auto', header=NULL, add=FALSE, ...){
+                    coord.axis='auto', pretty='auto', header=NULL, add=FALSE,  direction='auto', ...){
   
   if(missing(xlab)){
     if(coord.type=='sex'){

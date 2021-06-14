@@ -27,7 +27,7 @@ List; input header values to be used for the WCS. This should be the header WCS 
 Integer vector; this defines the desired dimensions of the output image. If this is not provided then the output image is made to be the same size as the NAXIS1 and NAXIS2 arguments taken from \option{header_out} (which is usually what you will want TBH).
 }
   \item{direction}{
-"auto" (default), "forward" or "backward", see \code{imwarp}. Since it is usally better to go from the higher resolution image and map this onto the lower resolution grid, "auto" selects the better direction given the pixel scales recovered from the header information.
+Character scalar; "auto" (default), "forward" or "backward", see \code{imwarp}. Since it is usally better to go from the higher resolution image and map this onto the lower resolution grid, "auto" selects the better direction given the pixel scales recovered from the header information.
 }
   \item{boundary}{
 boundary conditions: "dirichlet", "neumann", "periodic" (default "dirichlet"), see \code{imwarp}
