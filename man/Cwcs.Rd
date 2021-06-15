@@ -184,8 +184,11 @@ Aaron Robotham \cr
 Rodrgio Tobar \cr
 Mark Calabretta (main \code{wcslib} author, not responsible for mistakes in the \code{Rwcs} package)
 }
+\note{
+Note that SIP / TPV / DSS / WAT / TPD is only supported with the use of raw headers (see Examples).
+}
 \seealso{
-\code{\link{Cwcs}}
+\code{\link{Rwcs}}
 }
 \examples{
 Cwcs_s2p(10:20, 20:30)

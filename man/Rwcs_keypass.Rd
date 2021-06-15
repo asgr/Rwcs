@@ -150,6 +150,9 @@ GAPPT \tab  geocentric apparent place,  IAU 1984 system
 \author{
 Aaron Robotham
 }
+\note{
+Note that SIP / TPV / DSS / WAT / TPD is only supported with the use of raw headers (see Examples).
+}
 \seealso{
 \code{\link{Rwcs}}
 }

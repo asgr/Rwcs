@@ -147,6 +147,11 @@ Calabretta, M.R., & Greisen, E.W., (2002), Astronomy & Astrophysics, 395, 1077-1
 Aaron Robotham \cr
 Rodrgio Tobar
 }
+\note{
+By R convention the bottom-left part of the bottom-left pixel when plotting the image matrix is c(0,0) and the top-right part of the bottom-left pixel is c(1,1), i.e. the mid-point of pixels are half integer values in x and y. This differs to the FITS convention of pixel mid points being integer values. As such the R [x,y] = FITS [x-0.5,y-0.5]. This rarely matters too much in practice, but for accurate overlays you will want to get it right.
+
+Note that SIP / TPV / DSS / WAT / TPD is only supported with the use of raw headers (see Examples).
+}
 \seealso{
 \code{\link{Cwcs}}, \code{\link{Rwcs_keypass}}
 }
