@@ -21,6 +21,8 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
     }
   }
   
+  output = NULL
+  
   if(!missing(image)){
     
     if(add){
