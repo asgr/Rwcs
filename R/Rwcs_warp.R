@@ -1,10 +1,14 @@
 Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out = NULL, 
           direction = "auto", boundary = "dirichlet", interpolation = "cubic", 
-          doscale = TRUE, plot = FALSE, header_out = NULL, header_in = NULL, ...) 
+          doscale = TRUE, plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE, ...) 
 {
   if (!requireNamespace("imager", quietly = TRUE)) {
     stop("The imager package is needed for this function to work. Please install it from CRAN.", 
          call. = FALSE)
+  }
+  
+  if(!requireNamespace("Rfits", quietly = TRUE)){
+    stop("The Rfits package is needed!")
   }
   
   # if(any(names(image_in) == 'imDat') & is.null(keyvalues_in)){
@@ -86,6 +90,39 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     warpoffset = 0
   }
   
+  image_out = list(
+    imDat = matrix(NA, max(dim(image_in)[1], dim_out[1]), max(dim(image_in)[2], dim_out[2])),
+    keyvalues = keyvalues_out,
+    hdr = Rfits::Rfits_keyvalues_to_hdr(keyvalues_out),
+    header = Rfits::Rfits_keyvalues_to_header(keyvalues_out),
+    raw = Rfits::Rfits_header_to_raw(Rfits::Rfits_keyvalues_to_header(keyvalues_out)),
+    keynames = names(keyvalues_out),
+    keycomments = as.list(rep('', length(keyvalues_out)))
+  )
+  names(image_out$keycomments) = image_out$keynames
+  class(image_out) = c('Rfits_image', class(image_out))
+  
+  if(dotightcrop){
+    BL = Rwcs_p2s(0, 0, keyvalues = keyvalues_in, header=header_in, pixcen='R')
+    TL = Rwcs_p2s(0, dim(image_in)[2], keyvalues = keyvalues_in, header=header_in, pixcen='R')
+    TR = Rwcs_p2s(dim(image_in)[1], dim(image_in)[2], keyvalues = keyvalues_in, header=header_in, pixcen='R')
+    BR = Rwcs_p2s(dim(image_in)[1], 0, keyvalues = keyvalues_in, header=header_in, pixcen='R')
+    corners = rbind(BL, TL, TR, BR)
+    tightcrop = ceiling(Rwcs_s2p(corners, keyvalues = keyvalues_out, header=header_out, pixcen='R'))
+    min_x = max(1L, min(tightcrop[,1]))
+    max_x = max(min_x + dim(image_in)[1], range(tightcrop[,1])[2])
+    min_y = max(1L, min(tightcrop[,2]))
+    max_y = max(min_y + dim(image_in)[2], range(tightcrop[,2])[2])
+    image_out = image_out[c(min_x, max_x), c(min_y, max_y)]
+    keyvalues_out = image_out$keyvalues
+    header_out = image_out$raw
+  }else{
+    min_x = 1L
+    max_x = dim_out[1]
+    min_y = 1L
+    max_y = dim_out[2]
+  }
+  
   .warpfunc_in2out = function(x, y) {
     radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_in, header = header_in)
     xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_out, header = header_out)
@@ -96,15 +133,15 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_in, header = header_in)
     return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
   }
-  image_out = matrix(NA, max(dim(image_in)[1], dim_out[1]), max(dim(image_in)[2], dim_out[2]))
-  image_out[1:dim(image_in)[1], 1:dim(image_in)[2]] = image_in
   
+  image_out$imDat[1:dim(image_in)[1], 1:dim(image_in)[2]] = image_in
+
   suppressMessages({
     pixscale_in = Rwcs_pixscale(keyvalues=keyvalues_in)
     pixscale_out = Rwcs_pixscale(keyvalues=keyvalues_out)
   })
   
-  norm = matrix(1, max(dim(image_in)[1], dim_out[1]),max(dim(image_in)[2], dim_out[2]))
+  norm = matrix(1, max(dim(image_in)[1], dim(image_out)[1]),max(dim(image_in)[2], dim(image_out)[2]))
   
   if (direction == "auto") {
     if (pixscale_in < pixscale_out) {
@@ -115,7 +152,7 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     }
   }
   if (direction == "forward") {
-    out = imager::imwarp(im = imager::as.cimg(image_out), 
+    out = imager::imwarp(im = imager::as.cimg(image_out$imDat), 
                          map = .warpfunc_in2out, direction = direction, coordinates = "absolute", 
                          boundary = boundary, interpolation = interpolation)
     if(doscale){
@@ -126,7 +163,7 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     }
   }
   if (direction == "backward") {
-    out = imager::imwarp(im = imager::as.cimg(image_out), 
+    out = imager::imwarp(im = imager::as.cimg(image_out$imDat), 
                          map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
                          boundary = boundary, interpolation = interpolation)
     if(doscale){
@@ -136,22 +173,24 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
       out = out / renorm
     }
   }
-  if(requireNamespace("Rfits", quietly = TRUE)){
-    hdr = Rfits::Rfits_keyvalues_to_hdr(keyvalues_out)
-    header = Rfits::Rfits_keyvalues_to_header(keyvalues_out)
-    raw = Rfits::Rfits_header_to_raw(header)
-  }else{
-    stop("The Rfits package is needed!")
-  }
   
-  output = list(image = as.matrix(out)[1:dim_out[1], 1:dim_out[2]],
-                keyvalues = keyvalues_out,
-                hdr = hdr,
-                header = header,
-                raw = raw
-                )
+  # output = list(imDat = as.matrix(out)[1:dim(image_out)[1], 1:dim(image_out)[2]],
+  #               keyvalues = keyvalues_out,
+  #               hdr = hdr,
+  #               header = header,
+  #               raw = raw,
+  #               keynames = names(keyvalues_out),
+  #               keycomments = as.list(rep('', length(keyvalues_out)))
+  #               )
+  # 
+  # names(output$keycomments) = output$keynames
+  
+  image_out$imDat[] = out
+  
+  image_out = image_out[c(1L - (min_x - 1L), dim_out[1] - (min_x - 1L)),c(1L - (min_y - 1L), dim_out[2] - (min_y - 1L))]
+  
   if (plot) {
-    Rwcs_image(output, ...)
+    Rwcs_image(image_out, ...)
   }
-  return(invisible(output))
+  return(invisible(image_out))
 }

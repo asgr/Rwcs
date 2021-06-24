@@ -10,7 +10,7 @@ Remaps an input projection system to a different target WCS.
 \usage{
 Rwcs_warp(image_in, keyvalues_out = NULL, keyvalues_in = NULL, dim_out = NULL,
 direction = "auto", boundary = "dirichlet", interpolation = "cubic", doscale = TRUE,
-plot = FALSE, header_out = NULL, header_in = NULL, ...)
+plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -47,6 +47,9 @@ To aid backwards compatibility, you can also pass in a 1D character vector of he
   \item{header_in}{
 To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues_in} must be left as NULL in this case. If you want to use all distortion terms you can also pass in the raw header output of \code{Rfits_read_header_raw}.
 }
+  \item{dotightcrop}{
+Logical; should an internal tight crop be made. If the images are approximately the same angular size this should be left as FALSE (it will run faster), but when there is a big difference between the input and output WCS (the latter being much larger) then setting this to TRUE might speed the warping up a lot.  
+}
   \item{\dots}{
 Dots are parsed to \code{\link{Rwcs_image}} (only relevant if \option{plot}=TRUE).
 }  
@@ -64,11 +67,15 @@ There are a few different ways to consider doing pixel remapping (or warping). T
 The actual warping is done using the \code{imwarp} function in the \code{imager} package, so this will need to be installed prior to use (it is available on CRAN).
 }
 \value{
-A list containing:
+A list (class Rfits_image) containing:
 
-  \item{image}{Numeric matrix; the remapped image using the target WCS.}
-  \item{keyvalues}{The target \option{keyvalues_out}.}
-  \item{header}{The target \option{header_out}.}
+  \item{imDat}{Numeric matrix; the remapped image using the target WCS.}
+  \item{keyvalues}{Usual keyvalues of target \option{keyvalues_out}.}
+  \item{hdr}{Usual hdr of target \option{header_out}.}
+  \item{header}{Usual header of target \option{header_out}.}
+  \item{header}{Usual raw of target \option{header_out}.}
+  \item{keynames}{Usual keynames of target \option{header_out}.}
+  \item{keycomments}{Usual keycomments of target \option{header_out}.}
 }
 \author{
 Aaron Robotham
