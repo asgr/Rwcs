@@ -17,6 +17,7 @@ export(Rwcs_labels)
 export(Rwcs_compass)
 
 export(Rwcs_warp)
+export(Rwcs_rebin)
 
 useDynLib(Rwcs, .registration=TRUE)
 

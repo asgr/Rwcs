@@ -1,21 +1,27 @@
 \name{Rwcs_warp}
 \alias{Rwcs_warp}
+\alias{Rwcs_rebin}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Remap Image WCS via Warping
+Remap and Rebin Image WCS via Warping
 }
 \description{
 Remaps an input projection system to a different target WCS.
 }
 \usage{
 Rwcs_warp(image_in, keyvalues_out = NULL, keyvalues_in = NULL, dim_out = NULL,
-direction = "auto", boundary = "dirichlet", interpolation = "cubic", doscale = TRUE,
-plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE, ...)
+  direction = "auto", boundary = "dirichlet", interpolation = "cubic", doscale = TRUE,
+  plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE, ...)
+
+Rwcs_rebin(image, downsample = 2, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{image_in}{
 Numeric matrix; required, the image we want to warp. If \option{image} is a list as created by \code{Rfits_read_image} then the image part of the list is parsed to \option{image} and the correct header part is parsed to \option{keyvalues}.
+}
+  \item{image}{
+Numeric matrix; required, the image we want to rebin. If \option{image} is a list as created by \code{Rfits_read_image} then the image part of the list is parsed to \option{image} and the correct header part is parsed to \option{keyvalues}.
 }
   \item{keyvalues_out}{
 List; output header values to be used for the WCS. This is the target WCS projection that \option{image_in} will be mapped onto.
@@ -49,6 +55,9 @@ To aid backwards compatibility, you can also pass in a 1D character vector of he
 }
   \item{dotightcrop}{
 Logical; should an internal tight crop be made. If the images are approximately the same angular size this should be left as FALSE (it will run faster), but when there is a big difference between the input and output WCS (the latter being much larger) then setting this to TRUE might speed the warping up a lot.  
+}
+  \item{downsample}{
+Integer scalar; the downsampling factor for the image. This should be a power of 2, if it is not it will be coerced to one internally (the nearest lower one).  
 }
   \item{\dots}{
 Dots are parsed to \code{\link{Rwcs_image}} (only relevant if \option{plot}=TRUE).

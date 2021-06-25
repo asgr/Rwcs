@@ -16,11 +16,14 @@ Cwcs_s2p(RA, Dec, CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 =
   CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS",
   EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV1_3 = NA, PV2_1 = NA, PV2_2 = NA, PV2_3 = NA,
   PV2_4 = NA, PV2_5 = NA)
+  
 Cwcs_p2s(x, y, CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0,
   CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS",
   EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV1_3 = NA, PV2_1 = NA, PV2_2 = NA, PV2_3 = NA,
   PV2_4 = NA, PV2_5 = NA)
+  
 Cwcs_head_s2p(RA, Dec, header, nkeyrec)
+
 Cwcs_head_p2s(x, y, header, nkeyrec)
 }
 %- maybe also 'usage' for other objects documented here.

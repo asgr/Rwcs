@@ -13,8 +13,10 @@ Offers basic high level access to the C \code{wcslib} library for projecting and
 \usage{
 Rwcs_s2p(RA, Dec, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
   coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, ...)
+  
 Rwcs_p2s(x, y, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
   coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, ...)
+  
 Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1)
 }
 %- maybe also 'usage' for other objects documented here.
