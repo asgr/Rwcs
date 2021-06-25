@@ -7,6 +7,8 @@ Remap and Rebin Image WCS via Warping
 }
 \description{
 Remaps an input projection system to a different target WCS.
+
+\code{Rwcs_warp} does precised remapping of one WCS to another, \code{Rwcs_rebin} does quick coarse down-sampling (via re-binning), which can be useful for faster visualisations (since fewer pixels to worry about). Both conserve flux correctly.
 }
 \usage{
 Rwcs_warp(image_in, keyvalues_out = NULL, keyvalues_in = NULL, dim_out = NULL,
