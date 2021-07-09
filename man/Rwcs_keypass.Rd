@@ -10,8 +10,9 @@ Ensures we make a WCS legal header.
 \usage{
 Rwcs_keypass(keyvalues = NULL, CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0,
   CRVAL2 = 0, CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1,
-  RADESYS = 'ICRS', EQUINOX = 'infer', PV1_1 = NA, PV1_2 = NA, PV1_3 = NA, PV2_1 = NA,
-  PV2_2 = NA, PV2_3 = NA, PV2_4 = NA, PV2_5 = NA, ...)
+  RADESYS = 'ICRS', EQUINOX = 'infer', CUNIT1 = 'deg', CUNIT2 = 'deg',PV1_1 = NA,
+  PV1_2 = NA, PV1_3 = NA, PV2_1 = NA, PV2_2 = NA, PV2_3 = NA, PV2_4 = NA, PV2_5 = NA,
+  ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -53,6 +54,12 @@ Character scalar; the RA-DEC system to use. See details.
 }
   \item{EQUINOX}{
 Character scalar; the equinox for the system. Usually 2000 for ICRS and FK5, and 1950 for all others. Historically used "EPOCH", but this is deprecated now (although this function will search for EPOCH if EQUINOX is missing and use that in place).
+}
+  \item{CUNIT1}{
+Character scalar; the units of the WCS for the RA axis. Is de facto 'deg' almost always these days, to the degree that many headers do not even list it (or list it and leave it blank) assuming the user will assume it is in degrees. If found and set to a blank string it will be changed to 'deg'.
+}
+  \item{CUNIT2}{
+Character scalar; the units of the WCS for the Dec axis. Is de facto 'deg' almost always these days, to the degree that many headers do not even list it (or list it and leave it blank) assuming the user will assume it is in degrees. If found and set to a blank string it will be changed to 'deg'.
 }
   \item{PV1_1}{
 Numeric scalar; additional axis 1 projection parameter 1.

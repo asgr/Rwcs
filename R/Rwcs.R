@@ -277,6 +277,7 @@ Rwcs_keypass=function(keyvalues=NULL,
                       CD2_1=0, CD2_2=1,
                       RADESYS='ICRS',
                       EQUINOX='infer',
+                      CUNIT1='deg', CUNIT2='deg',
                       PV1_1=NA, PV1_2=NA, PV1_3=NA,
                       PV2_1=NA, PV2_2=NA, PV2_3=NA, PV2_4=NA, PV2_5=NA,
                       ...){
@@ -287,6 +288,8 @@ Rwcs_keypass=function(keyvalues=NULL,
     if(missing(CRVAL2)){if(!is.null(keyvalues$CRVAL2)){CRVAL2 = keyvalues$CRVAL2}else{message('CRVAL2 is not defined!')}}
     if(missing(CRPIX1)){if(!is.null(keyvalues$CRPIX1)){CRPIX1 = keyvalues$CRPIX1}else{message('CRPIX1 is not defined!')}}
     if(missing(CRPIX2)){if(!is.null(keyvalues$CRPIX2)){CRPIX2 = keyvalues$CRPIX2}else{message('CRPIX2 is not defined!')}}
+    if(missing(CUNIT1)){if(!is.null(keyvalues$CUNIT1)){CUNIT1 = keyvalues$CUNIT1}else{message('CUNIT1 is not defined!')}}
+    if(missing(CUNIT2)){if(!is.null(keyvalues$CUNIT2)){CUNIT2 = keyvalues$CUNIT2}else{message('CUNIT2 is not defined!')}}
     if(missing(CD1_1)){
       if(!is.null(keyvalues$CD1_1)){
         CD1_1 = keyvalues$CD1_1
@@ -352,6 +355,14 @@ Rwcs_keypass=function(keyvalues=NULL,
           message('EQUINOX is not defined (also no EPOCH)!')
         }
       }
+    }
+    if(CUNIT1=='        '){
+      CUNIT1 = 'deg'
+      message('CUNIT1 is blank, setting to \'deg\'!')
+    }
+    if(CUNIT2=='        '){
+      CUNIT2 = 'deg'
+      message('CUNIT1 is blank, setting to \'deg\'!')
     }
     if(missing(PV1_1)){if(!is.null(keyvalues$PV1_1)){PV1_1 = keyvalues$PV1_1}}
     if(missing(PV1_2)){if(!is.null(keyvalues$PV1_2)){PV1_2 = keyvalues$PV1_2}}
@@ -476,6 +487,8 @@ Rwcs_keypass=function(keyvalues=NULL,
   keyvalues$CD2_2 = CD2_2
   keyvalues$RADESYS = RADESYS
   keyvalues$EQUINOX = EQUINOX
+  keyvalues$CUNIT1 = CUNIT1
+  keyvalues$CUNIT2 = CUNIT2
   keyvalues$PV1_1 = PV1_1
   keyvalues$PV1_2 = PV1_2
   keyvalues$PV1_3 = PV1_3
