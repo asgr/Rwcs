@@ -5,6 +5,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // Cwcs_s2p
 SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec, Rcpp::String CTYPE1, Rcpp::String CTYPE2, double CRVAL1, double CRVAL2, double CRPIX1, double CRPIX2, double CD1_1, double CD1_2, double CD2_1, double CD2_2, Rcpp::String RADESYS, int EQUINOX, double PV1_1, double PV1_2, double PV1_3, double PV2_1, double PV2_2, double PV2_3, double PV2_4, double PV2_5);
 RcppExport SEXP _Rwcs_Cwcs_s2p(SEXP RASEXP, SEXP DecSEXP, SEXP CTYPE1SEXP, SEXP CTYPE2SEXP, SEXP CRVAL1SEXP, SEXP CRVAL2SEXP, SEXP CRPIX1SEXP, SEXP CRPIX2SEXP, SEXP CD1_1SEXP, SEXP CD1_2SEXP, SEXP CD2_1SEXP, SEXP CD2_2SEXP, SEXP RADESYSSEXP, SEXP EQUINOXSEXP, SEXP PV1_1SEXP, SEXP PV1_2SEXP, SEXP PV1_3SEXP, SEXP PV2_1SEXP, SEXP PV2_2SEXP, SEXP PV2_3SEXP, SEXP PV2_4SEXP, SEXP PV2_5SEXP) {

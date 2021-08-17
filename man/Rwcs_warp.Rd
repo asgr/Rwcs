@@ -15,7 +15,7 @@ Rwcs_warp(image_in, keyvalues_out = NULL, keyvalues_in = NULL, dim_out = NULL,
   direction = "auto", boundary = "dirichlet", interpolation = "cubic", doscale = TRUE,
   plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE, ...)
 
-Rwcs_rebin(image, downsample = 2, ...)
+Rwcs_rebin(image, scale = 1, interpolation = 6)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -41,7 +41,7 @@ Character scalar; "auto" (default), "forward" or "backward", see \code{imwarp}. 
 boundary conditions: "dirichlet", "neumann", "periodic" (default "dirichlet"), see \code{imwarp}
 }
   \item{interpolation}{
-"nearest", "linear", "cubic" (default "linear"), see \code{imwarp}
+Character/integer scalar; For \code{Rwcs_warp}: "nearest", "linear", "cubic" (default "linear"), see \code{imwarp}. For \code{imresize}: Linear is 3, Cubic is 5, Lanczos (higher quality), default) is 6.
 }
   \item{doscale}{
 Logical; if TRUE (default) then the image is scaled by the relative change the change in flux per pixel found in a refernece normalisation image. This is usually what you want when converting images between different WCS (since we really want to make sure we conserve overall flux). If FALSE then nothing is done to rescale the image. This is useful when the input \option{image_in} is something like a segmentation map, where the actual values matter.
@@ -58,8 +58,8 @@ To aid backwards compatibility, you can also pass in a 1D character vector of he
   \item{dotightcrop}{
 Logical; should an internal tight crop be made. If the images are approximately the same angular size this should be left as FALSE (it will run faster), but when there is a big difference between the input and output WCS (the latter being much larger) then setting this to TRUE might speed the warping up a lot.  
 }
-  \item{downsample}{
-Integer scalar; the downsampling factor for the image. This should be a power of 2, if it is not it will be coerced to one internally (the nearest lower one).  
+  \item{scale}{
+Numeric scalar; resolution increasing factor, i.e. value larger thatn 1 will increase the number of output pixels (decrease the asec/pix pixel scale) and vica-versa.  
 }
   \item{\dots}{
 Dots are parsed to \code{\link{Rwcs_image}} (only relevant if \option{plot}=TRUE).
