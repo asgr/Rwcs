@@ -201,32 +201,36 @@ Rwcs_rebin = function(image, scale = 1,interpolation = 6){
          call. = FALSE)
   }
   
-  #downsample = 2^floor(log(downsample,2))
-  #dim_use = downsample * floor(dim(image) / downsample)
-  #image = image[1:dim_use[1], 1:dim_use[2]]
-  image_resize = as.matrix(imager::imresize(imager::as.cimg(image$imDat), scale)) / (scale^2)
-  
-  keyvalues_out = image$keyvalues
-  keyvalues_out$NAXIS1 = dim(image_resize)[1]
-  keyvalues_out$NAXIS2 = dim(image_resize)[2]
-  keyvalues_out$CRPIX1 = keyvalues_out$CRPIX1 * scale
-  keyvalues_out$CRPIX2 = keyvalues_out$CRPIX2 * scale
-  keyvalues_out$CD1_1 = keyvalues_out$CD1_1 / scale
-  keyvalues_out$CD1_2 = keyvalues_out$CD1_2 / scale
-  keyvalues_out$CD2_1 = keyvalues_out$CD2_1 / scale
-  keyvalues_out$CD2_2 = keyvalues_out$CD2_2 / scale
-  
-  image_out = list(
-    imDat = image_resize,
-    keyvalues = keyvalues_out,
-    hdr = Rfits::Rfits_keyvalues_to_hdr(keyvalues_out),
-    header = Rfits::Rfits_keyvalues_to_header(keyvalues_out),
-    raw = Rfits::Rfits_header_to_raw(Rfits::Rfits_keyvalues_to_header(keyvalues_out)),
-    keynames = names(keyvalues_out),
-    keycomments = as.list(rep('', length(keyvalues_out)))
-  )
-  names(image_out$keycomments) = image_out$keynames
-  class(image_out) = c('Rfits_image', class(image_out))
-  
-  return(image_out)
+  if(inherits(image,'Rfits_image')){
+    #downsample = 2^floor(log(downsample,2))
+    #dim_use = downsample * floor(dim(image) / downsample)
+    #image = image[1:dim_use[1], 1:dim_use[2]]
+    image_resize = as.matrix(imager::imresize(imager::as.cimg(image$imDat), scale)) / (scale^2)
+    
+    keyvalues_out = image$keyvalues
+    keyvalues_out$NAXIS1 = dim(image_resize)[1]
+    keyvalues_out$NAXIS2 = dim(image_resize)[2]
+    keyvalues_out$CRPIX1 = keyvalues_out$CRPIX1 * scale
+    keyvalues_out$CRPIX2 = keyvalues_out$CRPIX2 * scale
+    keyvalues_out$CD1_1 = keyvalues_out$CD1_1 / scale
+    keyvalues_out$CD1_2 = keyvalues_out$CD1_2 / scale
+    keyvalues_out$CD2_1 = keyvalues_out$CD2_1 / scale
+    keyvalues_out$CD2_2 = keyvalues_out$CD2_2 / scale
+    
+    image_out = list(
+      imDat = image_resize,
+      keyvalues = keyvalues_out,
+      hdr = Rfits::Rfits_keyvalues_to_hdr(keyvalues_out),
+      header = Rfits::Rfits_keyvalues_to_header(keyvalues_out),
+      raw = Rfits::Rfits_header_to_raw(Rfits::Rfits_keyvalues_to_header(keyvalues_out)),
+      keynames = names(keyvalues_out),
+      keycomments = as.list(rep('', length(keyvalues_out)))
+    )
+    names(image_out$keycomments) = image_out$keynames
+    class(image_out) = c('Rfits_image', class(image_out))
+    
+    return(image_out)
+  }else{
+    return(as.matrix(imager::imresize(imager::as.cimg(image), scale)) / (scale^2))
+  }
 }
