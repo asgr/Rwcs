@@ -66,7 +66,7 @@ Dots are parsed to \code{\link{Rwcs_image}} (only relevant if \option{plot}=TRUE
 }  
 }
 \details{
-The function allows for arbitrary WCS remapping from any \code{wcslib} supported projection (see \code{\link{Rwcs}}). The process internally does the following:
+The \code{Rwcs_warp} function allows for arbitrary WCS remapping from any \code{wcslib} supported projection (see \code{\link{Rwcs}}). The process internally does the following:
 
 \itemize{
   \item Rwcs_p2s; maps the input image to RA and Dec per pixel using the input header
@@ -76,9 +76,11 @@ The function allows for arbitrary WCS remapping from any \code{wcslib} supported
 There are a few different ways to consider doing pixel remapping (or warping). The main question is usually whether to operate on a forward or backwards manner (see \code{imwarp}). Backwards mapping (the default) finds the best interpolation of every output pixel in the input image, whereas forward mapping finds the best interpolation of every input pixel on the output image. Backwards mapping usually provides the fewest artefacts (hence it is the default), but in general if the input image is higher resolution then you might prefer forward mapping and vica-versa.
 
 The actual warping is done using the \code{imwarp} function in the \code{imager} package, so this will need to be installed prior to use (it is available on CRAN).
+
+The \code{Rwcs_rebin} allows simple rebinning on the same projection geometry (so no rotation or distortion term differences). For this reason it is simpler to use, and also work on matrix inputs (really with PSF re-scaling in mind).
 }
 \value{
-A list (class Rfits_image) containing:
+For both \code{Rwcs_warp} and \code{Rwcs_rebin} (if input is class Rfits), returns a list (class Rfits_image) containing:
 
   \item{imDat}{Numeric matrix; the remapped image using the target WCS.}
   \item{keyvalues}{Usual keyvalues of target \option{keyvalues_out}.}
@@ -87,6 +89,8 @@ A list (class Rfits_image) containing:
   \item{header}{Usual raw of target \option{header_out}.}
   \item{keynames}{Usual keynames of target \option{header_out}.}
   \item{keycomments}{Usual keycomments of target \option{header_out}.}
+  
+For \code{Rwcs_rebin}, if the input is a matrix then the output is also a matrix. The user will need to pay attention to the change in the pixel scale etc because this is therefore not stored directly in the output since there is no attached WCS.
 }
 \author{
 Aaron Robotham
