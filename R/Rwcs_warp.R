@@ -159,7 +159,7 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
       renorm = imager::imwarp(im = imager::as.cimg(norm), 
                            map = .warpfunc_in2out, direction = direction, coordinates = "absolute", 
                            boundary = boundary, interpolation = interpolation)
-      out = out / renorm
+      out = (out / renorm) * (pixscale_out / pixscale_in)^2
     }
   }
   if (direction == "backward") {
@@ -170,7 +170,7 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
       renorm = imager::imwarp(im = imager::as.cimg(norm), 
                            map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
                            boundary = boundary, interpolation = interpolation)
-      out = out / renorm
+      out = (out / renorm) * (pixscale_out / pixscale_in)^2
     }
   }
   
@@ -205,7 +205,16 @@ Rwcs_rebin = function(image, scale = 1,interpolation = 6){
     #downsample = 2^floor(log(downsample,2))
     #dim_use = downsample * floor(dim(image) / downsample)
     #image = image[1:dim_use[1], 1:dim_use[2]]
-    image_resize = as.matrix(imager::imresize(imager::as.cimg(image$imDat), scale)) / (scale^2)
+    image_resize = as.matrix(imager::resize(imager::as.cimg(image$imDat), -100*scale, -100*scale))
+    norm = matrix(1, dim(image$imDat)[1], dim(image$imDat)[2])
+    norm_resize = as.matrix(imager::resize(imager::as.cimg(norm), -100*scale, -100*scale))
+    image_resize = (image_resize / norm_resize) / scale^2
+    
+    # if(all(dim(image$imDat)*scale %% 1 == 0)){
+    #   image_resize = image_resize * sum(image$imDat, na.rm = TRUE) / sum(image_resize, na.rm = TRUE)
+    # }else{
+    #   image_resize = image_resize / (scale^2)
+    # }
     
     keyvalues_out = image$keyvalues
     keyvalues_out$NAXIS1 = dim(image_resize)[1]
@@ -231,6 +240,16 @@ Rwcs_rebin = function(image, scale = 1,interpolation = 6){
     
     return(image_out)
   }else{
-    return(as.matrix(imager::imresize(imager::as.cimg(image), scale)) / (scale^2))
+    image_resize = as.matrix(imager::resize(imager::as.cimg(image), -100*scale, -100*scale))
+    norm = matrix(1, dim(image)[1], dim(image)[2])
+    norm_resize = as.matrix(imager::resize(imager::as.cimg(norm), -100*scale, -100*scale))
+    image_resize = (image_resize / norm_resize) / scale^2
+    
+    # if(all(dim(image$imDat)*scale %% 1 == 0)){
+    #   image_resize = image_resize * sum(image, na.rm = TRUE) / sum(image_resize, na.rm = TRUE)
+    # }else{
+    #   image_resize = image_resize / (scale^2)
+    # }
+    return(image_resize)
   }
 }
