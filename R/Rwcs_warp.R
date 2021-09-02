@@ -90,12 +90,18 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     warpoffset = 0
   }
   
+  if(is.null(header_in)){
+    raw = NULL
+  }else{
+    raw = Rfits::Rfits_header_to_raw(Rfits::Rfits_keyvalues_to_header(keyvalues_out))
+  }
+  
   image_out = list(
     imDat = matrix(NA, max(dim(image_in)[1], dim_out[1]), max(dim(image_in)[2], dim_out[2])),
     keyvalues = keyvalues_out,
     hdr = Rfits::Rfits_keyvalues_to_hdr(keyvalues_out),
     header = Rfits::Rfits_keyvalues_to_header(keyvalues_out),
-    raw = Rfits::Rfits_header_to_raw(Rfits::Rfits_keyvalues_to_header(keyvalues_out)),
+    raw = raw,
     keynames = names(keyvalues_out),
     keycomments = as.list(rep('', length(keyvalues_out)))
   )
@@ -115,7 +121,11 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     max_y = max(min_y + dim(image_in)[2], range(tightcrop[,2])[2])
     image_out = image_out[c(min_x, max_x), c(min_y, max_y)]
     keyvalues_out = image_out$keyvalues
-    header_out = image_out$raw
+    if(!is.null(header_out)){
+      header_out = image_out$raw
+    }else{
+      header_out = NULL
+    }
   }else{
     min_x = 1L
     max_x = dim_out[1]
