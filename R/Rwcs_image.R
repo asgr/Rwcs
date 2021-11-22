@@ -59,32 +59,6 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
       image = image$imDat
     }
     
-    # if(any(names(image)=='imDat') & is.null(keyvalues)){
-    #   if(is.null(header)){
-    #     if(is.null(image$raw)){
-    #       header = image$hdr
-    #     }else{
-    #       header = image$raw
-    #     }
-    #   }
-    #   keyvalues = image$keyvalues
-    #   image = image$imDat
-    # }else if(any(names(image)=='imDat') & !is.null(keyvalues)){
-    #   image = image$imDat
-    # }
-    # if(any(names(image) == "image") & is.null(keyvalues)){
-    #   if(is.null(header)){
-    #     header = image$header
-    #   }else{
-    #     
-    #   }
-    #   keyvalues = image$keyvalues
-    #   image = image$image
-    # }else if(any(names(image) == "image") & !is.null(keyvalues)){
-    #   image = image$image
-    # }
-    
-    
     output = magimage(image, axes=FALSE, add=add, ...)
     if(add == FALSE){
       box()

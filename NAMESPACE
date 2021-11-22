@@ -12,6 +12,7 @@ export(Cwcs_head_p2s)
 export(Cwcs_head_s2p)
 
 export(Rwcs_image)
+export(Rwcs_imageRGB)
 export(Rwcs_grid)
 export(Rwcs_labels)
 export(Rwcs_compass)
