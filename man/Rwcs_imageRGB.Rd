@@ -134,3 +134,4 @@ GALEX_NUV = Rfits_read_image(system.file("extdata", 'GALEX_NUV.fits', package="m
 Rwcs_imageRGB(VISTA_K, VST_r, GALEX_NUV)
 }
 
+\concept{ WCS }% use one of  RShowDoc("KEYWORDS")
