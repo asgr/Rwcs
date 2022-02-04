@@ -58,7 +58,17 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   }
   
   if (!is.null(keyvalues_out) & is.null(dim_out)){
-    dim_out = c(keyvalues_out$NAXIS1, keyvalues_out$NAXIS2)
+    if(is.null(keyvalues_out$ZNAXIS1)){
+      NAXIS1 = keyvalues_out$NAXIS1
+    }else{
+      NAXIS1 = keyvalues_out$ZNAXIS1
+    }
+    if(is.null(keyvalues_out$ZNAXIS2)){
+      NAXIS2 = keyvalues_out$NAXIS2
+    }else{
+      NAXIS2 = keyvalues_out$ZNAXIS2
+    }
+    dim_out = c(NAXIS1, NAXIS2)
   }
   
   if(is.null(dim_out)){
@@ -97,9 +107,9 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     corners = rbind(BL, TL, TR, BR)
     tightcrop = ceiling(Rwcs_s2p(corners, keyvalues = keyvalues_out, header=header_out, pixcen='R'))
     min_x = max(1L, min(tightcrop[,1]))
-    max_x = max(min_x + dim(image_in)[1], range(tightcrop[,1])[2])
+    max_x = max(min_x + dim(image_in)[1] - 1L, range(tightcrop[,1])[2])
     min_y = max(1L, min(tightcrop[,2]))
-    max_y = max(min_y + dim(image_in)[2], range(tightcrop[,2])[2])
+    max_y = max(min_y + dim(image_in)[2] - 1L, range(tightcrop[,2])[2])
     image_out = image_out[c(min_x, max_x), c(min_y, max_y)]
     keyvalues_out = image_out$keyvalues
     if(!is.null(header_out)){
