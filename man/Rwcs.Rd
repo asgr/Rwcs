@@ -17,7 +17,8 @@ Rwcs_s2p(RA, Dec, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
 Rwcs_p2s(x, y, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
   coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, ...)
   
-Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1)
+Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, type = 'old',
+  dim = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -59,6 +60,12 @@ Numeric scalar; FITS header CD2_1 for the CTYPE2 projection system. Change in CT
 }
   \item{CD2_2}{
 Numeric scalar; FITS header CD2_2 for the CTYPE2 projection system. Change in CTYPE2 in degrees along y-Axis.
+}
+  \item{type}{
+Character scalar; either 'old' style pixel scale computed from CD matrix, or 'new' that detects the pixel scale in the centre of the image.
+}
+  \item{dim}{
+Numeric vector; the image dimensions. This is only relevant for \option{type} = 'new', and if not provided it is taken from NAXIS1 / NAXIS2 from the \option{keyvalues}. The only tie this tends to be wrong (when you shoudl enter it manually) is when the image has been compressed and these key values have different meanings (check for ZNAXIS1 and ZNAXIS2 in that case).
 }
   \item{header}{
 To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues} must be left as NULL in this case. If you want to use all distortion terms you can also pass in the raw header output of \code{Rfits_read_header_raw}.
@@ -139,7 +146,7 @@ GAPPT \tab  geocentric apparent place,  IAU 1984 system
 
 \code{Rwcs_p2s} is the pixel to spherical (hence p2s) projection function, i.e. x/y to RA/Dec. The output is a two column numeric matrix containing [RA,Dec] data.
 
-\code{Rwcs_pixscale} is the scalar image pixscale in asec/pixel (so typically a value of 0.1-0.5 for modern survey instruments).
+\code{Rwcs_pixscale} is the scalar image pixel scale in asec/pixel (so typically a value of 0.1-0.5 for modern survey instruments).
 }
 \references{
 Greisen, E.W. & Calabretta, M.R. (2002), Astronomy & Astrophysics, 395, 1061-1075

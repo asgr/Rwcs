@@ -500,23 +500,33 @@ Rwcs_keypass=function(keyvalues=NULL,
   return(keyvalues)
 }
 
-Rwcs_pixscale = function(keyvalues=NULL, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1){
+Rwcs_pixscale = function(keyvalues=NULL, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1, type='old', dim=NULL){
   assertList(keyvalues, null.ok = TRUE)
-  
   if(is.null(keyvalues)){
     keyvalues = options()$current_keyvalues
   }
   
-  if(!is.null(keyvalues)){
-    keyvalues = Rwcs_keypass(keyvalues)
-    CD1_1 = keyvalues$CD1_1
-    CD1_2 = keyvalues$CD1_2
-    CD2_1 = keyvalues$CD2_1
-    CD2_2 = keyvalues$CD2_2
+  if(type=='old'){
+    
+    if(!is.null(keyvalues)){
+      keyvalues = Rwcs_keypass(keyvalues)
+      CD1_1 = keyvalues$CD1_1
+      CD1_2 = keyvalues$CD1_2
+      CD2_1 = keyvalues$CD2_1
+      CD2_2 = keyvalues$CD2_2
+    }
+    assertNumeric(CD1_1, len=1)
+    assertNumeric(CD1_2, len=1)
+    assertNumeric(CD2_1, len=1)
+    assertNumeric(CD2_2, len=1)
+    return(3600*(sqrt(CD1_1^2+CD1_2^2)+sqrt(CD2_1^2+CD2_2^2))/2)
   }
-  assertNumeric(CD1_1, len=1)
-  assertNumeric(CD1_2, len=1)
-  assertNumeric(CD2_1, len=1)
-  assertNumeric(CD2_2, len=1)
-  return(3600*(sqrt(CD1_1^2+CD1_2^2)+sqrt(CD2_1^2+CD2_2^2))/2)
+  if(type=='new'){
+    if(is.null(dim)){
+      dim = c(keyvalues$NAXIS1, keyvalues$NAXIS2)
+    }
+    output = Rwcs_p2s(dim[1]/2 + c(-0.5,0.5), dim[2]/2 + c(-0.5,0.5), keyvalues = keyvalues)
+    output[,1] = output[,1] * cos(mean(output[,2])*pi/180)
+    return(2545.584412*sqrt(diff(output[,1])^2 + diff(output[,2])^2)) # 2545.584412 = 3600/sqrt(2)
+  }
 }
