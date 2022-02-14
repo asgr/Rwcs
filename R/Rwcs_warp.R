@@ -1,4 +1,5 @@
-Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out = NULL, 
+Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out = NULL,
+                      pixscale_out = NULL, pixscale_in = NULL,
           direction = "auto", boundary = "dirichlet", interpolation = "cubic", 
           doscale = TRUE, plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE, ...) 
 {
@@ -138,8 +139,12 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   image_out$imDat[1:dim(image_in)[1], 1:dim(image_in)[2]] = image_in
 
   suppressMessages({
-    pixscale_in = Rwcs_pixscale(keyvalues=keyvalues_in)
-    pixscale_out = Rwcs_pixscale(keyvalues=keyvalues_out)
+    if(is.null(pixscale_in)){
+      pixscale_in = Rwcs_pixscale(keyvalues=keyvalues_in)
+    }
+    if(is.null(pixscale_out)){
+      pixscale_out = Rwcs_pixscale(keyvalues=keyvalues_out)
+    }
   })
   
   norm = matrix(1, max(dim(image_in)[1], dim(image_out)[1]),max(dim(image_in)[2], dim(image_out)[2]))

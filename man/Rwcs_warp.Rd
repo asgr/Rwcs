@@ -12,8 +12,9 @@ Remaps an input projection system to a different target WCS.
 }
 \usage{
 Rwcs_warp(image_in, keyvalues_out = NULL, keyvalues_in = NULL, dim_out = NULL,
-  direction = "auto", boundary = "dirichlet", interpolation = "cubic", doscale = TRUE,
-  plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE, ...)
+  pixscale_out = NULL, pixscale_in = NULL, direction = "auto", boundary = "dirichlet",
+  interpolation = "cubic", doscale = TRUE, plot = FALSE, header_out = NULL,
+  header_in = NULL, dotightcrop = TRUE, ...)
 
 Rwcs_rebin(image, scale = 1, interpolation = 6)
 }
@@ -33,6 +34,12 @@ List; input header values to be used for the WCS. This should be the header WCS 
 }
   \item{dim_out}{
 Integer vector; this defines the desired dimensions of the output image. If this is not provided then the output image is made to be the same size as the NAXIS1 and NAXIS2 arguments taken from \option{header_out} (which is usually what you will want TBH).
+}
+  \item{pixscale_out}{
+Numeric scalar; output pixel scale in asec/pixel. If not provided it will be computed from the \option{keyvalues_out} using \code{\link{Rwcs_pixscale}}, which is only an issue if the CD matrix is defined a long way from the actual projected image which can lead to distorted pixel scales.
+}
+  \item{pixscale_in}{
+Numeric scalar; input pixel scale in asec/pixel. If not provided it will be computed from the \option{keyvalues_in} using \code{\link{Rwcs_pixscale}}, which is only an issue if the CD matrix is defined a long way from the actual projected image which can lead to distorted pixel scales.
 }
   \item{direction}{
 Character scalar; "auto" (default), "forward" or "backward", see \code{imwarp}. Since it is usally better to go from the higher resolution image and map this onto the lower resolution grid, "auto" selects the better direction given the pixel scales recovered from the header information.
