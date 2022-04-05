@@ -323,6 +323,9 @@ SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String he
     Rcout << "Failed WCS header read!" << "\n";
   }
   
+  //IntegerVector fixstat(100);
+  //wcsfix(1, 0, wcs, &(fixstat[0])); //This doesn't seemt to help anything... maybe put back in later.
+    
   NumericMatrix pixel(naxis, ncoord);
   for (i = 0; i < ncoord; i++) {
     pixel(0, i) = x[i];

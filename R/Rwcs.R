@@ -37,11 +37,18 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   
   if(length(header)==1){
     
+    nkey = nchar(header)/80
+    header_temp = substring(header, 1+(80*((1:nkey)-1)), 80*(1:nkey))
+    
+    nkeyrec_total = length(grep('=', header_temp))
+    nkeyrec_empty = length(grep('=                                                                       ', header_temp))
+    nkeyrec = nkeyrec_total - nkeyrec_empty
+    
     output = Cwcs_head_s2p(
       RA = RA,
       Dec = Dec,
       header = header,
-      nkeyrec = nchar(header)/80
+      nkeyrec = nkeyrec
     )
     
     if(is.null(dim(output))){
@@ -52,7 +59,7 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
           RA = RA[good],
           Dec = Dec[good],
           header = header,
-          nkeyrec = nchar(header)/80
+          nkeyrec = nkeyrec
         )
       }
     }
@@ -178,11 +185,18 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
   
   if(length(header)==1){
     
+    nkey = nchar(header)/80
+    header_temp = substring(header, 1+(80*((1:nkey)-1)), 80*(1:nkey))
+    
+    nkeyrec_total = length(grep('=', header_temp))
+    nkeyrec_empty = length(grep('=                                                                       ', header_temp))
+    nkeyrec = nkeyrec_total - nkeyrec_empty
+    
     output = Cwcs_head_p2s(
       x = x,
       y = y,
       header = header,
-      nkeyrec = nchar(header)/80
+      nkeyrec = nkeyrec
     )
     
     if(is.null(dim(output))){
@@ -193,7 +207,7 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
           x = x[good],
           y = y[good],
           header = header,
-          nkeyrec = nchar(header)/80
+          nkeyrec = nkeyrec
         )
       }
     }
