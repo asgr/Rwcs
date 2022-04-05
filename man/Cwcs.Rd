@@ -22,9 +22,9 @@ Cwcs_p2s(x, y, CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0,
   EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV1_3 = NA, PV2_1 = NA, PV2_2 = NA, PV2_3 = NA,
   PV2_4 = NA, PV2_5 = NA)
   
-Cwcs_head_s2p(RA, Dec, header, nkeyrec)
+Cwcs_head_s2p(RA, Dec, header, nkeyrec, WCSref)
 
-Cwcs_head_p2s(x, y, header, nkeyrec)
+Cwcs_head_p2s(x, y, header, nkeyrec, WCSref)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -105,6 +105,9 @@ Character scalar; a fully concatenated form of long header (where each key takes
 }
   \item{nkeyrec}{
 Integer scalar; the exact number of keys present in \option{header}.
+}
+  \item{WCSref}{
+Integer scalar; 0 is the base WCS, and 1-26 correspond with letters [a-z].  
 }
 }
 \details{

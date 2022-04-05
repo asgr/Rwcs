@@ -1,7 +1,7 @@
 Package: Rwcs
 Type: Package
 Title: High Level 'WCSlib' Interface
-Version: 1.2.3
+Version: 1.2.4
 Date: 2022-04-04
 Authors@R: c(
     person(given='Aaron', family='Robotham', email='aaron.robotham@uwa.edu.au',

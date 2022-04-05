@@ -12,10 +12,10 @@ Offers basic high level access to the C \code{wcslib} library for projecting and
 }
 \usage{
 Rwcs_s2p(RA, Dec, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
-  coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, ...)
+  coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, WCSref = NULL, ...)
   
 Rwcs_p2s(x, y, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
-  coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, ...)
+  coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, WCSref = NULL, ...)
   
 Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, type = 'old',
   dim = NULL)
@@ -71,7 +71,10 @@ Numeric vector; the image dimensions. This is only relevant for \option{type} = 
 To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues} must be left as NULL in this case. If you want to use all distortion terms you can also pass in the raw header output of \code{Rfits_read_header_raw}.
 }
   \item{inherit}{
-Logical; manual over-ride for inheriting the current WCS. This is usually only an issue of no options are passed in (see first Examples).
+Logical; manual over-ride for inheriting the current WCS. This is usually only an issue if no options are passed in (see first Examples).
+}
+  \item{WCSref}{
+Scalar; either NULL for base WCS (default), or a letter [a-z] for the relevant projection desired. Only used if using a raw \option{header}, and obviously this has to exist within the provided raw \option{header}.  
 }
   \item{\dots}{
 Optional keyvalues to overwrite the \option{keyvalues} entries with. If not present, the defaults are CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0, CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS", EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV2_1 = NA, PV2_2 = NA.

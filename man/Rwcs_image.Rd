@@ -16,17 +16,18 @@ Rwcs_image(image, keyvalues = NULL, n, grid.col = "grey", grid.lty = 2, grid.lwd
   xlab = "Right Ascension", ylab = "Declination", mgp = c(2, 0.5, 0), mtline = 2,
   position = "topright", com.col = "green", com.length = 0.05, coord.axis = 'auto',
   pretty = 'auto', header = NULL, add = FALSE, direction = 'auto', dotightcrop = TRUE,
-  ...)
+  WCSref = NULL, ...)
 
 Rwcs_grid(keyvalues = NULL, n, grid.col = "grey", grid.lty = 2, grid.lwd = 0.5,
-  coord.type = "sex", loc.diff = c(0, 0), pretty= 'auto', header = NULL, ...)
+  coord.type = "sex", loc.diff = c(0, 0), pretty= 'auto', header = NULL, WCSref = NULL,
+  ...)
 
 Rwcs_labels(keyvalues = NULL, n, lab.col = "green", coord.type = "sex", margin = TRUE,
   loc.diff = c(0, 0), xlab = "Right Ascension", ylab = "Declination", mgp = c(2, 0.5, 0),
-  mtline = 2, coord.axis='auto', pretty= 'auto', header = NULL, ...)
+  mtline = 2, coord.axis='auto', pretty= 'auto', header = NULL, WCSref = NULL, ...)
 
 Rwcs_compass(keyvalues = NULL, position = "topright", com.col = "green",
-  com.length = 0.05, loc.diff = c(0, 0), header = NULL, ...)
+  com.length = 0.05, loc.diff = c(0, 0), header = NULL, WCSref = NULL, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -98,6 +99,9 @@ Character scalar; "auto" (default), "forward" or "backward", see \code{imwarp}. 
 }
   \item{dotightcrop}{
 Logical; should an internal tight crop be made. If the images are approximately the same angular size this should be left as FALSE (it will run faster), but when there is a big difference between the input and output WCS (the latter being much larger) then setting this to TRUE might speed the warping up a lot.  
+}
+  \item{WCSref}{
+Scalar; either NULL for base WCS (default), or a letter [a-z] for the relevant projection desired. Only used if using a raw \option{header}, and obviously this has to exist within the provided raw \option{header}.  
 }
   \item{\dots}{
 These are parsed to \code{\link{magimage}}, (\code{Rwcs_image}), \code{\link{lines}} (\code{Rwcs_grid}), \code{\link{axis}} (\code{Rwcs_labels}) or \code{\link{arrows}} (\code{Rwcs_compass}).

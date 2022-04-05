@@ -1,4 +1,4 @@
-Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', header=NULL, inherit=TRUE, ...){
+Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', header=NULL, inherit=TRUE, WCSref=NULL, ...){
   assertList(keyvalues, null.ok = TRUE)
   if(is.character(header) & is.null(keyvalues)){
     if(length(header) > 1){
@@ -33,6 +33,10 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
     if(is.null(keyvalues) & is.null(header) & length(list(...))==0){
       keyvalues = options()$current_keyvalues
     }
+    
+    if(is.null(WCSref)){
+      WCSref = options()$current_WCSref
+    }
   }
   
   if(length(header)==1){
@@ -44,11 +48,24 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
     nkeyrec_empty = length(grep('=                                                                       ', header_temp))
     nkeyrec = nkeyrec_total - nkeyrec_empty
     
+    if(!is.null(WCSref)){
+      WCSref = tolower(WCSref)
+      reflet = 1:26
+      names(reflet) = letters
+      if(! WCSref %in% letters){
+        stop('WCS ref must be 0 (base WCS) or a letter [a-z]!')
+      }
+      WCSref = reflet[WCSref]
+    }else{
+      WCSref = 0
+    }
+    
     output = Cwcs_head_s2p(
       RA = RA,
       Dec = Dec,
       header = header,
-      nkeyrec = nkeyrec
+      nkeyrec = nkeyrec,
+      WCSref = WCSref
     )
     
     if(is.null(dim(output))){
@@ -59,7 +76,8 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
           RA = RA[good],
           Dec = Dec[good],
           header = header,
-          nkeyrec = nkeyrec
+          nkeyrec = nkeyrec,
+          WCSref = WCSref
         )
       }
     }
@@ -136,7 +154,7 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   return(output)
 }
 
-Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', header=NULL, inherit=TRUE, ...){
+Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', header=NULL, inherit=TRUE, WCSref=NULL, ...){
   assertList(keyvalues, null.ok = TRUE)
   if(is.character(header) & is.null(keyvalues)){
     if(length(header) > 1){
@@ -181,6 +199,10 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
     if(is.null(keyvalues) & is.null(header) & length(list(...))==0){
       keyvalues = options()$current_keyvalues
     }
+    
+    if(is.null(WCSref)){
+      WCSref = options()$current_WCSref
+    }
   }
   
   if(length(header)==1){
@@ -192,11 +214,24 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
     nkeyrec_empty = length(grep('=                                                                       ', header_temp))
     nkeyrec = nkeyrec_total - nkeyrec_empty
     
+    if(!is.null(WCSref)){
+      WCSref = tolower(WCSref)
+      reflet = 1:26
+      names(reflet) = letters
+      if(! WCSref %in% letters){
+        stop('WCS ref must be 0 (base WCS) or a letter [a-z]!')
+      }
+      WCSref = reflet[WCSref]
+    }else{
+      WCSref = 0
+    }
+    
     output = Cwcs_head_p2s(
       x = x,
       y = y,
       header = header,
-      nkeyrec = nkeyrec
+      nkeyrec = nkeyrec,
+      WCSref = WCSref
     )
     
     if(is.null(dim(output))){
@@ -207,7 +242,8 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
           x = x[good],
           y = y[good],
           header = header,
-          nkeyrec = nkeyrec
+          nkeyrec = nkeyrec,
+          WCSref = WCSref
         )
       }
     }

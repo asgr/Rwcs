@@ -14,7 +14,7 @@ Remaps an input projection system to a different target WCS.
 Rwcs_warp(image_in, keyvalues_out = NULL, keyvalues_in = NULL, dim_out = NULL,
   pixscale_out = NULL, pixscale_in = NULL, direction = "auto", boundary = "dirichlet",
   interpolation = "cubic", doscale = TRUE, plot = FALSE, header_out = NULL,
-  header_in = NULL, dotightcrop = TRUE, ...)
+  header_in = NULL, dotightcrop = TRUE, WCSref_out = NULL, WCSref_in = NULL, ...)
 
 Rwcs_rebin(image, scale = 1, interpolation = 6)
 }
@@ -57,13 +57,19 @@ Logical; if TRUE (default) then the image is scaled by the relative change the c
 Logical; should a \code{\link{Rwcs_image}} plot of the output be generated? 
 }
   \item{header_out}{
-To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues_out} must be left as NULL in this case. If you want to use all distortion terms you can also pass in the raw header output of \code{Rfits_read_header_raw}.
+Optional output header. To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues_out} must be left as NULL in this case. If you want to use all distortion terms you can also pass in the raw header output of \code{Rfits_read_header_raw}.
 }
   \item{header_in}{
-To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues_in} must be left as NULL in this case. If you want to use all distortion terms you can also pass in the raw header output of \code{Rfits_read_header_raw}.
+Optional input header. To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues_in} must be left as NULL in this case. If you want to use all distortion terms you can also pass in the raw header output of \code{Rfits_read_header_raw}.
 }
   \item{dotightcrop}{
 Logical; should an internal tight crop be made. If the images are approximately the same angular size this should be left as FALSE (it will run faster), but when there is a big difference between the input and output WCS (the latter being much larger) then setting this to TRUE might speed the warping up a lot.  
+}
+  \item{WCSref_out}{
+Scalar; optional output \option{WCSref}. Either NULL for base WCS (default), or a letter [a-z] for the relevant projection desired. Only used if using a raw \option{header}, and obviously this has to exist within the provided raw \option{header}.  
+}
+  \item{WCSref_in}{
+Scalar; optional input \option{WCSref}. Either NULL for base WCS (default), or a letter [a-z] for the relevant projection desired. Only used if using a raw \option{header}, and obviously this has to exist within the provided raw \option{header}.  
 }
   \item{scale}{
 Numeric scalar; resolution increasing factor, i.e. value larger thatn 1 will increase the number of output pixels (decrease the asec/pix pixel scale) and vica-versa.  

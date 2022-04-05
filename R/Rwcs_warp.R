@@ -1,7 +1,7 @@
 Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out = NULL,
                       pixscale_out = NULL, pixscale_in = NULL,
           direction = "auto", boundary = "dirichlet", interpolation = "cubic", 
-          doscale = TRUE, plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE, ...) 
+          doscale = TRUE, plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE, WCSref_out=NULL, WCSref_in=NULL, ...) 
 {
   if (!requireNamespace("imager", quietly = TRUE)) {
     stop("The imager package is needed for this function to work. Please install it from CRAN.", 
@@ -101,12 +101,12 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   class(image_out) = c('Rfits_image', class(image_out))
   
   if(dotightcrop){
-    BL = Rwcs_p2s(0, 0, keyvalues = keyvalues_in, header=header_in, pixcen='R')
-    TL = Rwcs_p2s(0, dim(image_in)[2], keyvalues = keyvalues_in, header=header_in, pixcen='R')
-    TR = Rwcs_p2s(dim(image_in)[1], dim(image_in)[2], keyvalues = keyvalues_in, header=header_in, pixcen='R')
-    BR = Rwcs_p2s(dim(image_in)[1], 0, keyvalues = keyvalues_in, header=header_in, pixcen='R')
+    BL = Rwcs_p2s(0, 0, keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
+    TL = Rwcs_p2s(0, dim(image_in)[2], keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
+    TR = Rwcs_p2s(dim(image_in)[1], dim(image_in)[2], keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
+    BR = Rwcs_p2s(dim(image_in)[1], 0, keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
     corners = rbind(BL, TL, TR, BR)
-    tightcrop = ceiling(Rwcs_s2p(corners, keyvalues = keyvalues_out, header=header_out, pixcen='R'))
+    tightcrop = ceiling(Rwcs_s2p(corners, keyvalues = keyvalues_out, header=header_out, pixcen='R', WCSref=WCSref_out))
     min_x = max(1L, min(tightcrop[,1]))
     max_x = max(min_x + dim(image_in)[1] - 1L, range(tightcrop[,1])[2])
     min_y = max(1L, min(tightcrop[,2]))
@@ -126,13 +126,13 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   }
   
   .warpfunc_in2out = function(x, y) {
-    radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_in, header = header_in)
-    xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_out, header = header_out)
+    radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_in, header = header_in, WCSref = WCSref_in)
+    xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_out, header = header_out, WCSref = WCSref_out)
     return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
   }
   .warpfunc_out2in = function(x, y) {
-    radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_out, header = header_out)
-    xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_in, header = header_in)
+    radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_out, header = header_out, WCSref = WCSref_in)
+    xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_in, header = header_in, , WCSref = WCSref_out)
     return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
   }
   
@@ -179,17 +179,6 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
       out = (out / renorm) * (pixscale_out / pixscale_in)^2
     }
   }
-  
-  # output = list(imDat = as.matrix(out)[1:dim(image_out)[1], 1:dim(image_out)[2]],
-  #               keyvalues = keyvalues_out,
-  #               hdr = hdr,
-  #               header = header,
-  #               raw = raw,
-  #               keynames = names(keyvalues_out),
-  #               keycomments = as.list(rep('', length(keyvalues_out)))
-  #               )
-  # 
-  # names(output$keycomments) = output$keynames
   
   image_out$imDat[] = out
   

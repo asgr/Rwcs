@@ -307,7 +307,7 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
 
 // [[Rcpp::export]]
 SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String header, 
-                  int nkeyrec){
+                  int nkeyrec, int WCSref=0){
   int i;
   const int ncoord = x.length();
   const int naxis = 2;
@@ -321,6 +321,15 @@ SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String he
   
   if(status > 0){
     Rcout << "Failed WCS header read!" << "\n";
+    return(0);
+  }
+  
+  IntegerVector alts(27);
+  wcsidx(nwcs, &wcs, &(alts[0]));
+  
+  if(alts[WCSref] < 0){
+    Rcout << "Bad WCS projection selection!" << "\n";
+    return(0);
   }
   
   //IntegerVector fixstat(100);
@@ -337,7 +346,7 @@ SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String he
   IntegerVector stat(ncoord);
   NumericMatrix world_matrix(naxis, ncoord);
   
-  status = wcsp2s(wcs, ncoord, naxis,
+  status = wcsp2s(wcs + alts[WCSref], ncoord, naxis,
                   &(pixel[0]), &(img[0]), &(phi[0]), &(theta[0]),
                   &(world_matrix[0]), &(stat[0]));
   
@@ -353,7 +362,7 @@ SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String he
 
 // [[Rcpp::export]]
 SEXP Cwcs_head_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec, Rcpp::String header, 
-                   int nkeyrec){
+                   int nkeyrec, int WCSref=0){
   int i;
   const int ncoord = RA.length();
   const int naxis = 2;
@@ -367,6 +376,15 @@ SEXP Cwcs_head_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec, Rcpp::String
   
   if(status > 0){
     Rcout << "Failed WCS header read!" << "\n";
+    return(0);
+  }
+  
+  IntegerVector alts(27);
+  wcsidx(nwcs, &wcs, &(alts[0]));
+  
+  if(alts[WCSref] < 0){
+    Rcout << "Bad WCS projection selection!" << "\n";
+    return(0);
   }
   
   NumericMatrix world(naxis, ncoord);
@@ -380,7 +398,7 @@ SEXP Cwcs_head_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec, Rcpp::String
   IntegerVector stat(ncoord);
   NumericMatrix pixel_matrix(naxis, ncoord);
   
-  status = wcss2p(wcs, ncoord, naxis,
+  status = wcss2p(wcs + alts[WCSref], ncoord, naxis,
                   &(world[0]), &(phi[0]), &(theta[0]), &(img[0]),
                   &(pixel_matrix[0]), &(stat[0]));
   
