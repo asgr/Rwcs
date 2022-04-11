@@ -35,12 +35,14 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   }
   
   if(is.character(header_out) & is.null(keyvalues_out)){
-    if(length(header_out) > 1){
-      if(requireNamespace("Rfits", quietly = TRUE)){
+    if(requireNamespace("Rfits", quietly = TRUE)){
+      if(length(header_out) == 1){
+        keyvalues_out = Rfits::Rfits_header_to_keyvalues(Rfits::Rfits_raw_to_header(header_out))
+      }else if(length(header_out) > 1){
         keyvalues_out = Rfits::Rfits_hdr_to_keyvalues(header_out)
-      }else{
-        stop("The Rfits package is need to process the header_out. Install from GitHub asgr/Rfits.")
       }
+    }else{
+      stop("The Rfits package is need to process the header_out. Install from GitHub asgr/Rfits.")
     }
   }
   if(is.character(header_in) & is.null(keyvalues_in)){
