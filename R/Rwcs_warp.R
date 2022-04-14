@@ -124,7 +124,9 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     max_y = max(min_y + dim(image_in)[2] - 1L, range(tightcrop[,2])[2])
     image_out = image_out[c(min_x, max_x), c(min_y, max_y)]
     keyvalues_out = image_out$keyvalues
-    raw_out = image_out$raw
+    if(!is.null(raw_out)){
+      raw_out = image_out$raw
+    }
   }else{
     min_x = 1L
     max_x = dim_out[1]
