@@ -13,11 +13,10 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   }
   
   if(any(names(image_in)=='imDat') | any(names(image_in)=='image')){
-    if(is.null(keyvalues_in)){
-      keyvalues_in = image_in$keyvalues
-    }
-    
     if(is.null(header_in)){
+      if(is.null(keyvalues_in)){
+        keyvalues_in = image_in$keyvalues
+      }
       if(is.null(image_in$raw)){
         header_in = image_in$hdr
       }else{
@@ -34,7 +33,7 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     }
   }
   
-  if(is.character(header_out) & is.null(keyvalues_out)){
+  if(is.character(header_out)){
     if(requireNamespace("Rfits", quietly = TRUE)){
       if(length(header_out) == 1){
         keyvalues_out = Rfits::Rfits_header_to_keyvalues(Rfits::Rfits_raw_to_header(header_out))
@@ -45,13 +44,15 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
       stop("The Rfits package is need to process the header_out. Install from GitHub asgr/Rfits.")
     }
   }
-  if(is.character(header_in) & is.null(keyvalues_in)){
-    if(length(header_out) > 1){
-      if(requireNamespace("Rfits", quietly = TRUE)){
+  if(is.character(header_in)){
+    if(requireNamespace("Rfits", quietly = TRUE)){
+      if(length(header_in) == 1){
+        keyvalues_in = Rfits::Rfits_header_to_keyvalues(Rfits::Rfits_raw_to_header(header_in))
+      }else if(length(header_in) > 1){
         keyvalues_in = Rfits::Rfits_hdr_to_keyvalues(header_in)
-      }else{
-        stop("The Rfits package is need to process the header_in. Install from GitHub asgr/Rfits.")
       }
+    }else{
+      stop("The Rfits package is need to process the header_in Install from GitHub asgr/Rfits.")
     }
   }
   
@@ -84,18 +85,26 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     warpoffset = 0
   }
   
-  if(is.null(header_in)){
-    raw = NULL
+  # if(is.null(header_out)){
+  #   raw = NULL
+  # }else{
+  #   raw = Rfits::Rfits_header_to_raw(Rfits::Rfits_keyvalues_to_header(keyvalues_out))
+  # }
+  
+  raw_out = header_out
+  
+  if(is.null(raw_out)){
+    header_out = Rfits::Rfits_keyvalues_to_header(keyvalues_out)
   }else{
-    raw = Rfits::Rfits_header_to_raw(Rfits::Rfits_keyvalues_to_header(keyvalues_out))
+    header_out = Rfits::Rfits_raw_to_header(raw_out)
   }
   
   image_out = list(
     imDat = matrix(NA, max(dim(image_in)[1], dim_out[1]), max(dim(image_in)[2], dim_out[2])),
     keyvalues = keyvalues_out,
     hdr = Rfits::Rfits_keyvalues_to_hdr(keyvalues_out),
-    header = Rfits::Rfits_keyvalues_to_header(keyvalues_out),
-    raw = raw,
+    header = header_out,
+    raw = raw_out,
     keynames = names(keyvalues_out),
     keycomments = as.list(rep('', length(keyvalues_out)))
   )
@@ -108,18 +117,14 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     TR = Rwcs_p2s(dim(image_in)[1], dim(image_in)[2], keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
     BR = Rwcs_p2s(dim(image_in)[1], 0, keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
     corners = rbind(BL, TL, TR, BR)
-    tightcrop = ceiling(Rwcs_s2p(corners, keyvalues = keyvalues_out, header=header_out, pixcen='R', WCSref=WCSref_out))
+    tightcrop = ceiling(Rwcs_s2p(corners, keyvalues = keyvalues_out, header=raw_out, pixcen='R', WCSref=WCSref_out))
     min_x = max(1L, min(tightcrop[,1]))
     max_x = max(min_x + dim(image_in)[1] - 1L, range(tightcrop[,1])[2])
     min_y = max(1L, min(tightcrop[,2]))
     max_y = max(min_y + dim(image_in)[2] - 1L, range(tightcrop[,2])[2])
     image_out = image_out[c(min_x, max_x), c(min_y, max_y)]
     keyvalues_out = image_out$keyvalues
-    if(!is.null(header_out)){
-      header_out = image_out$raw
-    }else{
-      header_out = NULL
-    }
+    raw_out = image_out$raw
   }else{
     min_x = 1L
     max_x = dim_out[1]
@@ -129,11 +134,11 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   
   .warpfunc_in2out = function(x, y) {
     radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_in, header = header_in, WCSref = WCSref_in)
-    xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_out, header = header_out, WCSref = WCSref_out)
+    xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_out, header = raw_out, WCSref = WCSref_out)
     return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
   }
   .warpfunc_out2in = function(x, y) {
-    radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_out, header = header_out, WCSref = WCSref_in)
+    radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_out, header = raw_out, WCSref = WCSref_in)
     xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_in, header = header_in, , WCSref = WCSref_out)
     return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
   }
