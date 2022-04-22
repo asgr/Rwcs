@@ -22,6 +22,7 @@
   $Id: wcsfix.c,v 7.9 2022/03/25 15:14:48 mcalabre Exp $
 *===========================================================================*/
 
+#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -336,7 +337,8 @@ int datfix(struct wcsprm *wcs)
       dateid = "-AVG";
       date   = wcs->dateavg;
       wcsmjd = &(wcs->mjdavg);
-    } else if (i == 4) {
+    } else {
+      assert(i == 4);
       dateid = "-END";
       date   = wcs->dateend;
       wcsmjd = &(wcs->mjdend);
