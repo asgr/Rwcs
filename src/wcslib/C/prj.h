@@ -1,7 +1,6 @@
 /*============================================================================
-
-  WCSLIB 7.1 - an implementation of the FITS WCS standard.
-  Copyright (C) 1995-2020, Mark Calabretta
+  WCSLIB 7.9 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2022, Mark Calabretta
 
   This file is part of WCSLIB.
 
@@ -18,14 +17,12 @@
   You should have received a copy of the GNU Lesser General Public License
   along with WCSLIB.  If not, see http://www.gnu.org/licenses.
 
-  Direct correspondence concerning WCSLIB to mark@calabretta.id.au
-
   Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
   http://www.atnf.csiro.au/people/Mark.Calabretta
-  $Id: prj.h,v 7.1 2019/12/31 13:25:19 mcalabre Exp $
+  $Id: prj.h,v 7.9 2022/03/25 15:14:48 mcalabre Exp $
 *=============================================================================
 *
-* WCSLIB 7.1 - C routines that implement the FITS World Coordinate System
+* WCSLIB 7.9 - C routines that implement the FITS World Coordinate System
 * (WCS) standard.  Refer to the README file provided with WCSLIB for an
 * overview of the library.
 *
@@ -54,7 +51,8 @@
 *
 * Routine prjini() is provided to initialize the prjprm struct with default
 * values, prjfree() reclaims any memory that may have been allocated to store
-* an error message, and prjprt() prints its contents.
+* an error message, prjsize() computes its total size including allocated
+* memory, and prjprt() prints its contents.
 *
 * prjperr() prints the error message(s) (if any) stored in a prjprm struct.
 * prjbchk() performs bounds checking on native spherical coordinates.
@@ -76,7 +74,8 @@
 * In summary, the routines are:
 *   - prjini()                Initialization routine for the prjprm struct.
 *   - prjfree()               Reclaim memory allocated for error messages.
-*   - prjprt()                Print the prjprm struct.
+*   - prjsize()               Compute total size of a prjprm struct.
+*   - prjprt()                Print a prjprm struct.
 *   - prjperr()               Print error message (if any).
 *   - prjbchk()               Bounds checking on native coordinates.
 *
@@ -182,6 +181,33 @@
 *             int       Status return value:
 *                         0: Success.
 *                         1: Null prjprm pointer passed.
+*
+*
+* prjsize() - Compute the size of a prjprm struct
+* -----------------------------------------------
+* prjsize() computes the full size of a prjprm struct, including allocated
+* memory.
+*
+* Given:
+*   prj       const struct prjprm*
+*                       Projection parameters.
+*
+*                       If NULL, the base size of the struct and the allocated
+*                       size are both set to zero.
+*
+* Returned:
+*   sizes     int[2]    The first element is the base size of the struct as
+*                       returned by sizeof(struct prjprm).  The second element
+*                       is the total allocated size, in bytes.  This figure
+*                       includes memory allocated for the constituent struct,
+*                       prjprm::err.
+*
+*                       It is not an error for the struct not to have been set
+*                       up via prjset().
+*
+* Function return value:
+*             int       Status return value:
+*                         0: Success.
 *
 *
 * prjprt() - Print routine for the prjprm struct
@@ -630,19 +656,19 @@ extern "C" {
 #endif
 
 
-/* Total number of projection parameters; 0 to PVN-1. */
+// Total number of projection parameters; 0 to PVN-1.
 #define PVN 30
 
 extern const char *prj_errmsg[];
 
 enum prj_errmsg_enum {
-  PRJERR_SUCCESS      = 0,	/* Success. */
-  PRJERR_NULL_POINTER = 1,	/* Null prjprm pointer passed. */
-  PRJERR_BAD_PARAM    = 2,	/* Invalid projection parameters. */
-  PRJERR_BAD_PIX      = 3,	/* One or more of the (x, y) coordinates were
-				   invalid. */
-  PRJERR_BAD_WORLD    = 4	/* One or more of the (phi, theta) coordinates
-				   were invalid. */
+  PRJERR_SUCCESS      = 0,	// Success.
+  PRJERR_NULL_POINTER = 1,	// Null prjprm pointer passed.
+  PRJERR_BAD_PARAM    = 2,	// Invalid projection parameters.
+  PRJERR_BAD_PIX      = 3,	// One or more of the (x, y) coordinates were
+				// invalid.
+  PRJERR_BAD_WORLD    = 4	// One or more of the (phi, theta) coordinates
+				// were invalid.
 };
 
 extern const int CONIC, CONVENTIONAL, CYLINDRICAL, POLYCONIC,
@@ -660,66 +686,72 @@ extern const char prj_codes[28][4];
 #undef PRJS2X_ARGS
 #endif
 
-/* For use in declaring deprojection function prototypes. */
+// For use in declaring deprojection function prototypes.
 #define PRJX2S_ARGS struct prjprm *prj, int nx, int ny, int sxy, int spt, \
 const double x[], const double y[], double phi[], double theta[], int stat[]
 
-/* For use in declaring projection function prototypes. */
+// For use in declaring projection function prototypes.
 #define PRJS2X_ARGS struct prjprm *prj, int nx, int ny, int sxy, int spt, \
 const double phi[], const double theta[], double x[], double y[], int stat[]
 
 
 struct prjprm {
-  /* Initialization flag (see the prologue above).                          */
-  /*------------------------------------------------------------------------*/
-  int    flag;			/* Set to zero to force initialization.     */
+  // Initialization flag (see the prologue above).
+  //--------------------------------------------------------------------------
+  int    flag;			// Set to zero to force initialization.
 
-  /* Parameters to be provided (see the prologue above).                    */
-  /*------------------------------------------------------------------------*/
-  char   code[4];		/* Three-letter projection code.            */
-  double r0;			/* Radius of the generating sphere.         */
-  double pv[PVN];		/* Projection parameters.                   */
-  double phi0, theta0;		/* Fiducial native coordinates.             */
-  int    bounds;		/* Controls bounds checking.                */
+  // Parameters to be provided (see the prologue above).
+  //--------------------------------------------------------------------------
+  char   code[4];		// Three-letter projection code.
+  double r0;			// Radius of the generating sphere.
+  double pv[PVN];		// Projection parameters.
+  double phi0, theta0;		// Fiducial native coordinates.
+  int    bounds;		// Controls bounds checking.
 
-  /* Information derived from the parameters supplied.                      */
-  /*------------------------------------------------------------------------*/
-  char   name[40];		/* Projection name.                         */
-  int    category;		/* Projection category.                     */
-  int    pvrange;		/* Range of projection parameter indices.   */
-  int    simplezen;		/* Is it a simple zenithal projection?      */
-  int    equiareal;		/* Is it an equal area projection?          */
-  int    conformal;		/* Is it a conformal projection?            */
-  int    global;		/* Can it map the whole sphere?             */
-  int    divergent;		/* Does the projection diverge in latitude? */
-  double x0, y0;		/* Fiducial offsets.                        */
+  // Information derived from the parameters supplied.
+  //--------------------------------------------------------------------------
+  char   name[40];		// Projection name.
+  int    category;		// Projection category.
+  int    pvrange;		// Range of projection parameter indices.
+  int    simplezen;		// Is it a simple zenithal projection?
+  int    equiareal;		// Is it an equal area projection?
+  int    conformal;		// Is it a conformal projection?
+  int    global;		// Can it map the whole sphere?
+  int    divergent;		// Does the projection diverge in latitude?
+  double x0, y0;		// Fiducial offsets.
 
-  /* Error handling                                                         */
-  /*------------------------------------------------------------------------*/
+  // Error handling
+  //--------------------------------------------------------------------------
   struct wcserr *err;
 
-  /* Private                                                                */
-  /*------------------------------------------------------------------------*/
-  void   *padding;		/* (Dummy inserted for alignment purposes.) */
-  double w[10];			/* Intermediate values.                     */
-  int    m, n;			/* Intermediate values.                     */
+  // Private
+  //--------------------------------------------------------------------------
+  void   *padding;		// (Dummy inserted for alignment purposes.)
+  double w[10];			// Intermediate values.
+  int    m, n;			// Intermediate values.
 
-  int (*prjx2s)(PRJX2S_ARGS);	/* Pointers to the spherical projection and */
-  int (*prjs2x)(PRJS2X_ARGS);	/* deprojection functions.                  */
+  int (*prjx2s)(PRJX2S_ARGS);	// Pointers to the spherical projection and
+  int (*prjs2x)(PRJS2X_ARGS);	// deprojection functions.
 };
 
-/* Size of the prjprm struct in int units, used by the Fortran wrappers. */
+// Size of the prjprm struct in int units, used by the Fortran wrappers.
 #define PRJLEN (sizeof(struct prjprm)/sizeof(int))
 
 
-/* Use the preprocessor to help declare function prototypes (see above). */
 int prjini(struct prjprm *prj);
+
 int prjfree(struct prjprm *prj);
+
+int prjsize(const struct prjprm *prj, int sizes[2]);
+
 int prjprt(const struct prjprm *prj);
+
 int prjperr(const struct prjprm *prj, const char *prefix);
+
 int prjbchk(double tol, int nphi, int ntheta, int spt, double phi[],
             double theta[], int stat[]);
 
+// Use the preprocessor to help declare function prototypes (see above).
 int prjset(struct prjprm *prj);
 int prjx2s(PRJX2S_ARGS);
 int prjs2x(PRJS2X_ARGS);
@@ -837,7 +869,7 @@ int xphx2s(PRJX2S_ARGS);
 int xphs2x(PRJS2X_ARGS);
 
 
-/* Deprecated. */
+// Deprecated.
 #define prjini_errmsg prj_errmsg
 #define prjprt_errmsg prj_errmsg
 #define prjset_errmsg prj_errmsg
@@ -848,4 +880,4 @@ int xphs2x(PRJS2X_ARGS);
 }
 #endif
 
-#endif /* WCSLIB_PROJ */
+#endif // WCSLIB_PROJ

@@ -1,7 +1,6 @@
 /*============================================================================
-
-  WCSLIB 7.1 - an implementation of the FITS WCS standard.
-  Copyright (C) 1995-2020, Mark Calabretta
+  WCSLIB 7.9 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2022, Mark Calabretta
 
   This file is part of WCSLIB.
 
@@ -18,14 +17,12 @@
   You should have received a copy of the GNU Lesser General Public License
   along with WCSLIB.  If not, see http://www.gnu.org/licenses.
 
-  Direct correspondence concerning WCSLIB to mark@calabretta.id.au
-
   Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
   http://www.atnf.csiro.au/people/Mark.Calabretta
-  $Id: fitshdr.h,v 7.1 2019/12/31 13:25:19 mcalabre Exp $
+  $Id: fitshdr.h,v 7.9 2022/03/25 15:14:48 mcalabre Exp $
 *=============================================================================
 *
-* WCSLIB 7.1 - C routines that implement the FITS World Coordinate System
+* WCSLIB 7.9 - C routines that implement the FITS World Coordinate System
 * (WCS) standard.  Refer to the README file provided with WCSLIB for an
 * overview of the library.
 *
@@ -96,6 +93,7 @@
 *                         1: Null fitskey pointer passed.
 *                         2: Memory allocation failed.
 *                         3: Fatal error returned by Flex parser.
+*                         4: Unrecognised data type.
 *
 * Notes:
 *   1: Keyword parsing is done in accordance with the syntax defined by
@@ -384,17 +382,18 @@ extern "C" {
 #define FITSHDR_KEYVALUE 0x02
 #define FITSHDR_COMMENT  0x04
 #define FITSHDR_KEYREC   0x08
-#define FITSHDR_CARD     0x08	/* Alias for backwards compatibility. */
+#define FITSHDR_CARD     0x08	// Alias for backwards compatibility.
 #define FITSHDR_TRAILER  0x10
 
 
 extern const char *fitshdr_errmsg[];
 
 enum fitshdr_errmsg_enum {
-  FITSHDRERR_SUCCESS      = 0,	/* Success.                                 */
-  FITSHDRERR_NULL_POINTER = 1,	/* Null fitskey pointer passed.             */
-  FITSHDRERR_MEMORY       = 2,	/* Memory allocation failed.                */
-  FITSHDRERR_FLEX_PARSER  = 3	/* Fatal error returned by Flex parser.     */
+  FITSHDRERR_SUCCESS      = 0,	// Success.
+  FITSHDRERR_NULL_POINTER = 1,	// Null fitskey pointer passed.
+  FITSHDRERR_MEMORY       = 2,	// Memory allocation failed.
+  FITSHDRERR_FLEX_PARSER  = 3,	// Fatal error returned by Flex parser.
+  FITSHDRERR_DATA_TYPE    = 4 	// Unrecognised data type.
 };
 
 #ifdef WCSLIB_INT64
@@ -404,38 +403,38 @@ enum fitshdr_errmsg_enum {
 #endif
 
 
-/* Struct used for indexing the keywords. */
+// Struct used for indexing the keywords.
 struct fitskeyid {
-  char name[12];		/* Keyword name, null-terminated.           */
-  int  count;			/* Number of occurrences of keyword.        */
-  int  idx[2];			/* Indices into fitskey array.              */
+  char name[12];		// Keyword name, null-terminated.
+  int  count;			// Number of occurrences of keyword.
+  int  idx[2];			// Indices into fitskey array.
 };
 
-/* Size of the fitskeyid struct in int units, used by the Fortran wrappers. */
+// Size of the fitskeyid struct in int units, used by the Fortran wrappers.
 #define KEYIDLEN (sizeof(struct fitskeyid)/sizeof(int))
 
 
-/* Struct used for storing FITS keywords. */
+// Struct used for storing FITS keywords.
 struct fitskey {
-  int  keyno;			/* Header keyrecord sequence number (1-rel).*/
-  int  keyid;			/* Index into fitskeyid[].                  */
-  int  status;			/* Header keyrecord status bit flags.       */
-  char keyword[12];		/* Keyword name, null-filled.               */
-  int  type;			/* Keyvalue type (see above).               */
-  int  padding;			/* (Dummy inserted for alignment purposes.) */
+  int  keyno;			// Header keyrecord sequence number (1-rel).
+  int  keyid;			// Index into fitskeyid[].
+  int  status;			// Header keyrecord status bit flags.
+  char keyword[12];		// Keyword name, null-filled.
+  int  type;			// Keyvalue type (see above).
+  int  padding;			// (Dummy inserted for alignment purposes.)
   union {
-    int    i;			/* 32-bit integer and logical values.       */
-    int64  k;			/* 64-bit integer values.                   */
-    int    l[8];		/* Very long signed integer values.         */
-    double f;			/* Floating point values.                   */
-    double c[2];		/* Complex values.                          */
-    char   s[72];		/* String values, null-terminated.          */
-  } keyvalue;			/* Keyvalue.                                */
-  int  ulen;			/* Length of units string.                  */
-  char comment[84];		/* Comment (or keyrecord), null-terminated. */
+    int    i;			// 32-bit integer and logical values.
+    int64  k;			// 64-bit integer values.
+    int    l[8];		// Very long signed integer values.
+    double f;			// Floating point values.
+    double c[2];		// Complex values.
+    char   s[72];		// String values, null-terminated.
+  } keyvalue;			// Keyvalue.
+  int  ulen;			// Length of units string.
+  char comment[84];		// Comment (or keyrecord), null-terminated.
 };
 
-/* Size of the fitskey struct in int units, used by the Fortran wrappers. */
+// Size of the fitskey struct in int units, used by the Fortran wrappers.
 #define KEYLEN (sizeof(struct fitskey)/sizeof(int))
 
 
@@ -447,4 +446,4 @@ int fitshdr(const char header[], int nkeyrec, int nkeyids,
 }
 #endif
 
-#endif /* WCSLIB_FITSHDR */
+#endif // WCSLIB_FITSHDR

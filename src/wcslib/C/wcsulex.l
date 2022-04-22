@@ -1,7 +1,6 @@
 /*============================================================================
-
-  WCSLIB 7.1 - an implementation of the FITS WCS standard.
-  Copyright (C) 1995-2020, Mark Calabretta
+  WCSLIB 7.9 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2022, Mark Calabretta
 
   This file is part of WCSLIB.
 
@@ -18,11 +17,9 @@
   You should have received a copy of the GNU Lesser General Public License
   along with WCSLIB.  If not, see http://www.gnu.org/licenses.
 
-  Direct correspondence concerning WCSLIB to mark@calabretta.id.au
-
   Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
   http://www.atnf.csiro.au/people/Mark.Calabretta
-  $Id: wcsulex.l,v 7.1 2019/12/31 13:25:19 mcalabre Exp $
+  $Id: wcsulex.l,v 7.9 2022/03/25 15:14:48 mcalabre Exp $
 *=============================================================================
 *
 * wcsulex.l is a Flex description file containing the definition of a
@@ -44,6 +41,7 @@
 %option outfile="wcsulex.c"
 %option prefix="wcsulex"
 %option reentrant
+%option extra-type="struct wcsulex_extra *"
 
 /* Exponents. */
 INTEGER	  [+-]?[1-9][0-9]*
@@ -94,81 +92,64 @@ ADD_UNIT  {ADD_ALL}|{ADD_SUP}|{ADD_SUB}|{ADD_NONE}
 #include "wcsunits.h"
 #include "wcsutil.h"
 
-static int wcsulex_scanner(const char unitstr[], int *func, double *scale,
-                           double units[WCSUNITS_NTYPE], struct wcserr **err,
-                           yyscan_t yyscanner);
+// User data associated with yyscanner.
+struct wcsulex_extra {
+  // Used in preempting the call to exit() by yy_fatal_error().
+  jmp_buf abort_jmp_env;
+};
 
-/*--------------------------------------------------------------------------*/
-
-int wcsulexe(
-  const char unitstr[],
-  int *func,
-  double *scale,
-  double units[WCSUNITS_NTYPE],
-  struct wcserr **err)
-
-{
-  int status;
-  yyscan_t yyscanner;
-  int yylex_init(yyscan_t *yyscanner);
-  int yylex_destroy(yyscan_t yyscanner);
-
-  yylex_init(&yyscanner);
-  status = wcsulex_scanner(unitstr, func, scale, units, err, yyscanner);
-  yylex_destroy(yyscanner);
-
-  return status;
-}
-
-/*--------------------------------------------------------------------------*/
-
-#define YY_DECL int wcsulex_scanner(const char unitstr[], int *func, \
+#define YY_DECL int wcsulexe_scanner(const char unitstr[], int *func, \
  double *scale, double units[WCSUNITS_NTYPE], struct wcserr **err, \
  yyscan_t yyscanner)
 
-/* Dummy definition to circumvent compiler warnings. */
+// Dummy definition to circumvent compiler warnings.
 #define YY_INPUT(inbuff, count, bufsize) { count = YY_NULL; }
 
-/* Used in preempting the call to exit() by yy_fatal_error(). */
-jmp_buf wcsulex_abort_jmp_env;
-#define exit(status) longjmp(wcsulex_abort_jmp_env, status)
+// Preempt the call to exit() by yy_fatal_error().
+#define exit(status) longjmp(yyextra->abort_jmp_env, status);
+
+// Internal helper functions.
+static YY_DECL;
 
 %}
 
 %%
-	static const char *function = "wcsulexe";
+	static const char *function = "wcsulexe_scanner";
 	
-	char ctmp[72];
+	void add(double *factor, double types[], double *expon, double *scale,
+	    double units[]);
+	
+	// Initialise returned values.
+	*func  = 0;
+	*scale = 1.0;
+	
+	for (int i = 0; i < WCSUNITS_NTYPE; i++) {
+	  units[i] = 0.0;
+	}
+	
+	if (err) *err = 0x0;
+	
+	double types[WCSUNITS_NTYPE];
+	for (int i = 0; i < WCSUNITS_NTYPE; i++) {
+	  types[i] = 0.0;
+	}
+	double expon  = 1.0;
+	double factor = 1.0;
+	
 	int bracket  = 0;
 	int operator = 0;
 	int paren    = 0;
 	int status   = 0;
-	int func_r, i, j;
-	double dexp, expon, factor, factor_r, types[WCSUNITS_NTYPE];
-	YY_BUFFER_STATE buf;
-	void add(double *factor, double types[], double *expon, double *scale,
-	    double units[]);
 	
-	if (err) *err = 0x0;
-	
-	*func = 0;
-	for (i = 0; i < WCSUNITS_NTYPE; i++) {
-	  units[i] = 0.0;
-	  types[i] = 0.0;
-	}
-	expon  = 1.0;
-	factor = 1.0;
-	*scale = 1.0;
-	
-	/* Avert a flex-induced memory leak. */
+	// Avert a flex-induced memory leak.
 	if (YY_CURRENT_BUFFER && YY_CURRENT_BUFFER->yy_input_file == stdin) {
 	  yy_delete_buffer(YY_CURRENT_BUFFER, yyscanner);
 	}
 	
 	yy_scan_string(unitstr, yyscanner);
 	
-	/* Return here via longjmp() invoked by yy_fatal_error(). */
-	if (setjmp(wcsulex_abort_jmp_env)) {
+	// Return here via longjmp() invoked by yy_fatal_error().
+	if (setjmp(yyextra->abort_jmp_env)) {
 	  return wcserr_set(WCSERR_SET(UNITSERR_PARSER_ERROR),
 	    "Internal units parser error parsing '%s'", unitstr);
 	}
@@ -180,7 +161,7 @@ jmp_buf wcsulex_abort_jmp_env;
 	#endif
 
 ^" "+	{
-	  /* Pretend initial whitespace doesn't exist. */
+	  // Pretend initial whitespace doesn't exist.
 	  yy_set_bol(1);
 	}
 
@@ -222,13 +203,13 @@ jmp_buf wcsulex_abort_jmp_env;
 	}
 
 ^[*.]	{
-	  /* Leading binary multiply. */
+	  // Leading binary multiply.
 	  status = wcserr_set(WCSERR_SET(UNITSERR_DANGLING_BINOP),
 	    "Dangling binary operator in '%s'", unitstr);
 	  BEGIN(FLUSH);
 	}
 
-" "+	  /* Discard whitespace in INITIAL context. */
+" "+	  // Discard whitespace in INITIAL context.
 
 sqrt" "*"(" {
 	  expon /= 2.0;
@@ -237,7 +218,7 @@ sqrt" "*"(" {
 	}
 
 "("	{
-	  /* Gather terms in parentheses. */
+	  // Gather terms in parentheses.
 	  yyless(0);
 	  BEGIN(PAREN);
 	}
@@ -291,15 +272,18 @@ sqrt" "*"(" {
 <PAREN>")" {
 	  paren--;
 	  if (paren) {
-	    /* Not balanced yet. */
+	    // Not balanced yet.
 	    yymore();
 	
 	  } else {
-	    /* Balanced; strip off the outer parentheses and recurse. */
+	    // Balanced; strip off the outer parentheses and recurse.
 	    yytext[yyleng-1] = '\0';
 	
-	    buf = YY_CURRENT_BUFFER;
+	    int func_r;
+	    double factor_r;
 	    status = wcsulexe(yytext+1, &func_r, &factor_r, types, err);
+	
+	    YY_BUFFER_STATE buf = YY_CURRENT_BUFFER;
 	    yy_switch_to_buffer(buf, yyscanner);
 	
 	    if (func_r) {
@@ -421,125 +405,125 @@ sqrt" "*"(" {
 	}
 
 <PREFIX>. {
-	  /* Internal parser error. */
+	  // Internal parser error.
 	  status = wcserr_set(WCSERR_SET(UNITSERR_PARSER_ERROR),
 	    "Internal units parser error parsing '%s'", unitstr);
 	  BEGIN(FLUSH);
 	}
 
 <UNITS>A {
-	  /* Ampere. */
+	  // Ampere.
 	  types[WCSUNITS_CHARGE] += 1.0;
 	  types[WCSUNITS_TIME]   -= 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>a|yr {
-	  /* Julian year (annum). */
+	  // Julian year (annum).
 	  factor *= 31557600.0;
 	  types[WCSUNITS_TIME] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>adu {
-	  /* Analogue-to-digital converter units. */
+	  // Analogue-to-digital converter units.
 	  types[WCSUNITS_COUNT] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>[Aa]ngstrom {
-	  /* Angstrom. */
+	  // Angstrom.
 	  factor *= 1e-10;
 	  types[WCSUNITS_LENGTH] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>arcmin {
-	  /* Minute of arc. */
+	  // Minute of arc.
 	  factor /= 60.0;
 	  types[WCSUNITS_PLANE_ANGLE] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>arcsec {
-	  /* Second of arc. */
+	  // Second of arc.
 	  factor /= 3600.0;
 	  types[WCSUNITS_PLANE_ANGLE] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>AU {
-	  /* Astronomical unit. */
+	  // Astronomical unit.
 	  factor *= 1.49598e+11;
 	  types[WCSUNITS_LENGTH] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>barn {
-	  /* Barn. */
+	  // Barn.
 	  factor *= 1e-28;
 	  types[WCSUNITS_LENGTH] += 2.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>beam {
-	  /* Beam, as in Jy/beam. */
+	  // Beam, as in Jy/beam.
 	  types[WCSUNITS_BEAM] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>bin {
-	  /* Bin (e.g. histogram). */
+	  // Bin (e.g. histogram).
 	  types[WCSUNITS_BIN] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>bit {
-	  /* Bit. */
+	  // Bit.
 	  types[WCSUNITS_BIT] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>[bB]yte {
-	  /* Byte. */
+	  // Byte.
 	  factor *= 8.0;
 	  types[WCSUNITS_BIT] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>C {
-	  /* Coulomb. */
+	  // Coulomb.
 	  types[WCSUNITS_CHARGE] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>cd {
-	  /* Candela. */
+	  // Candela.
 	  types[WCSUNITS_LUMINTEN] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>chan {
-	  /* Channel. */
+	  // Channel.
 	  types[WCSUNITS_BIN] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>count|ct {
-	  /* Count. */
+	  // Count.
 	  types[WCSUNITS_COUNT] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>cy {
-	  /* Julian century. */
+	  // Julian century.
 	  factor *= 3155760000.0;
 	  types[WCSUNITS_TIME] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>D {
-	  /* Debye. */
+	  // Debye.
 	  factor *= 1e-29 / 3.0;
 	  types[WCSUNITS_CHARGE] += 1.0;
 	  types[WCSUNITS_LENGTH] += 1.0;
@@ -547,20 +531,20 @@ sqrt" "*"(" {
 	}
 
 <UNITS>d {
-	  /* Day. */
+	  // Day.
 	  factor *= 86400.0;
 	  types[WCSUNITS_TIME] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>deg {
-	  /* Degree. */
+	  // Degree.
 	  types[WCSUNITS_PLANE_ANGLE] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>erg {
-	  /* Erg. */
+	  // Erg.
 	  factor *= 1e-7;
 	  types[WCSUNITS_MASS]   += 1.0;
 	  types[WCSUNITS_LENGTH] += 2.0;
@@ -569,7 +553,7 @@ sqrt" "*"(" {
 	}
 
 <UNITS>eV {
-	  /* Electron volt. */
+	  // Electron volt.
 	  factor *= 1.6021765e-19;
 	  types[WCSUNITS_MASS]   += 1.0;
 	  types[WCSUNITS_LENGTH] += 2.0;
@@ -578,7 +562,7 @@ sqrt" "*"(" {
 	}
 
 <UNITS>F {
-	  /* Farad. */
+	  // Farad.
 	  types[WCSUNITS_MASS]   -= 1.0;
 	  types[WCSUNITS_LENGTH] -= 2.0;
 	  types[WCSUNITS_TIME]   += 3.0;
@@ -587,7 +571,7 @@ sqrt" "*"(" {
 	}
 
 <UNITS>G {
-	  /* Gauss. */
+	  // Gauss.
 	  factor *= 1e-4;
 	  types[WCSUNITS_MASS]   += 1.0;
 	  types[WCSUNITS_TIME]   += 1.0;
@@ -596,14 +580,14 @@ sqrt" "*"(" {
 	}
 
 <UNITS>g {
-	  /* Gram. */
+	  // Gram.
 	  factor *= 1e-3;
 	  types[WCSUNITS_MASS] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>H {
-	  /* Henry. */
+	  // Henry.
 	  types[WCSUNITS_MASS]   += 1.0;
 	  types[WCSUNITS_LENGTH] += 2.0;
 	  types[WCSUNITS_TIME]   += 2.0;
@@ -612,20 +596,20 @@ sqrt" "*"(" {
 	}
 
 <UNITS>h {
-	  /* Hour. */
+	  // Hour.
 	  factor *= 3600.0;
 	  types[WCSUNITS_TIME] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>Hz {
-	  /* Hertz. */
+	  // Hertz.
 	  types[WCSUNITS_TIME] -= 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>J {
-	  /* Joule. */
+	  // Joule.
 	  types[WCSUNITS_MASS]   += 1.0;
 	  types[WCSUNITS_LENGTH] += 2.0;
 	  types[WCSUNITS_TIME]   -= 2.0;
@@ -633,7 +617,7 @@ sqrt" "*"(" {
 	}
 
 <UNITS>Jy {
-	  /* Jansky. */
+	  // Jansky.
 	  factor *= 1e-26;
 	  types[WCSUNITS_MASS] += 1.0;
 	  types[WCSUNITS_TIME] -= 2.0;
@@ -641,20 +625,20 @@ sqrt" "*"(" {
 	}
 
 <UNITS>K {
-	  /* Kelvin. */
+	  // Kelvin.
 	  types[WCSUNITS_TEMPERATURE] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>lm {
-	  /* Lumen. */
+	  // Lumen.
 	  types[WCSUNITS_LUMINTEN]    += 1.0;
 	  types[WCSUNITS_SOLID_ANGLE] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>lx {
-	  /* Lux. */
+	  // Lux.
 	  types[WCSUNITS_LUMINTEN]    += 1.0;
 	  types[WCSUNITS_SOLID_ANGLE] += 1.0;
 	  types[WCSUNITS_LENGTH]      -= 2.0;
@@ -662,46 +646,46 @@ sqrt" "*"(" {
 	}
 
 <UNITS>lyr {
-	  /* Light year. */
+	  // Light year.
 	  factor *= 2.99792458e8 * 31557600.0;
 	  types[WCSUNITS_LENGTH] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>m {
-	  /* Metre. */
+	  // Metre.
 	  types[WCSUNITS_LENGTH] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>mag {
-	  /* Stellar magnitude. */
+	  // Stellar magnitude.
 	  types[WCSUNITS_MAGNITUDE] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>mas {
-	  /* Milli-arcsec. */
+	  // Milli-arcsec.
 	  factor /= 3600e+3;
 	  types[WCSUNITS_PLANE_ANGLE] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>min {
-	  /* Minute. */
+	  // Minute.
 	  factor *= 60.0;
 	  types[WCSUNITS_TIME] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>mol {
-	  /* Mole. */
+	  // Mole.
 	  types[WCSUNITS_MOLE] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>N {
-	  /* Newton. */
+	  // Newton.
 	  types[WCSUNITS_MASS]   += 1.0;
 	  types[WCSUNITS_LENGTH] += 1.0;
 	  types[WCSUNITS_TIME]   -= 2.0;
@@ -709,7 +693,7 @@ sqrt" "*"(" {
 	}
 
 <UNITS>[Oo]hm {
-	  /* Ohm. */
+	  // Ohm.
 	  types[WCSUNITS_MASS]   += 1.0;
 	  types[WCSUNITS_LENGTH] += 2.0;
 	  types[WCSUNITS_TIME]   -= 1.0;
@@ -718,7 +702,7 @@ sqrt" "*"(" {
 	}
 
 <UNITS>Pa {
-	  /* Pascal. */
+	  // Pascal.
 	  types[WCSUNITS_MASS]   += 1.0;
 	  types[WCSUNITS_LENGTH] -= 1.0;
 	  types[WCSUNITS_TIME]   -= 2.0;
@@ -726,26 +710,26 @@ sqrt" "*"(" {
 	}
 
 <UNITS>pc {
-	  /* Parsec. */
+	  // Parsec.
 	  factor *= 3.0857e16;
 	  types[WCSUNITS_LENGTH] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>photon|ph {
-	  /* Photon. */
+	  // Photon.
 	  types[WCSUNITS_COUNT] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>pixel|pix {
-	  /* Pixel. */
+	  // Pixel.
 	  types[WCSUNITS_PIXEL] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>R {
-	  /* Rayleigh. */
+	  // Rayleigh.
 	  factor *= 1e10 / (4.0 * PI);
 	  types[WCSUNITS_LENGTH]      -= 2.0;
 	  types[WCSUNITS_TIME]        -= 1.0;
@@ -754,14 +738,14 @@ sqrt" "*"(" {
 	}
 
 <UNITS>rad {
-	  /* Radian. */
+	  // Radian.
 	  factor *= 180.0 / PI;
 	  types[WCSUNITS_PLANE_ANGLE] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>Ry {
-	  /* Rydberg. */
+	  // Rydberg.
 	  factor *= 13.605692 * 1.6021765e-19;
 	  types[WCSUNITS_MASS]   += 1.0;
 	  types[WCSUNITS_LENGTH] += 2.0;
@@ -770,7 +754,7 @@ sqrt" "*"(" {
 	}
 
 <UNITS>S {
-	  /* Siemen. */
+	  // Siemen.
 	  types[WCSUNITS_MASS]   -= 1.0;
 	  types[WCSUNITS_LENGTH] -= 2.0;
 	  types[WCSUNITS_TIME]   += 1.0;
@@ -779,13 +763,13 @@ sqrt" "*"(" {
 	}
 
 <UNITS>s {
-	  /* Second. */
+	  // Second.
 	  types[WCSUNITS_TIME] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>solLum {
-	  /* Solar luminosity. */
+	  // Solar luminosity.
 	  factor *= 3.8268e26;
 	  types[WCSUNITS_MASS]   += 1.0;
 	  types[WCSUNITS_LENGTH] += 2.0;
@@ -794,33 +778,33 @@ sqrt" "*"(" {
 	}
 
 <UNITS>solMass {
-	  /* Solar mass. */
+	  // Solar mass.
 	  factor *= 1.9891e30;
 	  types[WCSUNITS_MASS] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>solRad {
-	  /* Solar radius. */
+	  // Solar radius.
 	  factor *= 6.9599e8;
 	  types[WCSUNITS_LENGTH] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>sr {
-	  /* Steradian. */
+	  // Steradian.
 	  types[WCSUNITS_SOLID_ANGLE] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>Sun {
-	  /* Sun (with respect to). */
+	  // Sun (with respect to).
 	  types[WCSUNITS_SOLRATIO] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>T {
-	  /* Tesla. */
+	  // Tesla.
 	  types[WCSUNITS_MASS]   += 1.0;
 	  types[WCSUNITS_TIME]   += 1.0;
 	  types[WCSUNITS_CHARGE] -= 1.0;
@@ -828,21 +812,21 @@ sqrt" "*"(" {
 	}
 
 <UNITS>turn {
-	  /* Turn. */
+	  // Turn.
 	  factor *= 360.0;
 	  types[WCSUNITS_PLANE_ANGLE] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>u {
-	  /* Unified atomic mass unit. */
+	  // Unified atomic mass unit.
 	  factor *= 1.6605387e-27;
 	  types[WCSUNITS_MASS] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>V {
-	  /* Volt. */
+	  // Volt.
 	  types[WCSUNITS_MASS]   += 1.0;
 	  types[WCSUNITS_LENGTH] += 1.0;
 	  types[WCSUNITS_TIME]   -= 2.0;
@@ -851,13 +835,13 @@ sqrt" "*"(" {
 	}
 
 <UNITS>voxel {
-	  /* Voxel. */
+	  // Voxel.
 	  types[WCSUNITS_VOXEL] += 1.0;
 	  BEGIN(EXPON);
 	}
 
 <UNITS>W {
-	  /* Watt. */
+	  // Watt.
 	  types[WCSUNITS_MASS]   += 1.0;
 	  types[WCSUNITS_LENGTH] += 2.0;
 	  types[WCSUNITS_TIME]   -= 3.0;
@@ -865,7 +849,7 @@ sqrt" "*"(" {
 	}
 
 <UNITS>Wb {
-	  /* Weber. */
+	  // Weber.
 	  types[WCSUNITS_MASS]   += 1.0;
 	  types[WCSUNITS_LENGTH] += 2.0;
 	  types[WCSUNITS_TIME]   += 1.0;
@@ -874,20 +858,21 @@ sqrt" "*"(" {
 	}
 
 <UNITS>. {
-	  /* Internal parser error. */
+	  // Internal parser error.
 	  status = wcserr_set(WCSERR_SET(UNITSERR_PARSER_ERROR),
 	    "Internal units parser error parsing '%s'", unitstr);
 	  BEGIN(FLUSH);
 	}
 
 <EXPON>" "*("**"|^) {
-	  /* Exponentiation. */
+	  // Exponentiation.
 	  if (operator++) {
 	    BEGIN(FLUSH);
 	  }
 	}
 
 <EXPON>" "*{INTEGER} {
+	  int i;
 	  sscanf(yytext, " %d", &i);
 	  expon *= (double)i;
 	  add(&factor, types, &expon, scale, units);
@@ -896,6 +881,7 @@ sqrt" "*"(" {
 	}
 
 <EXPON>" "*"("" "*{INTEGER}" "*")" {
+	  int i;
 	  sscanf(yytext, " (%d)", &i);
 	  expon *= (double)i;
 	  add(&factor, types, &expon, scale, units);
@@ -904,6 +890,7 @@ sqrt" "*"(" {
 	}
 
 <EXPON>" "*"("" "*{FRAC}" "*")" {
+	  int i, j;
 	  sscanf(yytext, " (%d/%d)", &i, &j);
 	  expon *= (double)i / (double)j;
 	  add(&factor, types, &expon, scale, units);
@@ -912,7 +899,9 @@ sqrt" "*"(" {
 	}
 
 <EXPON>" "*"("" "*{FLOAT}" "*")" {
+	  char ctmp[72];
 	  sscanf(yytext, " (%s)", ctmp);
+	  double dexp;
 	  wcsutil_str2double(ctmp, &dexp);
 	  expon *= dexp;
 	  add(&factor, types, &expon, scale, units);
@@ -921,7 +910,7 @@ sqrt" "*"(" {
 	}
 
 <EXPON>" "*[.*]" "* {
-	  /* Multiply. */
+	  // Multiply.
 	  if (operator++) {
 	    BEGIN(FLUSH);
 	  } else {
@@ -931,7 +920,7 @@ sqrt" "*"(" {
 	}
 
 <EXPON>" "*"(" {
-	  /* Multiply. */
+	  // Multiply.
 	  if (operator) {
 	    BEGIN(FLUSH);
 	  } else {
@@ -942,7 +931,7 @@ sqrt" "*"(" {
 	}
 
 <EXPON>" "+ {
-	  /* Multiply. */
+	  // Multiply.
 	  if (operator) {
 	    BEGIN(FLUSH);
 	  } else {
@@ -952,7 +941,7 @@ sqrt" "*"(" {
 	}
 
 <EXPON>" "*"/"" "* {
-	  /* Divide. */
+	  // Divide.
 	  if (operator++) {
 	    BEGIN(FLUSH);
 	  } else {
@@ -975,11 +964,11 @@ sqrt" "*"(" {
 	}
 
 <FLUSH>.* {
-	  /* Discard any remaining input. */
+	  // Discard any remaining input.
 	}
 
 <<EOF>>	{
-	  /* End-of-string. */
+	  // End-of-string.
 	  if (YY_START == EXPON) {
 	    add(&factor, types, &expon, scale, units);
 	  }
@@ -1003,7 +992,7 @@ sqrt" "*"(" {
 	  }
 	
 	  if (status) {
-	    for (i = 0; i < WCSUNITS_NTYPE; i++) {
+	    for (int i = 0; i < WCSUNITS_NTYPE; i++) {
 	      units[i] = 0.0;
 	      *scale = 0.0;
 	    }
@@ -1013,6 +1002,32 @@ sqrt" "*"(" {
 	}
 
 %%
+
+/*----------------------------------------------------------------------------
+* External interface to the scanner.
+*---------------------------------------------------------------------------*/
+
+int wcsulexe(
+  const char unitstr[],
+  int *func,
+  double *scale,
+  double units[WCSUNITS_NTYPE],
+  struct wcserr **err)
+
+{
+  // Function prototypes.
+  int yylex_init_extra(YY_EXTRA_TYPE extra, yyscan_t *yyscanner);
+  int yylex_destroy(yyscan_t yyscanner);
+
+  struct wcsulex_extra extra;
+  yyscan_t yyscanner;
+  yylex_init_extra(&extra, &yyscanner);
+  int status = wcsulexe_scanner(unitstr, func, scale, units, err, yyscanner);
+  yylex_destroy(yyscanner);
+
+  return status;
+}
+
 
 /*----------------------------------------------------------------------------
 * Accumulate a term in a units specification and reset work variables.
@@ -1026,11 +1041,9 @@ void add(
   double units[])
 
 {
-  int i;
-
   *scale *= pow(*factor, *expon);
 
-  for (i = 0; i < WCSUNITS_NTYPE; i++) {
+  for (int i = 0; i < WCSUNITS_NTYPE; i++) {
     units[i] += *expon * types[i];
     types[i] = 0.0;
   }

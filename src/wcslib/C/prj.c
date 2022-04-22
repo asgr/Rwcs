@@ -1,7 +1,6 @@
 /*============================================================================
-
-  WCSLIB 7.1 - an implementation of the FITS WCS standard.
-  Copyright (C) 1995-2020, Mark Calabretta
+  WCSLIB 7.9 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2022, Mark Calabretta
 
   This file is part of WCSLIB.
 
@@ -18,11 +17,9 @@
   You should have received a copy of the GNU Lesser General Public License
   along with WCSLIB.  If not, see http://www.gnu.org/licenses.
 
-  Direct correspondence concerning WCSLIB to mark@calabretta.id.au
-
   Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
   http://www.atnf.csiro.au/people/Mark.Calabretta
-  $Id: prj.c,v 7.1 2019/12/31 13:25:19 mcalabre Exp $
+  $Id: prj.c,v 7.9 2022/03/25 15:14:48 mcalabre Exp $
 *===========================================================================*/
 
 #include <math.h>
@@ -38,7 +35,7 @@
 #include "prj.h"
 
 
-/* Projection categories. */
+// Projection categories.
 const int ZENITHAL          = 1;
 const int CYLINDRICAL       = 2;
 const int PSEUDOCYLINDRICAL = 3;
@@ -53,7 +50,7 @@ const char prj_categories[9][32] =
   "conventional", "conic", "polyconic", "quadcube", "HEALPix"};
 
 
-/* Projection codes. */
+// Projection codes.
 const int  prj_ncode = 28;
 const char prj_codes[28][4] =
   {"AZP", "SZP", "TAN", "STG", "SIN", "ARC", "ZPN", "ZEA", "AIR", "CYP",
@@ -90,7 +87,7 @@ const int HPX = 801;
 const int XPH = 802;
 
 
-/* Map status return value to message. */
+// Map status return value to message.
 const char *prj_errmsg[] = {
   "Success",
   "Null prjprm pointer passed",
@@ -98,7 +95,7 @@ const char *prj_errmsg[] = {
   "One or more of the (x,y) coordinates were invalid",
   "One or more of the (phi,theta) coordinates were invalid"};
 
-/* Convenience macros for generating common error messages. */
+// Convenience macros for generating common error messages.
 #define PRJERR_BAD_PARAM_SET(function) \
   wcserr_set(&(prj->err), PRJERR_BAD_PARAM, function, __FILE__, __LINE__, \
     "Invalid parameters for %s projection", prj->name);
@@ -123,6 +120,8 @@ const char *prj_errmsg[] = {
 *
 * prjfree frees any memory that may have been allocated to store an error
 *        message in the prjprm struct.
+*
+* prjsize computed the size of a prjprm struct.
 *
 * prjprt prints the contents of a prjprm struct.
 *
@@ -184,7 +183,7 @@ int prjini(struct prjprm *prj)
   return 0;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int prjfree(struct prjprm *prj)
 
@@ -196,7 +195,32 @@ int prjfree(struct prjprm *prj)
   return 0;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
+
+int prjsize(const struct prjprm *prj, int sizes[2])
+
+{
+  if (prj == 0x0) {
+    sizes[0] = sizes[1] = 0;
+    return PRJERR_SUCCESS;
+  }
+
+  // Base size, in bytes.
+  sizes[0] = sizeof(struct prjprm);
+
+  // Total size of allocated memory, in bytes.
+  sizes[1] = 0;
+
+  int exsizes[2];
+
+  // prjprm::err.
+  wcserr_size(prj->err, exsizes);
+  sizes[1] += exsizes[0] + exsizes[1];
+
+  return PRJERR_SUCCESS;
+}
+
+//----------------------------------------------------------------------------
 
 int prjprt(const struct prjprm *prj)
 
@@ -284,7 +308,7 @@ int prjprt(const struct prjprm *prj)
   return 0;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int prjperr(const struct prjprm *prj, const char *prefix)
 
@@ -298,7 +322,7 @@ int prjperr(const struct prjprm *prj, const char *prefix)
   return 0;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int prjbchk(
   double tol,
@@ -319,7 +343,7 @@ int prjbchk(
   statp  = stat;
   for (itheta = 0; itheta < ntheta; itheta++) {
     for (iphi = 0; iphi < nphi; iphi++, phip += spt, thetap += spt, statp++) {
-      /* Skip values already marked as illegal. */
+      // Skip values already marked as illegal.
       if (*statp == 0) {
         if (*phip < -180.0) {
           if (*phip < -180.0-tol) {
@@ -359,7 +383,7 @@ int prjbchk(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int prjset(struct prjprm *prj)
 
@@ -372,7 +396,7 @@ int prjset(struct prjprm *prj)
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   err = &(prj->err);
 
-  /* Invoke the relevant initialization routine. */
+  // Invoke the relevant initialization routine.
   prj->code[3] = '\0';
   if (strcmp(prj->code, "AZP") == 0) {
     status = azpset(prj);
@@ -431,7 +455,7 @@ int prjset(struct prjprm *prj)
   } else if (strcmp(prj->code, "XPH") == 0) {
     status = xphset(prj);
   } else {
-    /* Unrecognized projection code. */
+    // Unrecognized projection code.
     status = wcserr_set(WCSERR_SET(PRJERR_BAD_PARAM),
                "Unrecognized projection code '%s'", prj->code);
   }
@@ -439,7 +463,7 @@ int prjset(struct prjprm *prj)
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int prjx2s(
   struct prjprm *prj,
@@ -456,7 +480,7 @@ int prjx2s(
 {
   int status;
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag == 0) {
     if ((status = prjset(prj))) return status;
@@ -465,7 +489,7 @@ int prjx2s(
   return prj->prjx2s(prj, nx, ny, sxy, spt, x, y, phi, theta, stat);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int prjs2x(
   struct prjprm *prj,
@@ -482,7 +506,7 @@ int prjs2x(
 {
   int status;
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag == 0) {
     if ((status = prjset(prj))) return status;
@@ -511,7 +535,7 @@ int prjoff(
   prj->y0 = 0.0;
 
   if (undefined(prj->phi0) || undefined(prj->theta0)) {
-    /* Set both to the projection-specific default if either undefined. */
+    // Set both to the projection-specific default if either undefined.
     prj->phi0   = phi0;
     prj->theta0 = theta0;
 
@@ -607,7 +631,7 @@ int azpset(struct prjprm *prj)
   return prjoff(prj, 0.0, 90.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int azpx2s(
   struct prjprm *prj,
@@ -630,7 +654,7 @@ int azpx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != AZP) {
     if ((status = azpset(prj))) return status;
@@ -648,7 +672,7 @@ int azpx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -663,7 +687,7 @@ int azpx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -718,7 +742,7 @@ int azpx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("azpx2s");
   }
@@ -726,7 +750,7 @@ int azpx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int azps2x(
   struct prjprm *prj,
@@ -748,7 +772,7 @@ int azps2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != AZP) {
     if ((status = azpset(prj))) return status;
@@ -766,7 +790,7 @@ int azps2x(
   status = 0;
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -784,7 +808,7 @@ int azps2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -805,16 +829,16 @@ int azps2x(
       } else {
         r = prj->w[0]*costhe/t;
 
-        /* Bounds checking. */
+        // Bounds checking.
         istat = 0;
         if (prj->bounds&1) {
           if (*thetap < prj->w[5]) {
-            /* Overlap. */
+            // Overlap.
             istat = 1;
             if (!status) status = PRJERR_BAD_WORLD_SET("azps2x");
 
           } else if (prj->w[7] > 0.0) {
-            /* Divergence. */
+            // Divergence.
             t = prj->pv[1] / sqrt(1.0 + s*s);
 
             if (fabs(t) <= 1.0) {
@@ -926,7 +950,7 @@ int szpset(struct prjprm *prj)
   return prjoff(prj, 0.0, 90.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int szpx2s(
   struct prjprm *prj,
@@ -949,7 +973,7 @@ int szpx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != SZP) {
     if ((status = szpset(prj))) return status;
@@ -967,7 +991,7 @@ int szpx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -982,7 +1006,7 @@ int szpx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -999,7 +1023,7 @@ int szpx2s(
       xy = xr*x1 + yr*y1;
 
       if (r2 < 1.0e-10) {
-        /* Use small angle formula. */
+        // Use small angle formula.
         z = r2/2.0;
         *thetap = 90.0 - R2D*sqrt(r2/(1.0 + xy));
 
@@ -1010,7 +1034,7 @@ int szpx2s(
         c = r2 - xy - xy + t - 1.0;
         d = b*b - a*c;
 
-        /* Check for a solution. */
+        // Check for a solution.
         if (d < 0.0) {
           *phip = 0.0;
           *thetap = 0.0;
@@ -1020,7 +1044,7 @@ int szpx2s(
         }
         d = sqrt(d);
 
-        /* Choose solution closest to pole. */
+        // Choose solution closest to pole.
         sinth1 = (-b + d)/a;
         sinth2 = (-b - d)/a;
         sinthe = (sinth1 > sinth2) ? sinth1 : sinth2;
@@ -1057,7 +1081,7 @@ int szpx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("szpx2s");
   }
@@ -1065,7 +1089,7 @@ int szpx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int szps2x(
   struct prjprm *prj,
@@ -1087,7 +1111,7 @@ int szps2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != SZP) {
     if ((status = szpset(prj))) return status;
@@ -1105,7 +1129,7 @@ int szps2x(
   status = 0;
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -1123,7 +1147,7 @@ int szps2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -1147,16 +1171,16 @@ int szps2x(
       v = prj->w[5]*s/t + prj->y0;
 
       for (iphi = 0; iphi < mphi; iphi++, xp += sxy, yp += sxy) {
-        /* Bounds checking. */
+        // Bounds checking.
         istat = 0;
         if (prj->bounds&1) {
           if (*thetap < prj->w[8]) {
-            /* Divergence. */
+            // Divergence.
             istat = 1;
             if (!status) status = PRJERR_BAD_WORLD_SET("szps2x");
 
           } else if (fabs(prj->pv[1]) > 1.0) {
-            /* Overlap. */
+            // Overlap.
             s = prj->w[1]*(*xp) - prj->w[2]*(*yp);
             t = 1.0/sqrt(prj->w[7] + s*s);
 
@@ -1230,7 +1254,7 @@ int tanset(struct prjprm *prj)
   return prjoff(prj, 0.0, 90.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int tanx2s(
   struct prjprm *prj,
@@ -1252,7 +1276,7 @@ int tanx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != TAN) {
     if ((status = tanset(prj))) return status;
@@ -1270,7 +1294,7 @@ int tanx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -1285,7 +1309,7 @@ int tanx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -1310,7 +1334,7 @@ int tanx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("tanx2s");
   }
@@ -1318,7 +1342,7 @@ int tanx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int tans2x(
   struct prjprm *prj,
@@ -1340,7 +1364,7 @@ int tans2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != TAN) {
     if ((status = tanset(prj))) return status;
@@ -1358,7 +1382,7 @@ int tans2x(
   status = 0;
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -1376,7 +1400,7 @@ int tans2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -1394,7 +1418,7 @@ int tans2x(
     } else {
       r =  prj->r0*cosd(*thetap)/s;
 
-      /* Bounds checking. */
+      // Bounds checking.
       istat = 0;
       if (prj->bounds&1) {
         if (s < 0.0) {
@@ -1465,7 +1489,7 @@ int stgset(struct prjprm *prj)
   return prjoff(prj, 0.0, 90.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int stgx2s(
   struct prjprm *prj,
@@ -1487,7 +1511,7 @@ int stgx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != STG) {
     if ((status = stgset(prj))) return status;
@@ -1503,7 +1527,7 @@ int stgx2s(
   }
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -1518,7 +1542,7 @@ int stgx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -1545,7 +1569,7 @@ int stgx2s(
   return 0;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int stgs2x(
   struct prjprm *prj,
@@ -1567,7 +1591,7 @@ int stgs2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != STG) {
     if ((status = stgset(prj))) return status;
@@ -1585,7 +1609,7 @@ int stgs2x(
   status = 0;
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -1603,7 +1627,7 @@ int stgs2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -1688,7 +1712,7 @@ int sinset(struct prjprm *prj)
   return prjoff(prj, 0.0, 90.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int sinx2s(
   struct prjprm *prj,
@@ -1712,7 +1736,7 @@ int sinx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != SIN) {
     if ((status = sinset(prj))) return status;
@@ -1733,7 +1757,7 @@ int sinx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -1748,7 +1772,7 @@ int sinx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -1758,12 +1782,12 @@ int sinx2s(
     y02 = y0*y0;
 
     for (ix = 0; ix < mx; ix++, phip += spt, thetap += spt) {
-      /* Compute intermediaries. */
+      // Compute intermediaries.
       x0 = *phip;
       r2 = x0*x0 + y02;
 
       if (prj->w[1] == 0.0) {
-        /* Orthographic projection. */
+        // Orthographic projection.
         if (r2 != 0.0) {
           *phip = atan2d(x0, -y0);
         } else {
@@ -1781,11 +1805,11 @@ int sinx2s(
         }
 
       } else {
-        /* "Synthesis" projection. */
+        // "Synthesis" projection.
         xy = x0*xi + y0*eta;
 
         if (r2 < 1.0e-10) {
-          /* Use small angle formula. */
+          // Use small angle formula.
           z = r2/2.0;
           *thetap = 90.0 - R2D*sqrt(r2/(1.0 + xy));
 
@@ -1795,7 +1819,7 @@ int sinx2s(
           c = r2 - xy - xy + prj->w[3];
           d = b*b - a*c;
 
-          /* Check for a solution. */
+          // Check for a solution.
           if (d < 0.0) {
             *phip = 0.0;
             *thetap = 0.0;
@@ -1805,7 +1829,7 @@ int sinx2s(
           }
           d = sqrt(d);
 
-          /* Choose solution closest to pole. */
+          // Choose solution closest to pole.
           sinth1 = (-b + d)/a;
           sinth2 = (-b - d)/a;
           sinthe = (sinth1 > sinth2) ? sinth1 : sinth2;
@@ -1849,7 +1873,7 @@ int sinx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("sinx2s");
   }
@@ -1857,7 +1881,7 @@ int sinx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int sins2x(
   struct prjprm *prj,
@@ -1879,7 +1903,7 @@ int sins2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != SIN) {
     if ((status = sinset(prj))) return status;
@@ -1897,7 +1921,7 @@ int sins2x(
   status = 0;
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -1915,7 +1939,7 @@ int sins2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -1936,7 +1960,7 @@ int sins2x(
     r = prj->r0*costhe;
 
     if (prj->w[1] == 0.0) {
-      /* Orthographic projection. */
+      // Orthographic projection.
       istat = 0;
       if (prj->bounds&1) {
         if (*thetap < 0.0) {
@@ -1952,7 +1976,7 @@ int sins2x(
       }
 
     } else {
-      /* "Synthesis" projection. */
+      // "Synthesis" projection.
       z *= prj->r0;
       z1 = prj->pv[1]*z - prj->x0;
       z2 = prj->pv[2]*z - prj->y0;
@@ -2028,7 +2052,7 @@ int arcset(struct prjprm *prj)
   return prjoff(prj, 0.0, 90.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int arcx2s(
   struct prjprm *prj,
@@ -2050,7 +2074,7 @@ int arcx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != ARC) {
     if ((status = arcset(prj))) return status;
@@ -2068,7 +2092,7 @@ int arcx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -2083,7 +2107,7 @@ int arcx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -2109,7 +2133,7 @@ int arcx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("arcx2s");
   }
@@ -2117,7 +2141,7 @@ int arcx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int arcs2x(
   struct prjprm *prj,
@@ -2139,7 +2163,7 @@ int arcs2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != ARC) {
     if ((status = arcset(prj))) return status;
@@ -2155,7 +2179,7 @@ int arcs2x(
   }
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -2173,7 +2197,7 @@ int arcs2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -2240,7 +2264,7 @@ int zpnset(struct prjprm *prj)
   prj->global    = 0;
   prj->divergent = 0;
 
-  /* Find the highest non-zero coefficient. */
+  // Find the highest non-zero coefficient.
   for (k = PVN-1; k >= 0 && prj->pv[k] == 0.0; k--);
   if (k < 0) {
     return PRJERR_BAD_PARAM_SET("zpnset");
@@ -2249,18 +2273,18 @@ int zpnset(struct prjprm *prj)
   prj->n = k;
 
   if (k < 2) {
-    /* No point of inflection. */
+    // No point of inflection.
     prj->w[0] = PI;
 
   } else {
-    /* Find the point of inflection closest to the pole. */
+    // Find the point of inflection closest to the pole.
     zd1 = 0.0;
     d1  = prj->pv[1];
     if (d1 <= 0.0) {
       return PRJERR_BAD_PARAM_SET("zpnset");
     }
 
-    /* Find the point where the derivative first goes negative. */
+    // Find the point where the derivative first goes negative.
     for (j = 0; j < 180; j++) {
       zd2 = j*D2R;
       d2  = 0.0;
@@ -2274,11 +2298,11 @@ int zpnset(struct prjprm *prj)
     }
 
     if (j == 180) {
-      /* No negative derivative -> no point of inflection. */
+      // No negative derivative -> no point of inflection.
       zd = PI;
       prj->global = 1;
     } else {
-      /* Find where the derivative is zero. */
+      // Find where the derivative is zero.
       for (j = 1; j <= 10; j++) {
         zd = zd1 - d1*(zd2-zd1)/(d2-d1);
 
@@ -2313,7 +2337,7 @@ int zpnset(struct prjprm *prj)
   return prjoff(prj, 0.0, 90.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int zpnx2s(
   struct prjprm *prj,
@@ -2336,7 +2360,7 @@ int zpnx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != ZPN) {
     if ((status = zpnset(prj))) return status;
@@ -2356,7 +2380,7 @@ int zpnx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -2371,7 +2395,7 @@ int zpnx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -2391,15 +2415,15 @@ int zpnx2s(
       }
 
       if (k < 1) {
-        /* Constant - no solution. */
+        // Constant - no solution.
         return PRJERR_BAD_PARAM_SET("zpnx2s");
 
       } else if (k == 1) {
-        /* Linear. */
+        // Linear.
         zd = (r - prj->pv[0])/prj->pv[1];
 
       } else if (k == 2) {
-        /* Quadratic. */
+        // Quadratic.
         a = prj->pv[2];
         b = prj->pv[1];
         c = prj->pv[0] - r;
@@ -2413,7 +2437,7 @@ int zpnx2s(
         }
         d = sqrt(d);
 
-        /* Choose solution closest to pole. */
+        // Choose solution closest to pole.
         zd1 = (-b + d)/(2.0*a);
         zd2 = (-b - d)/(2.0*a);
         zd  = (zd1<zd2) ? zd1 : zd2;
@@ -2436,7 +2460,7 @@ int zpnx2s(
           zd = PI;
         }
       } else {
-        /* Higher order - solve iteratively. */
+        // Higher order - solve iteratively.
         zd1 = 0.0;
         r1  = prj->pv[0];
         zd2 = prj->w[0];
@@ -2459,7 +2483,7 @@ int zpnx2s(
           }
           zd = zd2;
         } else {
-          /* Dissect the interval. */
+          // Dissect the interval.
           for (j = 0; j < 100; j++) {
             lambda = (r2 - r)/(r2 - r1);
             if (lambda < 0.1) {
@@ -2496,7 +2520,7 @@ int zpnx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("zpnx2s");
   }
@@ -2504,7 +2528,7 @@ int zpnx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int zpns2x(
   struct prjprm *prj,
@@ -2526,7 +2550,7 @@ int zpns2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != ZPN) {
     if ((status = zpnset(prj))) return status;
@@ -2544,7 +2568,7 @@ int zpns2x(
   status = 0;
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -2562,7 +2586,7 @@ int zpns2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -2576,7 +2600,7 @@ int zpns2x(
     }
     r *= prj->r0;
 
-    /* Bounds checking. */
+    // Bounds checking.
     istat = 0;
     if (prj->bounds&1) {
       if (s > prj->w[0]) {
@@ -2646,7 +2670,7 @@ int zeaset(struct prjprm *prj)
   return prjoff(prj, 0.0, 90.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int zeax2s(
   struct prjprm *prj,
@@ -2669,7 +2693,7 @@ int zeax2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != ZEA) {
     if ((status = zeaset(prj))) return status;
@@ -2687,7 +2711,7 @@ int zeax2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -2702,7 +2726,7 @@ int zeax2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -2740,7 +2764,7 @@ int zeax2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("zeax2s");
   }
@@ -2748,7 +2772,7 @@ int zeax2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int zeas2x(
   struct prjprm *prj,
@@ -2770,7 +2794,7 @@ int zeas2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != ZEA) {
     if ((status = zeaset(prj))) return status;
@@ -2786,7 +2810,7 @@ int zeas2x(
   }
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -2804,7 +2828,7 @@ int zeas2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -2897,7 +2921,7 @@ int airset(struct prjprm *prj)
   return prjoff(prj, 0.0, 90.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int airx2s(
   struct prjprm *prj,
@@ -2920,7 +2944,7 @@ int airx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != AIR) {
     if ((status = airset(prj))) return status;
@@ -2938,7 +2962,7 @@ int airx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -2953,7 +2977,7 @@ int airx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -2978,7 +3002,7 @@ int airx2s(
       } else if (r < prj->w[5]) {
         xi = r*prj->w[6];
       } else {
-        /* Find a solution interval. */
+        // Find a solution interval.
         x1 = x2 = 1.0;
         r1 = r2 = 0.0;
         for (k = 0; k < 30; k++) {
@@ -2998,7 +3022,7 @@ int airx2s(
         }
 
         for (k = 0; k < 100; k++) {
-          /* Weighted division of the interval. */
+          // Weighted division of the interval.
           lambda = (r2-r)/(r2-r1);
           if (lambda < 0.1) {
             lambda = 0.1;
@@ -3036,7 +3060,7 @@ int airx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("airx2s");
   }
@@ -3044,7 +3068,7 @@ int airx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int airs2x(
   struct prjprm *prj,
@@ -3066,7 +3090,7 @@ int airs2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != AIR) {
     if ((status = airset(prj))) return status;
@@ -3084,7 +3108,7 @@ int airs2x(
   status = 0;
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -3102,7 +3126,7 @@ int airs2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -3222,7 +3246,7 @@ int cypset(struct prjprm *prj)
   return prjoff(prj, 0.0, 0.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int cypx2s(
   struct prjprm *prj,
@@ -3244,7 +3268,7 @@ int cypx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != CYP) {
     if ((status = cypset(prj))) return status;
@@ -3262,7 +3286,7 @@ int cypx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -3277,7 +3301,7 @@ int cypx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   thetap = theta;
   statp = stat;
@@ -3292,7 +3316,7 @@ int cypx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("cypx2s");
   }
@@ -3300,7 +3324,7 @@ int cypx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int cyps2x(
   struct prjprm *prj,
@@ -3322,7 +3346,7 @@ int cyps2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != CYP) {
     if ((status = cypset(prj))) return status;
@@ -3340,7 +3364,7 @@ int cyps2x(
   status = 0;
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -3355,7 +3379,7 @@ int cyps2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   yp = y;
   statp = stat;
@@ -3450,7 +3474,7 @@ int ceaset(struct prjprm *prj)
   return prjoff(prj, 0.0, 0.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int ceax2s(
   struct prjprm *prj,
@@ -3473,7 +3497,7 @@ int ceax2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != CEA) {
     if ((status = ceaset(prj))) return status;
@@ -3491,7 +3515,7 @@ int ceax2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -3506,7 +3530,7 @@ int ceax2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   thetap = theta;
   statp = stat;
@@ -3533,7 +3557,7 @@ int ceax2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("ceax2s");
   }
@@ -3541,7 +3565,7 @@ int ceax2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int ceas2x(
   struct prjprm *prj,
@@ -3563,7 +3587,7 @@ int ceas2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != CEA) {
     if ((status = ceaset(prj))) return status;
@@ -3579,7 +3603,7 @@ int ceas2x(
   }
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -3594,7 +3618,7 @@ int ceas2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   yp = y;
   statp = stat;
@@ -3661,7 +3685,7 @@ int carset(struct prjprm *prj)
   return prjoff(prj, 0.0, 0.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int carx2s(
   struct prjprm *prj,
@@ -3683,7 +3707,7 @@ int carx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != CAR) {
     if ((status = carset(prj))) return status;
@@ -3701,7 +3725,7 @@ int carx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -3716,7 +3740,7 @@ int carx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   thetap = theta;
   statp = stat;
@@ -3730,7 +3754,7 @@ int carx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("carx2s");
   }
@@ -3738,7 +3762,7 @@ int carx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int cars2x(
   struct prjprm *prj,
@@ -3760,7 +3784,7 @@ int cars2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != CAR) {
     if ((status = carset(prj))) return status;
@@ -3776,7 +3800,7 @@ int cars2x(
   }
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -3791,7 +3815,7 @@ int cars2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   yp = y;
   statp = stat;
@@ -3858,7 +3882,7 @@ int merset(struct prjprm *prj)
   return prjoff(prj, 0.0, 0.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int merx2s(
   struct prjprm *prj,
@@ -3880,7 +3904,7 @@ int merx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != MER) {
     if ((status = merset(prj))) return status;
@@ -3898,7 +3922,7 @@ int merx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -3913,7 +3937,7 @@ int merx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   thetap = theta;
   statp  = stat;
@@ -3927,7 +3951,7 @@ int merx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("merx2s");
   }
@@ -3935,7 +3959,7 @@ int merx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int mers2x(
   struct prjprm *prj,
@@ -3957,7 +3981,7 @@ int mers2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != MER) {
     if ((status = merset(prj))) return status;
@@ -3975,7 +3999,7 @@ int mers2x(
   status = 0;
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -3990,7 +4014,7 @@ int mers2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   yp = y;
   statp = stat;
@@ -4065,7 +4089,7 @@ int sflset(struct prjprm *prj)
   return prjoff(prj, 0.0, 0.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int sflx2s(
   struct prjprm *prj,
@@ -4087,7 +4111,7 @@ int sflx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != SFL) {
     if ((status = sflset(prj))) return status;
@@ -4105,7 +4129,7 @@ int sflx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -4120,7 +4144,7 @@ int sflx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -4147,7 +4171,7 @@ int sflx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-12, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("sflx2s");
   }
@@ -4155,7 +4179,7 @@ int sflx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int sfls2x(
   struct prjprm *prj,
@@ -4177,7 +4201,7 @@ int sfls2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != SFL) {
     if ((status = sflset(prj))) return status;
@@ -4193,7 +4217,7 @@ int sfls2x(
   }
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -4208,7 +4232,7 @@ int sfls2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -4284,7 +4308,7 @@ int parset(struct prjprm *prj)
   return prjoff(prj, 0.0, 0.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int parx2s(
   struct prjprm *prj,
@@ -4307,7 +4331,7 @@ int parx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != PAR) {
     if ((status = parset(prj))) return status;
@@ -4325,7 +4349,7 @@ int parx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -4345,7 +4369,7 @@ int parx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -4363,7 +4387,7 @@ int parx2s(
     } else {
       s = 1.0 - 4.0*r*r;
       if (s == 0.0) {
-        /* Deferred test. */
+        // Deferred test.
         istat = -1;
       } else {
         s = 1.0/s;
@@ -4390,7 +4414,7 @@ int parx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-12, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("parx2s");
   }
@@ -4398,7 +4422,7 @@ int parx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int pars2x(
   struct prjprm *prj,
@@ -4420,7 +4444,7 @@ int pars2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != PAR) {
     if ((status = parset(prj))) return status;
@@ -4436,7 +4460,7 @@ int pars2x(
   }
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -4451,7 +4475,7 @@ int pars2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -4523,7 +4547,7 @@ int molset(struct prjprm *prj)
   return prjoff(prj, 0.0, 0.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int molx2s(
   struct prjprm *prj,
@@ -4546,7 +4570,7 @@ int molx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != MOL) {
     if ((status = molset(prj))) return status;
@@ -4564,7 +4588,7 @@ int molx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -4584,7 +4608,7 @@ int molx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -4600,7 +4624,7 @@ int molx2s(
         istat = 1;
         if (!status) status = PRJERR_BAD_PIX_SET("molx2s");
       } else {
-        /* OK if fabs(x) < tol whence phi = 0.0. */
+        // OK if fabs(x) < tol whence phi = 0.0.
         istat = -1;
       }
 
@@ -4655,7 +4679,7 @@ int molx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-11, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("molx2s");
   }
@@ -4663,7 +4687,7 @@ int molx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int mols2x(
   struct prjprm *prj,
@@ -4686,7 +4710,7 @@ int mols2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != MOL) {
     if ((status = molset(prj))) return status;
@@ -4702,7 +4726,7 @@ int mols2x(
   }
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -4717,7 +4741,7 @@ int mols2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -4815,7 +4839,7 @@ int aitset(struct prjprm *prj)
   return prjoff(prj, 0.0, 0.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int aitx2s(
   struct prjprm *prj,
@@ -4838,7 +4862,7 @@ int aitx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != AIT) {
     if ((status = aitset(prj))) return status;
@@ -4856,7 +4880,7 @@ int aitx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -4876,7 +4900,7 @@ int aitx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -4925,7 +4949,7 @@ int aitx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("aitx2s");
   }
@@ -4933,7 +4957,7 @@ int aitx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int aits2x(
   struct prjprm *prj,
@@ -4955,7 +4979,7 @@ int aits2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != AIT) {
     if ((status = aitset(prj))) return status;
@@ -4971,7 +4995,7 @@ int aits2x(
   }
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -4990,7 +5014,7 @@ int aits2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -5083,7 +5107,7 @@ int copset(struct prjprm *prj)
   return prjoff(prj, 0.0, prj->pv[1]);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int copx2s(
   struct prjprm *prj,
@@ -5104,7 +5128,7 @@ int copx2s(
   register const double *xp, *yp;
   register double *phip, *thetap;
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != COP) {
     if ((status = copset(prj))) return status;
@@ -5122,7 +5146,7 @@ int copx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -5137,7 +5161,7 @@ int copx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -5165,7 +5189,7 @@ int copx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("copx2s");
   }
@@ -5173,7 +5197,7 @@ int copx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int cops2x(
   struct prjprm *prj,
@@ -5194,7 +5218,7 @@ int cops2x(
   register const double *phip, *thetap;
   register double *xp, *yp;
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != COP) {
     if ((status = copset(prj))) return status;
@@ -5212,7 +5236,7 @@ int cops2x(
   status = 0;
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -5231,7 +5255,7 @@ int cops2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -5243,16 +5267,16 @@ int cops2x(
 
     istat = 0;
     if (s == 0.0) {
-      /* Latitude of divergence. */
+      // Latitude of divergence.
       r = 0.0;
       istat = 1;
       if (!status) status = PRJERR_BAD_WORLD_SET("cops2x");
 
     } else if (fabs(*thetap) == 90.0) {
-      /* Return an exact value at the poles. */
+      // Return an exact value at the poles.
       r = 0.0;
 
-      /* Bounds checking. */
+      // Bounds checking.
       if (prj->bounds&1) {
         if ((*thetap < 0.0) != (prj->pv[1] < 0.0)) {
           istat = 1;
@@ -5263,7 +5287,7 @@ int cops2x(
     } else {
       r = prj->w[2] - prj->w[3]*sind(t)/s;
 
-      /* Bounds checking. */
+      // Bounds checking.
       if (prj->bounds&1) {
         if (r*prj->w[0] < 0.0) {
           istat = 1;
@@ -5363,7 +5387,7 @@ int coeset(struct prjprm *prj)
   return prjoff(prj, 0.0, prj->pv[1]);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int coex2s(
   struct prjprm *prj,
@@ -5385,7 +5409,7 @@ int coex2s(
   register const double *xp, *yp;
   register double *phip, *thetap;
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != COE) {
     if ((status = coeset(prj))) return status;
@@ -5403,7 +5427,7 @@ int coex2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -5418,7 +5442,7 @@ int coex2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -5466,7 +5490,7 @@ int coex2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("coex2s");
   }
@@ -5474,7 +5498,7 @@ int coex2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int coes2x(
   struct prjprm *prj,
@@ -5495,7 +5519,7 @@ int coes2x(
   register const double *phip, *thetap;
   register double *xp, *yp;
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != COE) {
     if ((status = coeset(prj))) return status;
@@ -5511,7 +5535,7 @@ int coes2x(
   }
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -5530,7 +5554,7 @@ int coes2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -5622,7 +5646,7 @@ int codset(struct prjprm *prj)
   return prjoff(prj, 0.0, prj->pv[1]);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int codx2s(
   struct prjprm *prj,
@@ -5643,7 +5667,7 @@ int codx2s(
   register const double *xp, *yp;
   register double *phip, *thetap;
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != COD) {
     if ((status = codset(prj))) return status;
@@ -5661,7 +5685,7 @@ int codx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -5676,7 +5700,7 @@ int codx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -5704,7 +5728,7 @@ int codx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("codx2s");
   }
@@ -5712,7 +5736,7 @@ int codx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int cods2x(
   struct prjprm *prj,
@@ -5733,7 +5757,7 @@ int cods2x(
   register const double *phip, *thetap;
   register double *xp, *yp;
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != COD) {
     if ((status = codset(prj))) return status;
@@ -5749,7 +5773,7 @@ int cods2x(
   }
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -5768,7 +5792,7 @@ int cods2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -5873,7 +5897,7 @@ int cooset(struct prjprm *prj)
   return prjoff(prj, 0.0, prj->pv[1]);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int coox2s(
   struct prjprm *prj,
@@ -5894,7 +5918,7 @@ int coox2s(
   register const double *xp, *yp;
   register double *phip, *thetap;
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != COO) {
     if ((status = cooset(prj))) return status;
@@ -5912,7 +5936,7 @@ int coox2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -5927,7 +5951,7 @@ int coox2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -5968,7 +5992,7 @@ int coox2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("coox2s");
   }
@@ -5976,7 +6000,7 @@ int coox2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int coos2x(
   struct prjprm *prj,
@@ -5997,7 +6021,7 @@ int coos2x(
   register const double *phip, *thetap;
   register double *xp, *yp;
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != COO) {
     if ((status = cooset(prj))) return status;
@@ -6015,7 +6039,7 @@ int coos2x(
   status = 0;
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -6034,7 +6058,7 @@ int coos2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -6099,7 +6123,7 @@ int bonset(struct prjprm *prj)
   }
 
   if (prj->pv[1] == 0.0) {
-    /* Sanson-Flamsteed. */
+    // Sanson-Flamsteed.
     return sflset(prj);
   }
 
@@ -6126,7 +6150,7 @@ int bonset(struct prjprm *prj)
   return prjoff(prj, 0.0, 0.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int bonx2s(
   struct prjprm *prj,
@@ -6148,10 +6172,10 @@ int bonx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->pv[1] == 0.0) {
-    /* Sanson-Flamsteed. */
+    // Sanson-Flamsteed.
     return sflx2s(prj, nx, ny, sxy, spt, x, y, phi, theta, stat);
   }
 
@@ -6171,7 +6195,7 @@ int bonx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -6186,7 +6210,7 @@ int bonx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -6222,7 +6246,7 @@ int bonx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-11, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("bonx2s");
   }
@@ -6230,7 +6254,7 @@ int bonx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int bons2x(
   struct prjprm *prj,
@@ -6251,10 +6275,10 @@ int bons2x(
   register const double *phip, *thetap;
   register double *xp, *yp;
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->pv[1] == 0.0) {
-    /* Sanson-Flamsteed. */
+    // Sanson-Flamsteed.
     return sfls2x(prj, nphi, ntheta, spt, sxy, phi, theta, x, y, stat);
   }
 
@@ -6274,7 +6298,7 @@ int bons2x(
   y0 = prj->y0 - prj->w[2];
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -6289,7 +6313,7 @@ int bons2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -6366,7 +6390,7 @@ int pcoset(struct prjprm *prj)
   return prjoff(prj, 0.0, 0.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int pcox2s(
   struct prjprm *prj,
@@ -6390,7 +6414,7 @@ int pcox2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != PCO) {
     if ((status = pcoset(prj))) return status;
@@ -6408,7 +6432,7 @@ int pcox2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -6423,7 +6447,7 @@ int pcox2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -6445,23 +6469,23 @@ int pcox2s(
 
       } else {
         if (w < 1.0e-4) {
-          /* To avoid cot(theta) blowing up near theta == 0. */
+          // To avoid cot(theta) blowing up near theta == 0.
           the    = yj / (prj->w[0] + prj->w[3]*xj*xj);
           ymthe  = yj - prj->w[0]*the;
           tanthe = tand(the);
 
         } else {
-          /* Iterative solution using weighted division of the interval. */
+          // Iterative solution using weighted division of the interval.
           thepos = yj / prj->w[0];
           theneg = 0.0;
 
-          /* Setting fneg = -fpos halves the interval in the first iter. */
+          // Setting fneg = -fpos halves the interval in the first iter.
           xx = xj*xj;
           fpos  =  xx;
           fneg  = -xx;
 
           for (k = 0; k < 64; k++) {
-            /* Weighted division of the interval. */
+            // Weighted division of the interval.
             lambda = fpos/(fpos-fneg);
             if (lambda < 0.1) {
               lambda = 0.1;
@@ -6470,16 +6494,16 @@ int pcox2s(
             }
             the = thepos - lambda*(thepos-theneg);
 
-            /* Compute the residue. */
+            // Compute the residue.
             ymthe  = yj - prj->w[0]*the;
             tanthe = tand(the);
             f = xx + ymthe*(ymthe - prj->w[2]/tanthe);
 
-            /* Check for convergence. */
+            // Check for convergence.
             if (fabs(f) < tol) break;
             if (fabs(thepos-theneg) < tol) break;
 
-            /* Redefine the interval. */
+            // Redefine the interval.
             if (f > 0.0) {
               thepos = the;
               fpos = f;
@@ -6506,7 +6530,7 @@ int pcox2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-12, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("pcox2s");
   }
@@ -6514,7 +6538,7 @@ int pcox2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int pcos2x(
   struct prjprm *prj,
@@ -6535,7 +6559,7 @@ int pcos2x(
   register const double *phip, *thetap;
   register double *xp, *yp;
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != PCO) {
     if ((status = pcoset(prj))) return status;
@@ -6551,7 +6575,7 @@ int pcos2x(
   }
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -6564,7 +6588,7 @@ int pcos2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -6578,7 +6602,7 @@ int pcos2x(
       }
 
     } else if (fabs(*thetap) < 1.0e-4) {
-      /* To avoid cot(theta) blowing up near theta == 0. */
+      // To avoid cot(theta) blowing up near theta == 0.
       for (iphi = 0; iphi < mphi; iphi++, xp += sxy, yp += sxy) {
         *xp = prj->w[0]*(*xp)*cosd(*thetap) - prj->x0;
         *yp = (prj->w[0] + prj->w[3]*(*xp)*(*xp))*(*thetap) - prj->y0;
@@ -6653,7 +6677,7 @@ int tscset(struct prjprm *prj)
   return prjoff(prj, 0.0, 0.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int tscx2s(
   struct prjprm *prj,
@@ -6675,7 +6699,7 @@ int tscx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != TSC) {
     if ((status = tscset(prj))) return status;
@@ -6693,7 +6717,7 @@ int tscx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -6708,7 +6732,7 @@ int tscx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -6719,7 +6743,7 @@ int tscx2s(
     for (ix = 0; ix < mx; ix++, phip += spt, thetap += spt) {
       xf = *phip;
 
-      /* Bounds checking. */
+      // Bounds checking.
       if (fabs(xf) <= 1.0) {
         if (fabs(yf) > 3.0) {
           *phip = 0.0;
@@ -6738,42 +6762,42 @@ int tscx2s(
         }
       }
 
-      /* Map negative faces to the other side. */
+      // Map negative faces to the other side.
       if (xf < -1.0) xf += 8.0;
 
-      /* Determine the face. */
+      // Determine the face.
       if (xf > 5.0) {
-        /* face = 4 */
+        // face = 4
         xf = xf - 6.0;
         m  = -1.0/sqrt(1.0 + xf*xf + yf*yf);
         l  = -m*xf;
         n  = -m*yf;
       } else if (xf > 3.0) {
-        /* face = 3 */
+        // face = 3
         xf = xf - 4.0;
         l  = -1.0/sqrt(1.0 + xf*xf + yf*yf);
         m  =  l*xf;
         n  = -l*yf;
       } else if (xf > 1.0) {
-        /* face = 2 */
+        // face = 2
         xf = xf - 2.0;
         m  =  1.0/sqrt(1.0 + xf*xf + yf*yf);
         l  = -m*xf;
         n  =  m*yf;
       } else if (yf > 1.0) {
-        /* face = 0 */
+        // face = 0
         yf = yf - 2.0;
         n  = 1.0/sqrt(1.0 + xf*xf + yf*yf);
         l  = -n*yf;
         m  =  n*xf;
       } else if (yf < -1.0) {
-        /* face = 5 */
+        // face = 5
         yf = yf + 2.0;
         n  = -1.0/sqrt(1.0 + xf*xf + yf*yf);
         l  = -n*yf;
         m  = -n*xf;
       } else {
-        /* face = 1 */
+        // face = 1
         l  =  1.0/sqrt(1.0 + xf*xf + yf*yf);
         m  =  l*xf;
         n  =  l*yf;
@@ -6791,7 +6815,7 @@ int tscx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("tscx2s");
   }
@@ -6799,7 +6823,7 @@ int tscx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int tscs2x(
   struct prjprm *prj,
@@ -6821,7 +6845,7 @@ int tscs2x(
   register const double *phip, *thetap;
   register double *xp, *yp;
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != TSC) {
     if ((status = tscset(prj))) return status;
@@ -6839,7 +6863,7 @@ int tscs2x(
   status = 0;
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -6857,7 +6881,7 @@ int tscs2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -6925,7 +6949,7 @@ int tscs2x(
         y0 = -2.0;
         break;
       default:
-        /* face == 0 */
+        // face == 0
         xf =  m/zeta;
         yf = -l/zeta;
         x0 =  0.0;
@@ -7009,7 +7033,7 @@ int cscset(struct prjprm *prj)
   return prjoff(prj, 0.0, 0.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int cscx2s(
   struct prjprm *prj,
@@ -7060,7 +7084,7 @@ int cscx2s(
   const float p15 =  0.52032238f;
   const float p06 =  0.14381585f;
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != CSC) {
     if ((status = cscset(prj))) return status;
@@ -7078,7 +7102,7 @@ int cscx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -7093,7 +7117,7 @@ int cscx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -7104,7 +7128,7 @@ int cscx2s(
     for (ix = 0; ix < mx; ix++, phip += spt, thetap += spt) {
       xf = (float)(*phip);
 
-      /* Bounds checking. */
+      // Bounds checking.
       if (fabs((double)xf) <= 1.0) {
         if (fabs((double)yf) > 3.0) {
           *phip = 0.0;
@@ -7123,10 +7147,10 @@ int cscx2s(
         }
       }
 
-      /* Map negative faces to the other side. */
+      // Map negative faces to the other side.
       if (xf < -1.0f) xf += 8.0f;
 
-      /* Determine the face. */
+      // Determine the face.
       if (xf > 5.0f) {
         face = 4;
         xf = xf - 6.0f;
@@ -7201,7 +7225,7 @@ int cscx2s(
         m = -chi*n;
         break;
       default:
-        /* face == 0 */
+        // face == 0
         n =  t;
         l = -psi*n;
         m =  chi*n;
@@ -7220,7 +7244,7 @@ int cscx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("cscx2s");
   }
@@ -7228,7 +7252,7 @@ int cscx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int cscs2x(
   struct prjprm *prj,
@@ -7266,7 +7290,7 @@ int cscs2x(
   const float c02 =  0.106959469314f;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != CSC) {
     if ((status = cscset(prj))) return status;
@@ -7284,7 +7308,7 @@ int cscs2x(
   status = 0;
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -7302,7 +7326,7 @@ int cscs2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -7370,7 +7394,7 @@ int cscs2x(
         y0  = -2.0;
         break;
       default:
-        /* face == 0 */
+        // face == 0
         xi  =  m;
         eta = -l;
         x0  =  0.0;
@@ -7386,7 +7410,7 @@ int cscs2x(
       chi2co = 1.0f - chi2;
       psi2co = 1.0f - psi2;
 
-      /* Avoid floating underflows. */
+      // Avoid floating underflows.
       chipsi = (float)fabs((double)(chi*psi));
       chi4   = (chi2 > 1.0e-16f) ? chi2*chi2 : 0.0f;
       psi4   = (psi2 > 1.0e-16f) ? psi2*psi2 : 0.0f;
@@ -7475,7 +7499,7 @@ int qscset(struct prjprm *prj)
   return prjoff(prj, 0.0, 0.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int qscx2s(
   struct prjprm *prj,
@@ -7498,7 +7522,7 @@ int qscx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != QSC) {
     if ((status = qscset(prj))) return status;
@@ -7516,7 +7540,7 @@ int qscx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -7531,7 +7555,7 @@ int qscx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -7542,7 +7566,7 @@ int qscx2s(
     for (ix = 0; ix < mx; ix++, phip += spt, thetap += spt) {
       xf = *phip;
 
-      /* Bounds checking. */
+      // Bounds checking.
       if (fabs(xf) <= 1.0) {
         if (fabs(yf) > 3.0) {
           *phip = 0.0;
@@ -7561,10 +7585,10 @@ int qscx2s(
         }
       }
 
-      /* Map negative faces to the other side. */
+      // Map negative faces to the other side.
       if (xf < -1.0) xf += 8.0;
 
-      /* Determine the face. */
+      // Determine the face.
       if (xf > 5.0) {
         face = 4;
         xf -= 6.0;
@@ -7692,7 +7716,7 @@ int qscx2s(
         }
         break;
       default:
-        /* face == 0 */
+        // face == 0
         n = zeta;
         if (direct) {
           m = w;
@@ -7718,7 +7742,7 @@ int qscx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-13, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("qscx2s");
   }
@@ -7726,7 +7750,7 @@ int qscx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int qscs2x(
   struct prjprm *prj,
@@ -7750,7 +7774,7 @@ int qscs2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != QSC) {
     if ((status = qscset(prj))) return status;
@@ -7768,7 +7792,7 @@ int qscs2x(
   status = 0;
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -7786,7 +7810,7 @@ int qscs2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -7836,7 +7860,7 @@ int qscs2x(
         xi  = m;
         eta = n;
         if (zeco < 1.0e-8) {
-          /* Small angle formula. */
+          // Small angle formula.
           t = (*thetap)*D2R;
           p = atan2(*yp, *xp);
           zeco = (p*p + t*t)/2.0;
@@ -7848,7 +7872,7 @@ int qscs2x(
         xi  = -l;
         eta =  n;
         if (zeco < 1.0e-8) {
-          /* Small angle formula. */
+          // Small angle formula.
           t = (*thetap)*D2R;
           p = atan2(*yp, *xp) - PI/2.0;
           zeco = (p*p + t*t)/2.0;
@@ -7860,7 +7884,7 @@ int qscs2x(
         xi  = -m;
         eta =  n;
         if (zeco < 1.0e-8) {
-          /* Small angle formula. */
+          // Small angle formula.
           t = (*thetap)*D2R;
           p = atan2(*yp, *xp);
           p -= copysign(PI, p);
@@ -7873,7 +7897,7 @@ int qscs2x(
         xi  = l;
         eta = n;
         if (zeco < 1.0e-8) {
-          /* Small angle formula. */
+          // Small angle formula.
           t = (*thetap)*D2R;
           p = atan2(*yp, *xp) + PI/2.0;
           zeco = (p*p + t*t)/2.0;
@@ -7885,7 +7909,7 @@ int qscs2x(
         xi  =  m;
         eta =  l;
         if (zeco < 1.0e-8) {
-          /* Small angle formula. */
+          // Small angle formula.
           t = (*thetap + 90.0)*D2R;
           zeco = t*t/2.0;
         }
@@ -7893,11 +7917,11 @@ int qscs2x(
         y0 = -2;
          break;
       default:
-        /* face == 0 */
+        // face == 0
         xi  =  m;
         eta = -l;
         if (zeco < 1.0e-8) {
-          /* Small angle formula. */
+          // Small angle formula.
           t = (90.0 - *thetap)*D2R;
           zeco = t*t/2.0;
         }
@@ -8041,7 +8065,7 @@ int hpxset(struct prjprm *prj)
   return prjoff(prj, 0.0, 0.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int hpxx2s(
   struct prjprm *prj,
@@ -8063,7 +8087,7 @@ int hpxx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != HPX) {
     if ((status = hpxset(prj))) return status;
@@ -8084,20 +8108,20 @@ int hpxx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
   for (ix = 0; ix < nx; ix++, rowoff += spt, xp += sxy) {
     s = prj->w[1] * (*xp + prj->x0);
-    /* x_c for K odd or theta > 0. */
+    // x_c for K odd or theta > 0.
     t = -180.0 + (2.0 * floor((*xp + 180.0) * prj->w[7]) + 1.0) * prj->w[6];
     t = prj->w[1] * (*xp - t);
 
     phip   = phi + rowoff;
     thetap = theta + rowoff;
     for (iy = 0; iy < my; iy++) {
-      /* theta[] is used to hold (x - x_c). */
+      // theta[] is used to hold (x - x_c).
       *phip   = s;
       *thetap = t;
       phip   += rowlen;
@@ -8106,7 +8130,7 @@ int hpxx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -8117,7 +8141,7 @@ int hpxx2s(
 
     istat = 0;
     if (absy <= prj->w[5]) {
-      /* Equatorial regime. */
+      // Equatorial regime.
       t = asind(yr/prj->w[3]);
       for (ix = 0; ix < mx; ix++, phip += spt, thetap += spt) {
         *thetap = t;
@@ -8125,7 +8149,7 @@ int hpxx2s(
       }
 
     } else if (absy <= ylim) {
-      /* Polar regime. */
+      // Polar regime.
       offset = (prj->n || *yp > 0.0) ? 0 : 1;
 
       sigma = prj->w[4] - absy / prj->w[6];
@@ -8150,7 +8174,7 @@ int hpxx2s(
 
       for (ix = 0; ix < mx; ix++, phip += spt, thetap += spt) {
         if (offset) {
-          /* Offset the southern polar half-facets for even K. */
+          // Offset the southern polar half-facets for even K.
           h = (int)floor(*phip / prj->w[6]) + prj->m;
           if (h%2) {
             *thetap -= prj->w[6];
@@ -8159,10 +8183,10 @@ int hpxx2s(
           }
         }
 
-        /* Recall that theta[] holds (x - x_c). */
+        // Recall that theta[] holds (x - x_c).
         r = s * *thetap;
 
-        /* Bounds checking. */
+        // Bounds checking.
         if (prj->bounds&2) {
           if (slim <= fabs(r)) {
             istat = 1;
@@ -8178,7 +8202,7 @@ int hpxx2s(
       }
 
     } else {
-      /* Beyond latitude range. */
+      // Beyond latitude range.
       for (ix = 0; ix < mx; ix++, phip += spt, thetap += spt) {
         *phip   = 0.0;
         *thetap = 0.0;
@@ -8189,7 +8213,7 @@ int hpxx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-12, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("hpxx2s");
   }
@@ -8197,7 +8221,7 @@ int hpxx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int hpxs2x(
   struct prjprm *prj,
@@ -8219,7 +8243,7 @@ int hpxs2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != HPX) {
     if ((status = hpxset(prj))) return status;
@@ -8235,21 +8259,21 @@ int hpxs2x(
   }
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
   for (iphi = 0; iphi < nphi; iphi++, rowoff += sxy, phip += spt) {
     xi = prj->w[0] * (*phip) - prj->x0;
 
-    /* phi_c for K odd or theta > 0. */
+    // phi_c for K odd or theta > 0.
     t = -180.0 + (2.0*floor((*phip+180.0) * prj->w[7]) + 1.0) * prj->w[6];
     t = prj->w[0] * (*phip - t);
 
     xp = x + rowoff;
     yp = y + rowoff;
     for (itheta = 0; itheta < mtheta; itheta++) {
-      /* y[] is used to hold (phi - phi_c). */
+      // y[] is used to hold (phi - phi_c).
       *xp = xi;
       *yp = t;
       xp += rowlen;
@@ -8258,7 +8282,7 @@ int hpxs2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -8268,7 +8292,7 @@ int hpxs2x(
     abssin = fabs(sinthe);
 
     if (abssin <= prj->w[2]) {
-      /* Equatorial regime. */
+      // Equatorial regime.
       eta = prj->w[8] * sinthe - prj->y0;
       for (iphi = 0; iphi < mphi; iphi++, xp += sxy, yp += sxy) {
         *yp = eta;
@@ -8276,7 +8300,7 @@ int hpxs2x(
       }
 
     } else {
-      /* Polar regime. */
+      // Polar regime.
       offset = (prj->n || *thetap > 0.0) ? 0 : 1;
 
       sigma = sqrt(prj->pv[2]*(1.0 - abssin));
@@ -8288,7 +8312,7 @@ int hpxs2x(
 
       for (iphi = 0; iphi < mphi; iphi++, xp += sxy, yp += sxy) {
         if (offset) {
-          /* Offset the southern polar half-facets for even K. */
+          // Offset the southern polar half-facets for even K.
           h = (int)floor((*xp + prj->x0) / prj->w[9]) + prj->m;
           if (h%2) {
             *yp -= prj->w[9];
@@ -8297,12 +8321,12 @@ int hpxs2x(
           }
         }
 
-        /* Recall that y[] holds (phi - phi_c). */
+        // Recall that y[] holds (phi - phi_c).
         *xp += *yp * xi;
         *yp = eta;
         *(statp++) = 0;
 
-        /* Put the phi = 180 meridian in the expected place. */
+        // Put the phi = 180 meridian in the expected place.
         if (180.0 < *xp) *xp = 360.0 - *xp;
       }
     }
@@ -8375,7 +8399,7 @@ int xphset(struct prjprm *prj)
   return prjoff(prj, 0.0, 90.0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int xphx2s(
   struct prjprm *prj,
@@ -8398,7 +8422,7 @@ int xphx2s(
   register double *phip, *thetap;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != XPH) {
     if ((status = xphset(prj))) return status;
@@ -8416,7 +8440,7 @@ int xphx2s(
   status = 0;
 
 
-  /* Do x dependence. */
+  // Do x dependence.
   xp = x;
   rowoff = 0;
   rowlen = nx*spt;
@@ -8431,7 +8455,7 @@ int xphx2s(
   }
 
 
-  /* Do y dependence. */
+  // Do y dependence.
   yp = y;
   phip   = phi;
   thetap = theta;
@@ -8466,12 +8490,12 @@ int xphx2s(
 
       if (abseta <= 90.0) {
         if (abseta <= 45.0) {
-          /* Equatorial regime. */
+          // Equatorial regime.
           *phip  += xi;
           *thetap = asind(eta/67.5);
           istat = 0;
 
-          /* Bounds checking. */
+          // Bounds checking.
           if (prj->bounds&2) {
             if (45.0+tol < fabs(xi1)) {
               istat = 1;
@@ -8482,10 +8506,10 @@ int xphx2s(
           *(statp++) = istat;
 
         } else {
-          /* Polar regime. */
+          // Polar regime.
           sigma = (90.0 - abseta) / 45.0;
 
-          /* Ensure an exact result for points on the boundary. */
+          // Ensure an exact result for points on the boundary.
           if (xr == 0.0) {
             if (yr <= 0.0) {
               *phip = 0.0;
@@ -8509,7 +8533,7 @@ int xphx2s(
           }
           if (eta < 0.0) *thetap = -(*thetap);
 
-          /* Bounds checking. */
+          // Bounds checking.
           istat = 0;
           if (prj->bounds&2) {
             if (eta < -45.0 && eta+90.0+tol < fabs(xi1)) {
@@ -8522,7 +8546,7 @@ int xphx2s(
         }
 
       } else {
-        /* Beyond latitude range. */
+        // Beyond latitude range.
         *phip   = 0.0;
         *thetap = 0.0;
         *(statp++) = 1;
@@ -8532,7 +8556,7 @@ int xphx2s(
   }
 
 
-  /* Do bounds checking on the native coordinates. */
+  // Do bounds checking on the native coordinates.
   if (prj->bounds&4 && prjbchk(1.0e-12, nx, my, spt, phi, theta, stat)) {
     if (!status) status = PRJERR_BAD_PIX_SET("xphx2s");
   }
@@ -8540,7 +8564,7 @@ int xphx2s(
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int xphs2x(
   struct prjprm *prj,
@@ -8562,7 +8586,7 @@ int xphs2x(
   register double *xp, *yp;
 
 
-  /* Initialize. */
+  // Initialize.
   if (prj == 0x0) return PRJERR_NULL_POINTER;
   if (prj->flag != XPH) {
     if ((status = xphset(prj))) return status;
@@ -8578,7 +8602,7 @@ int xphs2x(
   }
 
 
-  /* Do phi dependence. */
+  // Do phi dependence.
   phip = phi;
   rowoff = 0;
   rowlen = nphi*sxy;
@@ -8593,14 +8617,14 @@ int xphs2x(
       }
     }
 
-    /* phi is also recomputed from chi to avoid rounding problems. */
+    // phi is also recomputed from chi to avoid rounding problems.
     chi += 180.0;
     psi = fmod(chi, 90.0);
 
     xp = x + rowoff;
     yp = y + rowoff;
     for (itheta = 0; itheta < mtheta; itheta++) {
-      /* y[] is used to hold phi (rounded). */
+      // y[] is used to hold phi (rounded).
       *xp = psi;
       *yp = chi - 180.0;
       xp += rowlen;
@@ -8609,7 +8633,7 @@ int xphs2x(
   }
 
 
-  /* Do theta dependence. */
+  // Do theta dependence.
   thetap = theta;
   xp = x;
   yp = y;
@@ -8620,12 +8644,12 @@ int xphs2x(
 
     for (iphi = 0; iphi < mphi; iphi++, xp += sxy, yp += sxy) {
       if (abssin <= prj->w[2]) {
-        /* Equatorial regime. */
+        // Equatorial regime.
         xi  = *xp;
         eta = 67.5 * sinthe;
 
       } else {
-        /* Polar regime. */
+        // Polar regime.
         if (*thetap < prj->w[5]) {
           sigma = sqrt(3.0*(1.0 - abssin));
         } else {
@@ -8640,7 +8664,7 @@ int xphs2x(
       xi  -= 45.0;
       eta -= 90.0;
 
-      /* Recall that y[] holds phi. */
+      // Recall that y[] holds phi.
       if (*yp < -90.0) {
         *xp = prj->w[0]*(-xi + eta) - prj->x0;
         *yp = prj->w[0]*(-xi - eta) - prj->y0;

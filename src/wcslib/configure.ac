@@ -3,12 +3,12 @@
 #-----------------------------------------------------------------------------
 # Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
 # http://www.atnf.csiro.au/people/Mark.Calabretta
-# $Id: configure.ac,v 7.1 2019/12/31 13:25:19 mcalabre Exp $
+# $Id: configure.ac,v 7.9 2022/03/25 15:14:49 mcalabre Exp $
 #-----------------------------------------------------------------------------
 
-AC_INIT([WCSLIB], [7.1], [mark@calabretta.id.au], [wcslib-7.1])
+AC_INIT([WCSLIB], [7.9], [mark@calabretta.id.au], [wcslib-7.9])
 AC_PREREQ([2.53])
-AC_REVISION([$Revision: 7.1 $])
+AC_REVISION([$Revision: 7.9 $])
 AC_SUBST([PACKAGE_VERSION])
 AC_DEFINE_UNQUOTED([WCSLIB_VERSION], [$PACKAGE_VERSION], [Define wcslib version])
 
@@ -26,22 +26,31 @@ AC_SUBST([ARCH])
 
 
 # Look for Flex.
-AC_CHECK_PROG([FLEX], [flex], [flex], [], [], [])
-if test "x$FLEX" = xflex ; then
-  # Version 2.5.9 or later is required.
-  V=`flex --version | awk '{print $2}'`
-  W=`echo $V | awk -F. '{if ((($1*100 + $2)*100 + $3) < 20509) print "no"}'`
-  if test "x$W" != x ; then
-    AC_MSG_NOTICE([Flex version $V is too old, ignored.])
-    FLEX=
-  else
-    AC_MSG_NOTICE([Using Flex version $V.])
-  fi
-fi
+AC_ARG_ENABLE([flex], [AS_HELP_STRING([--disable-flex],
+            [don't apply flex (use pre-generated sources)])], [])
+if test "x$enable_flex" = xno ; then
+  FLEX=
+  AC_MSG_WARN([Generation of flex sources disabled by request, using
+           pre-generated sources.])
 
-if test "x$FLEX" = x ; then
-  AC_MSG_WARN([Flex version 2.5.9 or later does not appear to be
+else
+  AC_CHECK_PROG([FLEX], [flex], [flex], [], [], [])
+  if test "x$FLEX" = xflex ; then
+    # Version 2.6.0 or later is required.
+    V=`flex --version | awk '{print $2}'`
+    W=`echo $V | awk -F. '{if ((($1*100 + $2)*100 + $3) < 20600) print "no"}'`
+    if test "x$W" != x ; then
+      AC_MSG_WARN([Flex version $V is too old, ignored.])
+      FLEX=
+    else
+      AC_MSG_NOTICE([Using Flex version $V.])
+    fi
+  fi
+
+  if test "x$FLEX" = x ; then
+    AC_MSG_WARN([Flex version 2.6.0 or later does not appear to be
            available, will use pre-generated sources.])
+  fi
 fi
 
 
@@ -176,7 +185,7 @@ fi
 if test "x$F77" = xno ; then
   F77=
 
-  AC_MSG_WARN([Compilation of Fortran wrappers and PGSBOX disabled])
+  AC_MSG_WARN([Compilation of Fortran wrappers and PGSBOX disabled.])
 
 else
   if test "x$F77" = x ; then
@@ -264,45 +273,61 @@ rm -f conftest.a
 AC_SUBST([ARFLAGS])
 AC_PROG_RANLIB
 
-# Shared library generation.
+# Shared library generation - gcc only.
+# Ways of disabling shared libraries:
+#   configure --disable-shared
+#   configure --enable-shared=no
+AC_ARG_ENABLE([shared], [AS_HELP_STRING([--disable-shared],
+            [don't build the WCS shared libraries])], [])
+
+SHRLIB=
+SONAME=
+SHRFLAGS=
+SHRLD=
+SHRSFX=
+SHRLN=
+
 if test "x$ac_cv_c_compiler_gnu" = xyes ; then
-  SHVER=`echo "$LIBVER" | sed -e 's/\..*$//'`
+  if test "x$enable_shared" = xno ; then
+    AC_MSG_WARN([Generation of WCS shared libraries disabled.])
 
-  # Note that -fPIC is on by default for Macs, this just makes it obvious.
-  SHRFLAGS="-fPIC"
-  SHRLD="\$(CC) \$(SHRFLAGS)"
+  else
+    SHVER=`echo "$LIBVER" | sed -e 's/\..*$//'`
 
-  case "$host_os" in
-  darwin*)
-    SHRLIB="libwcs.$LIBVER.dylib"
-    SONAME="libwcs.$SHVER.dylib"
-    SHRLD="$SHRLD -dynamiclib -single_module"
-    SHRLD="$SHRLD -compatibility_version $SHVER -current_version $LIBVER"
-    SHRLN="libwcs.dylib"
+    # Note that -fPIC is on by default for Macs, this just makes it obvious.
+    SHRFLAGS="-fPIC"
+    SHRLD="\$(CC) \$(SHRFLAGS)"
 
-    case "$host_cpu" in
-    powerpc*)
-      # Switch off -fPIC (not applicable for PowerPC Macs).
-      CFLAGS="$CFLAGS -mdynamic-no-pic"
+    case "$host_os" in
+    darwin*)
+      SHRLIB="libwcs.$LIBVER.dylib"
+      SONAME="libwcs.$SHVER.dylib"
+      SHRLD="$SHRLD -dynamiclib -single_module"
+      SHRLD="$SHRLD -compatibility_version $SHVER -current_version $LIBVER -install_name \$(SONAME)"
+      SHRLN="libwcs.dylib"
+
+      case "$host_cpu" in
+      powerpc*)
+        # Switch off -fPIC (not applicable for PowerPC Macs).
+        CFLAGS="$CFLAGS -mdynamic-no-pic"
+        ;;
+      esac
+      ;;
+    *mingw*)
+      SHRLIB="libwcs.dll.$LIBVER"
+      SONAME="libwcs.dll.$SHVER"
+      SHRLD="$SHRLD -shared -Wl,-h\$(SONAME)"
+      SHRLN="libwcs.dll"
+      ;;
+    *)
+      # Covers Linux and Solaris at least.
+      SHRLIB="libwcs.so.$LIBVER"
+      SONAME="libwcs.so.$SHVER"
+      SHRLD="$SHRLD -shared -Wl,-h\$(SONAME)"
+      SHRLN="libwcs.so"
       ;;
     esac
-    ;;
-  *)
-    # Covers Linux and Solaris at least.
-    SHRLIB="libwcs.so.$LIBVER"
-    SONAME="libwcs.so.$SHVER"
-    SHRLD="$SHRLD -shared -Wl,-h\$(SONAME)"
-    SHRLN="libwcs.so"
-    ;;
-  esac
-
-else
-  SHRLIB=
-  SONAME=
-  SHRFLAGS=
-  SHRLD=
-  SHRSFX=
-  SHRLN=
+  fi
 fi
 
 AC_SUBST([SHRLIB])
@@ -343,7 +368,7 @@ LIBDIRS=
 AC_ARG_WITH([cfitsio], [AS_HELP_STRING([--without-cfitsio],
             [eschew CFITSIO])], [])
 if test "x$with_cfitsio" = xno ; then
-  AC_MSG_WARN([CFITSIO disabled])
+  AC_MSG_WARN([CFITSIO disabled.])
 else
   AC_ARG_WITH([cfitsiolib], [AS_HELP_STRING([--with-cfitsiolib=DIR],
               [directory containing cfitsio library])], [])
@@ -369,7 +394,7 @@ fi
 AC_ARG_WITH([pgplot], [AS_HELP_STRING([--without-pgplot],
             [eschew PGPLOT])], [])
 if test "x$with_pgplot" = xno ; then
-  AC_MSG_WARN([PGPLOT disabled])
+  AC_MSG_WARN([PGPLOT disabled.])
 else
   AC_ARG_WITH([pgplotlib], [AS_HELP_STRING([--with-pgplotlib=DIR],
               [directory containing pgplot library])], [])
@@ -527,11 +552,22 @@ fi
 #   configure --enable-utils=no
 AC_ARG_ENABLE([utils], [AS_HELP_STRING([--disable-utils],
             [don't build the WCS utilities])], [])
-if test "x$enable_utils" != xno ; then
+if test "x$enable_utils" = xno ; then
+  AC_MSG_WARN([Compilation of WCS utilities disabled.])
+else
   SUBDIRS="$SUBDIRS utils"
   INSTDIR="$INSTDIR utils"
-else
-  AC_MSG_WARN([Compilation of WCS utilities disabled])
+fi
+
+# Default observer coordinates for sundazel.
+if test -f "$HOME/.sundazelrc"; then
+  . "$HOME/.sundazelrc"
+fi
+
+if test "x$OBSLNG" = x; then
+  OBSLNG=0.0
+  OBSLAT=0.0
+  OBSTZ=0.0
 fi
 
 
@@ -545,6 +581,10 @@ AC_SUBST([PGPLOTLIB])
 AC_SUBST([SUBDIRS])
 AC_SUBST([TSTDIRS])
 AC_SUBST([INSTDIR])
+
+AC_SUBST([OBSLNG])
+AC_SUBST([OBSLAT])
+AC_SUBST([OBSTZ])
 
 AC_MSG_NOTICE([End of auxiliary configuration.
 ])

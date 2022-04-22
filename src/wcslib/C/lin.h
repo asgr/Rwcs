@@ -1,7 +1,6 @@
 /*============================================================================
-
-  WCSLIB 7.1 - an implementation of the FITS WCS standard.
-  Copyright (C) 1995-2020, Mark Calabretta
+  WCSLIB 7.9 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2022, Mark Calabretta
 
   This file is part of WCSLIB.
 
@@ -18,14 +17,12 @@
   You should have received a copy of the GNU Lesser General Public License
   along with WCSLIB.  If not, see http://www.gnu.org/licenses.
 
-  Direct correspondence concerning WCSLIB to mark@calabretta.id.au
-
   Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
   http://www.atnf.csiro.au/people/Mark.Calabretta
-  $Id: lin.h,v 7.1 2019/12/31 13:25:19 mcalabre Exp $
+  $Id: lin.h,v 7.9 2022/03/25 15:14:48 mcalabre Exp $
 *=============================================================================
 *
-* WCSLIB 7.1 - C routines that implement the FITS World Coordinate System
+* WCSLIB 7.9 - C routines that implement the FITS World Coordinate System
 * (WCS) standard.  Refer to the README file provided with WCSLIB for an
 * overview of the library.
 *
@@ -44,8 +41,8 @@
 * like a C++ class but with no encapsulation.
 *
 * Six routines, linini(), lininit(), lindis(), lindist() lincpy(), and
-* linfree() are provided to manage the linprm struct, and another, linprt(),
-* prints its contents.
+* linfree() are provided to manage the linprm struct, linsize() computes its
+* total size including allocated memory, and linprt() prints its contents.
 *
 * linperr() prints the error message(s) (if any) stored in a linprm struct,
 * and the disprm structs that it may contain.
@@ -223,6 +220,37 @@
 *             int       Status return value:
 *                         0: Success.
 *                         1: Null linprm pointer passed.
+*
+*
+* linsize() - Compute the size of a linprm struct
+* -----------------------------------------------
+* linsize() computes the full size of a linprm struct, including allocated
+* memory.
+*
+* Given:
+*   lin       const struct linprm*
+*                       Linear transformation parameters.
+*
+*                       If NULL, the base size of the struct and the allocated
+*                       size are both set to zero.
+*
+* Returned:
+*   sizes     int[2]    The first element is the base size of the struct as
+*                       returned by sizeof(struct linprm).
+*
+*                       The second element is the total size of memory
+*                       allocated in the struct, in bytes, assuming that the
+*                       allocation was done by linini().  This figure includes
+*                       memory allocated for members of constituent structs,
+*                       such as linprm::dispre.
+*
+*                       It is not an error for the struct not to have been set
+*                       up via linset(), which normally results in additional
+*                       memory allocation.
+*
+* Function return value:
+*             int       Status return value:
+*                         0: Success.
 *
 *
 * linprt() - Print routine for the linprm struct
@@ -619,44 +647,44 @@ extern "C" {
 extern const char *lin_errmsg[];
 
 enum lin_errmsg_enum {
-  LINERR_SUCCESS      = 0,	/* Success. */
-  LINERR_NULL_POINTER = 1,	/* Null linprm pointer passed. */
-  LINERR_MEMORY       = 2,	/* Memory allocation failed. */
-  LINERR_SINGULAR_MTX = 3,	/* PCi_ja matrix is singular. */
-  LINERR_DISTORT_INIT = 4,	/* Failed to initialise distortions. */
-  LINERR_DISTORT      = 5,	/* Distort error. */
-  LINERR_DEDISTORT    = 6	/* De-distort error. */
+  LINERR_SUCCESS      = 0,	// Success.
+  LINERR_NULL_POINTER = 1,	// Null linprm pointer passed.
+  LINERR_MEMORY       = 2,	// Memory allocation failed.
+  LINERR_SINGULAR_MTX = 3,	// PCi_ja matrix is singular.
+  LINERR_DISTORT_INIT = 4,	// Failed to initialise distortions.
+  LINERR_DISTORT      = 5,	// Distort error.
+  LINERR_DEDISTORT    = 6	// De-distort error.
 };
 
 struct linprm {
-  /* Initialization flag (see the prologue above).                          */
-  /*------------------------------------------------------------------------*/
-  int flag;			/* Set to zero to force initialization.     */
+  // Initialization flag (see the prologue above).
+  //--------------------------------------------------------------------------
+  int flag;			// Set to zero to force initialization.
 
-  /* Parameters to be provided (see the prologue above).                    */
-  /*------------------------------------------------------------------------*/
-  int naxis;			/* The number of axes, given by NAXIS.      */
-  double *crpix;		/* CRPIXja keywords for each pixel axis.    */
-  double *pc;			/* PCi_ja  linear transformation matrix.    */
-  double *cdelt;		/* CDELTia keywords for each coord axis.    */
-  struct disprm *dispre;	/* Prior   distortion parameters, if any.   */
-  struct disprm *disseq;	/* Sequent distortion parameters, if any.   */
+  // Parameters to be provided (see the prologue above).
+  //--------------------------------------------------------------------------
+  int naxis;			// The number of axes, given by NAXIS.
+  double *crpix;		// CRPIXja keywords for each pixel axis.
+  double *pc;			// PCi_ja  linear transformation matrix.
+  double *cdelt;		// CDELTia keywords for each coord axis.
+  struct disprm *dispre;	// Prior   distortion parameters, if any.
+  struct disprm *disseq;	// Sequent distortion parameters, if any.
 
-  /* Information derived from the parameters supplied.                      */
-  /*------------------------------------------------------------------------*/
-  double *piximg;		/* Product of CDELTia and PCi_ja matrices.  */
-  double *imgpix;		/* Inverse of the piximg matrix.            */
-  int    i_naxis;		/* Dimension of piximg and imgpix.          */
-  int    unity;			/* True if the PCi_ja matrix is unity.      */
-  int    affine;		/* True if there are no distortions.        */
-  int    simple;		/* True if unity and no distortions.        */
+  // Information derived from the parameters supplied.
+  //--------------------------------------------------------------------------
+  double *piximg;		// Product of CDELTia and PCi_ja matrices.
+  double *imgpix;		// Inverse of the piximg matrix.
+  int    i_naxis;		// Dimension of piximg and imgpix.
+  int    unity;			// True if the PCi_ja matrix is unity.
+  int    affine;		// True if there are no distortions.
+  int    simple;		// True if unity and no distortions.
 
-  /* Error handling, if enabled.                                            */
-  /*------------------------------------------------------------------------*/
+  // Error handling, if enabled.
+  //--------------------------------------------------------------------------
   struct wcserr *err;
 
-  /* Private - the remainder are for internal use.                          */
-  /*------------------------------------------------------------------------*/
+  // Private - the remainder are for internal use.
+  //--------------------------------------------------------------------------
   double *tmpcrd;
 
   int    m_flag, m_naxis;
@@ -664,7 +692,7 @@ struct linprm {
   struct disprm *m_dispre, *m_disseq;
 };
 
-/* Size of the linprm struct in int units, used by the Fortran wrappers. */
+// Size of the linprm struct in int units, used by the Fortran wrappers.
 #define LINLEN (sizeof(struct linprm)/sizeof(int))
 
 
@@ -679,6 +707,8 @@ int lindist(int sequence, struct linprm *lin, struct disprm *dis, int ndpmax);
 int lincpy(int alloc, const struct linprm *linsrc, struct linprm *lindst);
 
 int linfree(struct linprm *lin);
+
+int linsize(const struct linprm *lin, int sizes[2]);
 
 int linprt(const struct linprm *lin);
 
@@ -701,7 +731,7 @@ int linwarp(struct linprm *lin, const double pixblc[], const double pixtrc[],
 int matinv(int n, const double mat[], double inv[]);
 
 
-/* Deprecated. */
+// Deprecated.
 #define linini_errmsg lin_errmsg
 #define lincpy_errmsg lin_errmsg
 #define linfree_errmsg lin_errmsg
@@ -714,4 +744,4 @@ int matinv(int n, const double mat[], double inv[]);
 }
 #endif
 
-#endif /* WCSLIB_LIN */
+#endif // WCSLIB_LIN
