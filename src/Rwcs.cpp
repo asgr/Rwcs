@@ -84,6 +84,71 @@ static SEXP _wcsp2s(struct wcsprm *wcs, NumericVector x, NumericVector y)
   return transpose(world_matrix);
 }
 
+static void _wcsset(struct wcsprm* wcs,
+                    Rcpp::String CTYPE1, Rcpp::String CTYPE2,
+                    double CRVAL1, double CRVAL2, double CRPIX1, double CRPIX2,
+                    double CD1_1, double CD1_2, double CD2_1, double CD2_2,
+                    Rcpp::String RADESYS, int EQUINOX,
+                    double PV1_1, double PV1_2, double PV1_3,
+                    double PV2_1, double PV2_2, double PV2_3,
+                    double PV2_4, double PV2_5)
+{
+  //setup wcs
+  wcs->flag = -1;
+  wcsini(1, naxis, wcs);
+
+  //insert wcs val
+  wcs->crval[0] = CRVAL1;
+  wcs->crval[1] = CRVAL2;
+
+  //insert wcs pix
+  wcs->crpix[0] = CRPIX1;
+  wcs->crpix[1] = CRPIX2;
+
+  //insert wcs pix
+  wcs->crpix[0] = CRPIX1;
+  wcs->crpix[1] = CRPIX2;
+
+  //insert wcs cd matrix
+  wcs->pc[0] = CD1_1;
+  wcs->pc[1] = CD1_2;
+  wcs->pc[2] = CD2_1;
+  wcs->pc[3] = CD2_2;
+
+  //insert ctype
+  strcpy(wcs->ctype[0], CTYPE1.get_cstring());
+  strcpy(wcs->ctype[1], CTYPE2.get_cstring());
+
+  //insert radesys and equinox
+  strcpy(wcs->radesys, RADESYS.get_cstring());
+  wcs->equinox = EQUINOX;
+
+  //insert wcs pv
+#define FILL_PV(WHICH, I, M) \
+  if (!R_IsNA(WHICH)) {               \
+    wcs->pv[wcs->npv].i = I;          \
+    wcs->pv[wcs->npv].m = M;          \
+    wcs->pv[wcs->npv].value = WHICH;  \
+    wcs->npv++;                       \
+  }
+
+  wcs->npv = 0;
+  FILL_PV(PV1_1, 1, 1);
+  FILL_PV(PV1_2, 1, 2);
+  FILL_PV(PV1_3, 1, 3);
+  FILL_PV(PV2_1, 2, 1);
+  FILL_PV(PV2_2, 2, 2);
+  FILL_PV(PV2_3, 2, 3);
+  FILL_PV(PV2_4, 2, 4);
+  FILL_PV(PV2_5, 2, 5);
+
+  //set long and lat axis positions
+  wcs->lng = 0;
+  wcs->lat = 1;
+
+  wcsset(wcs);
+}
+
 // [[Rcpp::export]]
 SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
               Rcpp::String CTYPE1 = "RA---TAN", Rcpp::String CTYPE2 = "DEC--TAN",
@@ -96,110 +161,10 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
               double PV2_1 = NA_REAL, double PV2_2 = NA_REAL, double PV2_3 = NA_REAL,
               double PV2_4 = NA_REAL, double PV2_5 = NA_REAL)
 {
-  
   enable_wcsperr();
-  
-  //setup wcs
   struct wcsprm wcs;
-  wcs.flag = -1;
-  wcsini(1, naxis, &wcs);
-  
-  //insert wcs val
-  wcs.crval[0] = CRVAL1;
-  wcs.crval[1] = CRVAL2;
-  
-  //insert wcs pix
-  wcs.crpix[0] = CRPIX1;
-  wcs.crpix[1] = CRPIX2;
-  
-  //insert wcs pix
-  wcs.crpix[0] = CRPIX1;
-  wcs.crpix[1] = CRPIX2;
-  
-  //insert wcs cd matrix
-  double m[2][2];
-  m[0][0] = CD1_1;
-  m[0][1] = CD1_2;
-  m[1][0] = CD2_1;
-  m[1][1] = CD2_2;
-  wcs.pc = *m;
-  
-  //insert ctype
-  strcpy(wcs.ctype[0], CTYPE1.get_cstring());
-  strcpy(wcs.ctype[1], CTYPE2.get_cstring());
-  
-  //insert radesys and equinox
-  strcpy(wcs.radesys, RADESYS.get_cstring());
-  wcs.equinox = EQUINOX;
-  
-  //insert wcs pv
-  wcs.npv = 0;
-  if(!R_IsNA(PV1_1)){wcs.npv++;}
-  if(!R_IsNA(PV1_2)){wcs.npv++;}
-  if(!R_IsNA(PV1_3)){wcs.npv++;}
-  if(!R_IsNA(PV2_1)){wcs.npv++;}
-  if(!R_IsNA(PV2_2)){wcs.npv++;}
-  if(!R_IsNA(PV2_3)){wcs.npv++;}
-  if(!R_IsNA(PV2_4)){wcs.npv++;}
-  if(!R_IsNA(PV2_5)){wcs.npv++;}
-  
-  int npvcount = 0;
-  
-  if(!R_IsNA(PV1_1)){
-    wcs.pv[npvcount].i = 1;
-    wcs.pv[npvcount].m = 1;
-    wcs.pv[npvcount].value = PV1_1;
-    npvcount++;
-  }
-  if(!R_IsNA(PV1_2)){
-    wcs.pv[npvcount].i = 1;
-    wcs.pv[npvcount].m = 2;
-    wcs.pv[npvcount].value = PV1_2;
-    npvcount++;
-  }
-  if(!R_IsNA(PV1_3)){
-    wcs.pv[npvcount].i = 1;
-    wcs.pv[npvcount].m = 3;
-    wcs.pv[npvcount].value = PV1_3;
-    npvcount++;
-  }
-  if(!R_IsNA(PV2_1)){
-    wcs.pv[npvcount].i = 2;
-    wcs.pv[npvcount].m = 1;
-    wcs.pv[npvcount].value = PV2_1;
-    npvcount++;
-  }
-  if(!R_IsNA(PV2_2)){
-    wcs.pv[npvcount].i = 2;
-    wcs.pv[npvcount].m = 2;
-    wcs.pv[npvcount].value = PV2_2;
-    npvcount++;
-  }
-  if(!R_IsNA(PV2_3)){
-    wcs.pv[npvcount].i = 2;
-    wcs.pv[npvcount].m = 3;
-    wcs.pv[npvcount].value = PV2_3;
-    npvcount++;
-  }
-  if(!R_IsNA(PV2_4)){
-    wcs.pv[npvcount].i = 2;
-    wcs.pv[npvcount].m = 4;
-    wcs.pv[npvcount].value = PV2_4;
-    npvcount++;
-  }
-  if(!R_IsNA(PV2_5)){
-    wcs.pv[npvcount].i = 2;
-    wcs.pv[npvcount].m = 5;
-    wcs.pv[npvcount].value = PV2_5;
-    npvcount++;
-  }
-  
-  //set long and lat axis positions
-  wcs.lng = 0;
-  wcs.lat = 1;
-  
-  wcsset(&wcs);
-  
+  _wcsset(&wcs, CTYPE1, CTYPE2, CRVAL1, CRVAL2, CRPIX1, CRPIX2, CD1_1, CD1_2, CD2_1, CD2_2, RADESYS, EQUINOX,
+    PV1_1, PV1_2, PV1_3, PV2_1, PV2_2, PV2_3, PV2_4, PV2_5);
   auto result = _wcss2p(&wcs, RA, Dec);
   wcsfree(&wcs);
   return result;
@@ -218,108 +183,9 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
               double PV2_4 = NA_REAL, double PV2_5 = NA_REAL)
 {
   enable_wcsperr();
-  
-  //setup wcs
   struct wcsprm wcs;
-  wcs.flag = -1;
-  wcsini(1, naxis, &wcs);
-  
-  //insert wcs val
-  wcs.crval[0] = CRVAL1;
-  wcs.crval[1] = CRVAL2;
-  
-  //insert wcs pix
-  wcs.crpix[0] = CRPIX1;
-  wcs.crpix[1] = CRPIX2;
-  
-  //insert wcs pix
-  wcs.crpix[0] = CRPIX1;
-  wcs.crpix[1] = CRPIX2;
-  
-  //insert wcs cd matrix
-  double m[2][2];
-  m[0][0] = CD1_1;
-  m[0][1] = CD1_2;
-  m[1][0] = CD2_1;
-  m[1][1] = CD2_2;
-  wcs.pc = *m;
-  
-  //insert ctype
-  strcpy(wcs.ctype[0], CTYPE1.get_cstring());
-  strcpy(wcs.ctype[1], CTYPE2.get_cstring());
-  
-  //insert radesys and equinox
-  strcpy(wcs.radesys, RADESYS.get_cstring());
-  wcs.equinox = EQUINOX;
-  
-  //insert wcs pv
-  wcs.npv = 0;
-  if(!R_IsNA(PV1_1)){wcs.npv++;}
-  if(!R_IsNA(PV1_2)){wcs.npv++;}
-  if(!R_IsNA(PV1_3)){wcs.npv++;}
-  if(!R_IsNA(PV2_1)){wcs.npv++;}
-  if(!R_IsNA(PV2_2)){wcs.npv++;}
-  if(!R_IsNA(PV2_3)){wcs.npv++;}
-  if(!R_IsNA(PV2_4)){wcs.npv++;}
-  if(!R_IsNA(PV2_5)){wcs.npv++;}
-  
-  int npvcount = 0;
-  
-  if(!R_IsNA(PV1_1)){
-    wcs.pv[npvcount].i = 1;
-    wcs.pv[npvcount].m = 1;
-    wcs.pv[npvcount].value = PV1_1;
-    npvcount++;
-  }
-  if(!R_IsNA(PV1_2)){
-    wcs.pv[npvcount].i = 1;
-    wcs.pv[npvcount].m = 2;
-    wcs.pv[npvcount].value = PV1_2;
-    npvcount++;
-  }
-  if(!R_IsNA(PV1_3)){
-    wcs.pv[npvcount].i = 1;
-    wcs.pv[npvcount].m = 3;
-    wcs.pv[npvcount].value = PV1_3;
-    npvcount++;
-  }
-  if(!R_IsNA(PV2_1)){
-    wcs.pv[npvcount].i = 2;
-    wcs.pv[npvcount].m = 1;
-    wcs.pv[npvcount].value = PV2_1;
-    npvcount++;
-  }
-  if(!R_IsNA(PV2_2)){
-    wcs.pv[npvcount].i = 2;
-    wcs.pv[npvcount].m = 2;
-    wcs.pv[npvcount].value = PV2_2;
-    npvcount++;
-  }
-  if(!R_IsNA(PV2_3)){
-    wcs.pv[npvcount].i = 2;
-    wcs.pv[npvcount].m = 3;
-    wcs.pv[npvcount].value = PV2_3;
-    npvcount++;
-  }
-  if(!R_IsNA(PV2_4)){
-    wcs.pv[npvcount].i = 2;
-    wcs.pv[npvcount].m = 4;
-    wcs.pv[npvcount].value = PV2_4;
-    npvcount++;
-  }
-  if(!R_IsNA(PV2_5)){
-    wcs.pv[npvcount].i = 2;
-    wcs.pv[npvcount].m = 5;
-    wcs.pv[npvcount].value = PV2_5;
-    npvcount++;
-  }
-  
-  //set long and lat axis positions
-  wcs.lng = 0;
-  wcs.lat = 1;
-  
-  wcsset(&wcs);
-  
+  _wcsset(&wcs, CTYPE1, CTYPE2, CRVAL1, CRVAL2, CRPIX1, CRPIX2, CD1_1, CD1_2, CD2_1, CD2_2, RADESYS, EQUINOX,
+    PV1_1, PV1_2, PV1_3, PV2_1, PV2_2, PV2_3, PV2_4, PV2_5);
   auto result = _wcsp2s(&wcs, x, y);
   wcsfree(&wcs);
   return result;
