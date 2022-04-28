@@ -44,9 +44,9 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
     nkey = nchar(header)/80
     #header_temp = substring(header, 1+(80*((1:nkey)-1)), 80*(1:nkey))
     
-    #nkeyrec_total = length(grep('=', header_temp))
-    #nkeyrec_empty = length(grep('=                                                                       ', header_temp))
-    #nkeyrec = nkeyrec_total - nkeyrec_empty
+    #nkey_total = length(grep('=', header_temp))
+    #nkey_empty = length(grep('=                                                                       ', header_temp))
+    #nkey = nkey_total - nkey_empty
     
     if(!is.null(WCSref)){
       WCSref = tolower(WCSref)
@@ -211,9 +211,9 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
     nkey = nchar(header)/80
     # header_temp = substring(header, 1+(80*((1:nkey)-1)), 80*(1:nkey))
     # 
-    # nkeyrec_total = length(grep('=', header_temp))
-    # nkeyrec_empty = length(grep('=                                                                       ', header_temp))
-    # nkeyrec = nkeyrec_total - nkeyrec_empty
+    # nkey_total = length(grep('=', header_temp))
+    # nkey_empty = length(grep('=                                                                       ', header_temp))
+    # nkey = nkey_total - nkey_empty
     
     if(!is.null(WCSref)){
       WCSref = tolower(WCSref)
