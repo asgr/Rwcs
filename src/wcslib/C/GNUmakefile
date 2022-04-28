@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-# GNU makefile for building WCSLIB 7.1 and its test suite.
+# GNU makefile for building WCSLIB 7.9 and its test suite.
 #
 # Summary of the main targets
 # ---------------------------
@@ -31,7 +31,7 @@
 #
 # Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
 # http://www.atnf.csiro.au/people/Mark.Calabretta
-# $Id: GNUmakefile,v 7.1 2019/12/31 13:25:19 mcalabre Exp $
+# $Id: GNUmakefile,v 7.9 2022/03/25 15:14:48 mcalabre Exp $
 #-----------------------------------------------------------------------------
 # Get configure settings.
 SUBDIR := C
@@ -78,8 +78,11 @@ TEST_C := twcstab twcshdr tdis3 twcslint
 # Test programs that require PGPLOT but not PGSBOX.
 TEST_P := tspc tprj2 tcel1 tcel2 ttab2 ttab3 twcsmix
 
-# Test programs that require PGPLOT and PGSBOX.
+# Test programs that require PGSBOX (and therefore PGPLOT).
 TEST_B := tpih2
+
+# Test program for POSIX threads (code development only).
+TEST_T := tpthreads
 
 # Test programs that are compiled but not automatically exercised.
 TEST_X := tsphdpa twcshdr
@@ -88,24 +91,39 @@ TEST_X := tsphdpa twcshdr
 TESTS  := $(TEST_N)
 
 # Do we have CFITSIO?
-ifeq "$(CFITSIOINC)$(CFITSIOLIB)" ""
-  # No, amend TEST_X.
-  TEST_X := $(filter-out $(TEST_C),$(TEST_X))
-else
+DO_CFITSIO := 1
+ifeq "$(CFITSIOINC)" ""
+  DO_CFITSIO := 0
+else ifeq "$(CFITSIOLIB)" ""
+  DO_CFITSIO := 0
+endif
+
+ifeq "$(DO_CFITSIO)" "1"
   # Yes, add test programs that use it.
   TESTS += $(TEST_C)
   CFITSIO_CFLAGS := $(filter-out -Wpadded,$(CFLAGS))
+else
+  # No, amend TEST_X.
+  TEST_X := $(filter-out $(TEST_C),$(TEST_X))
 endif
 
 # Do we have PGPLOT?
+DO_PGPLOT := 0
 ifneq "$(CHECK)" "nopgplot"
-ifeq "$(PGPLOTINC)$(PGPLOTLIB)" ""
-  # No, amend TEST_X.
-  TEST_X := $(filter-out $(TEST_P) $(TEST_B),$(TEST_X))
-else
-  # Yes, add test programs that use it.
-  TESTS += $(TEST_P) $(TEST_B)
-endif
+  DO_PGPLOT := 1
+  ifeq "$(PGPLOTINC)" ""
+    DO_PGPLOT := 0
+  else ifeq "$(PGPLOTLIB)" ""
+    DO_PGPLOT := 0
+  endif
+
+  ifeq "$(DO_PGPLOT)" "1"
+    # Yes, add test programs that use it.
+    TESTS += $(TEST_P) $(TEST_B)
+  else
+    # No, amend TEST_X.
+    TEST_X := $(filter-out $(TEST_P) $(TEST_B),$(TEST_X))
+  endif
 endif
 
 # Remove tests that aren't automatically exercised.
@@ -163,8 +181,8 @@ $(PICLIB)(%.o) : $(WCSLIB)(%.o)
 	   sed -e 's|.*/||' | \
 	   sort -u
 
-%.fits : test/%.keyrec tofits
-	   ./tofits < $< > $@
+%.fits : test/%.keyrec ../utils/tofits
+	   ../utils/tofits < $< > $@
 
 # Use 'make VALGRIND=T run_%' to have VALGRIND defined (from flavours).
 # Use 'make VALGRIND=T check < /dev/null |& tee check_valgrind.log' to run
@@ -248,7 +266,7 @@ run_% : %
 #--------------------------------
 
 .PHONY : build check clean cleaner cleanest distclean install lib realclean \
-         run_% test tests
+         run_% test tests uninstall
 
 build : lib
 
@@ -268,7 +286,9 @@ $(WCSLIB) : $(LIBLOCK) $(MODULES:%=$(WCSLIB)(%))
 	       $(RM) *.o ; \
 	     fi
 	-@ $(RM) $<
-	 @ $(MAKE) --no-print-directory $(SHRLIB)
+	 @ if [ "$(SHRLIB)" != "" ] ; then \
+	     $(MAKE) --no-print-directory $(SHRLIB) ; \
+	   fi
 
 $(SHRLIB) : $(PICLIB)
 	-@ echo ''
@@ -336,18 +356,22 @@ install : build
 	-  $(RM) $(INCLINK)
 	   $(LN_S) $(notdir $(INCDIR)) $(INCLINK)
 
+uninstall :
+	-  cd $(LIBDIR) && $(RM) $(WCSLIB) $(SHRLN) $(SONAME) $(SHRLIB)
+	-  $(RM) $(INCDIR)
+	-  $(RM) $(INCLINK)
+
 clean :
 	- $(RM) *.o $(LIBLOCK) *.i a.out t*.out core *.dSYM
 	- $(RM) -r $(EXTRA_CLEAN)
 
 cleaner : clean
 	-  $(RM) .gdb_history
-	-  $(RM) $(TEST_N) $(TEST_n) $(TEST_X)
+	-  $(RM) $(TEST_N) $(TEST_n) $(TEST_T) $(TEST_X)
 	-  $(RM) $(TEST_P) tdis3 tpih2 twcshdr twcslint twcstab
-	-  $(RM) tofits
-	-  $(RM) bth.fits fitshdr.fits pih.fits wcslint.fits wcstab.fits
-	-  $(RM) SIP.fits SIPTPV.fits TPV3.fits TPV5.fits TPV7.fits
-	-  $(RM) DSS.fits TNX.fits ZPX.fits
+	-  $(RM) bth.fits fitshdr.fits pih.fits wcslint.fits wcspcx.fits
+	-  $(RM) wcstab.fits SIP.fits SIPTPV.fits TPV3.fits TPV5.fits
+	-  $(RM) TPV7.fits DSS.fits TNX.fits ZPX.fits
 	-  $(RM) t*_cfitsio test_results
 
 cleanest distclean realclean : cleaner
@@ -359,38 +383,20 @@ check test : tests $(TESTS:%=run_%)
 
 tests : $(TESTS) $(TEST_X)
 
+# TEST_N and TEST_n programs (no special libraries required).
 $(TEST_N) $(TEST_n) : % : test/%.c $(WCSLIB)
 	-@ echo ''
 	   $(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(WCSLIB) $(LIBS)
 	-@ $(RM) $@.o
 
-$(TEST_P) : % : test/%.c $(WCSLIB)
-	-@ echo ''
-	   $(CC) $(CPPFLAGS) $(PGPLOTINC) $(CFLAGS) -c -o $@.o $<
-	   $(LD) -o $@ $@.o $(LDFLAGS) $(PGPLOTLIB) $(WCSLIB) $(FLIBS) $(LIBS)
-	-@ $(RM) $@.o
-
-tpih2 : test/tpih2.c $(PGSBOXLIB) $(WCSLIB)
-	-@ echo ''
-	   $(CC) $(CPPFLAGS) -I../pgsbox $(PGPLOTINC) $(CFLAGS) -c -o $@.o $<
-	   $(LD) -o $@ $@.o $(LDFLAGS) $(PGSBOXLIB) $(PGPLOTLIB) $(WCSLIB) \
-	     $(FLIBS) $(LIBS)
-	-@ $(RM) $@.o
-
-tfitshdr_cfitsio tpih1_cfitsio tbth1_cfitsio : %_cfitsio : test/%.c $(WCSLIB)
+# TEST_N programs (optionally using CFITSIO).
+tpih1_cfitsio tbth1_cfitsio tfitshdr_cfitsio : %_cfitsio : test/%.c $(WCSLIB)
 	-@ echo ''
 	   $(CC) -DDO_CFITSIO $(CPPFLAGS) $(CFITSIOINC) $(CFITSIO_CFLAGS) \
 	     -o $@ $< $(LDFLAGS) $(CFITSIOLIB) $(WCSLIB) $(LIBS)
 	-@ $(RM) $@.o
 
-tpih2_cfitsio : test/tpih2.c $(PGSBOXLIB) $(WCSLIB)
-	-@ echo ''
-	   $(CC) -DDO_CFITSIO $(CPPFLAGS) -I../pgsbox $(PGPLOTINC) \
-	     $(CFITSIOINC) $(CFITSIO_CFLAGS) -c -o $@.o $<
-	   $(LD) -o $@ $@.o $(LDFLAGS) $(PGSBOXLIB) $(PGPLOTLIB) \
-	     $(CFITSIOLIB) $(WCSLIB) $(FLIBS) $(LIBS)
-	-@ $(RM) $@.o
-
+# TEST_C programs (using CFITSIO).
 twcstab : test/twcstab.c $(WCSLIB) $(GETWCSTAB)
 	-@ echo ''
 	   $(CC) $(CPPFLAGS) $(CFITSIOINC) $(CFITSIO_CFLAGS) -o $@ $< \
@@ -413,6 +419,36 @@ twcslint : test/twcslint
 	   cp $< .
 	-@ chmod a+x $@
 
+# TEST_P programs (using PGPLOT).
+$(TEST_P) : % : test/%.c $(WCSLIB)
+	-@ echo ''
+	   $(CC) $(CPPFLAGS) $(PGPLOTINC) $(CFLAGS) -c -o $@.o $<
+	   $(LD) -o $@ $@.o $(LDFLAGS) $(PGPLOTLIB) $(WCSLIB) $(FLIBS) $(LIBS)
+	-@ $(RM) $@.o
+
+# TEST_B programs (PGSBOX and PGPLOT).
+tpih2 : test/tpih2.c $(PGSBOXLIB) $(WCSLIB)
+	-@ echo ''
+	   $(CC) $(CPPFLAGS) -I../pgsbox $(PGPLOTINC) $(CFLAGS) -c -o $@.o $<
+	   $(LD) -o $@ $@.o $(LDFLAGS) $(PGSBOXLIB) $(PGPLOTLIB) $(WCSLIB) \
+	     $(FLIBS) $(LIBS)
+	-@ $(RM) $@.o
+
+tpih2_cfitsio : test/tpih2.c $(PGSBOXLIB) $(WCSLIB)
+	-@ echo ''
+	   $(CC) -DDO_CFITSIO $(CPPFLAGS) -I../pgsbox $(PGPLOTINC) \
+	     $(CFITSIOINC) $(CFITSIO_CFLAGS) -c -o $@.o $<
+	   $(LD) -o $@ $@.o $(LDFLAGS) $(PGSBOXLIB) $(PGPLOTLIB) \
+	     $(CFITSIOLIB) $(WCSLIB) $(FLIBS) $(LIBS)
+	-@ $(RM) $@.o
+
+# TEST_T programs (using POSIX threads).
+tpthreads : test/tpthreads.c $(WCSLIB)
+	-@ echo ''
+	   $(CC) $(CPPFLAGS) $(CFLAGS) -pthread -c -o $@.o $<
+	   $(LD) -o $@ $@.o $(LDFLAGS) -pthread $(WCSLIB) -lpthread $(LIBS)
+	-@ $(RM) $@.o
+
 getwcstab.o : getwcstab.c getwcstab.h
 	-@ echo ''
 	   $(CC) $(CPPFLAGS) $(CFITSIO_CFLAGS) $(CFITSIOINC) -c $<
@@ -421,7 +457,7 @@ $(PGSBOXLIB) :
 	-@ echo ''
 	   $(MAKE) -C ../pgsbox $(notdir $@)
 
-tofits : test/tofits.c
+../utils/tofits : ../utils/tofits.c
 	   $(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
 GNUmakefile : ../makedefs ;
@@ -434,6 +470,8 @@ GNUmakefile : ../makedefs ;
 show ::
 	-@ echo '  FLEXMODS    := $(FLEXMODS)'
 	-@ echo '  MODULES     := $(MODULES)'
+	-@ echo '  DO_CFITSIO  := $(DO_CFITSIO)'
+	-@ echo '  DO_PGPLOT   := $(DO_PGPLOT)'
 	-@ echo '  TESTS       := $(TESTS)'
 	-@ echo '  TEST_X      := $(TEST_X)'
 

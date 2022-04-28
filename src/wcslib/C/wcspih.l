@@ -1,7 +1,6 @@
 /*============================================================================
-
-  WCSLIB 7.1 - an implementation of the FITS WCS standard.
-  Copyright (C) 1995-2020, Mark Calabretta
+  WCSLIB 7.9 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2022, Mark Calabretta
 
   This file is part of WCSLIB.
 
@@ -18,11 +17,9 @@
   You should have received a copy of the GNU Lesser General Public License
   along with WCSLIB.  If not, see http://www.gnu.org/licenses.
 
-  Direct correspondence concerning WCSLIB to mark@calabretta.id.au
-
   Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
   http://www.atnf.csiro.au/people/Mark.Calabretta
-  $Id: wcspih.l,v 7.1 2019/12/31 13:25:19 mcalabre Exp $
+  $Id: wcspih.l,v 7.9 2022/03/25 15:14:48 mcalabre Exp $
 *=============================================================================
 *
 * wcspih.l is a Flex description file containing the definition of a lexical
@@ -73,6 +70,7 @@
 %option outfile="wcspih.c"
 %option prefix="wcspih"
 %option reentrant
+%option extra-type="struct wcspih_extra *"
 
 /* Indices for parameterized keywords. */
 Z1	[0-9]
@@ -137,58 +135,37 @@ INLINE " "*(\/.*)?
 #define DSS     2
 #define WAT     3
 
-static int wcspih_scanner(char *header, int nkeyrec, int relax, int ctrl,
-                          int *nreject, int *nwcs, struct wcsprm **wcs,
-                          yyscan_t yyscanner);
+// User data associated with yyscanner.
+struct wcspih_extra {
+  // Values passed to YY_INPUT.
+  char *hdr;
+  int  nkeyrec;
 
-/*--------------------------------------------------------------------------*/
-
-int wcspih(
-  char *header,
-  int nkeyrec,
-  int relax,
-  int ctrl,
-  int *nreject,
-  int *nwcs,
-  struct wcsprm **wcs)
-
-{
-  int status;
-  yyscan_t yyscanner;
-  int yylex_init(yyscan_t *yyscanner);
-  int yylex_destroy(yyscan_t yyscanner);
-
-  yylex_init(&yyscanner);
-  status = wcspih_scanner(header, nkeyrec, relax, ctrl, nreject, nwcs, wcs,
-                          yyscanner);
-  yylex_destroy(yyscanner);
-
-  return status;
-}
-
-/*--------------------------------------------------------------------------*/
+  // Used in preempting the call to exit() by yy_fatal_error().
+  jmp_buf abort_jmp_env;
+};
 
 #define YY_DECL int wcspih_scanner(char *header, int nkeyrec, int relax, \
  int ctrl, int *nreject, int *nwcs, struct wcsprm **wcs, yyscan_t yyscanner)
 
 #define YY_INPUT(inbuff, count, bufsize) \
 	{ \
-	  if (wcspih_nkeyrec) { \
-	    strncpy(inbuff, wcspih_hdr, 80); \
+	  if (yyextra->nkeyrec) { \
+	    strncpy(inbuff, yyextra->hdr, 80); \
 	    inbuff[80] = '\n'; \
-	    wcspih_hdr += 80; \
-	    wcspih_nkeyrec--; \
+	    yyextra->hdr += 80; \
+	    yyextra->nkeyrec--; \
 	    count = 81; \
 	  } else { \
 	    count = YY_NULL; \
 	  } \
 	}
 
-/* These global variables are required by YY_INPUT. */
-static char *wcspih_hdr;
-static int  wcspih_nkeyrec;
+// Preempt the call to exit() by yy_fatal_error().
+#define exit(status) longjmp(yyextra->abort_jmp_env, status);
 
-/* Internal helper functions. */
+// Internal helper functions.
+static YY_DECL;
 static int wcspih_final(int ndp[], int ndq[], int distran, double dsstmp[],
              char *wat[], int *nwcs, struct wcsprm **wcs);
 static int wcspih_init1(int naxis, int alts[], int dpq[], int npv[],
@@ -205,34 +182,20 @@ static int wcspih_vsource(double *wptr, const double *vsource);
 
 static int wcspih_timepixr(double timepixr);
 
-/* Used in preempting the call to exit() by yy_fatal_error(). */
-jmp_buf wcspih_abort_jmp_env;
-#define exit(status) longjmp(wcspih_abort_jmp_env, status)
-
 %}
 
 %%
-	/* Keyword indices, as used in the WCS papers, e.g. PCi_ja, PVi_ma. */
-	char a;
-	int  i, j, m, p, q;
-	
-	char *cptr, *errmsg, errtxt[80], *hptr, *keep, *keyname, *keyrec,
-	     keyword[16], strtmp[80], *wat[2], *watstr;
-	int  altlin, alts[27], auxprm, distran, distype, dpq[27], dssflag,
-	     gotone, ialt, inttmp, ipass, ipx, ix, jx, naux, naxis,
-	     ndp[27], ndq[27], nother, *npptr, nps[27], npass, npv[27],
-	     nvalid, rectype, sipflag, status, valtype, watflag, watn;
-	ptrdiff_t voff;
+	int  p, q;
+	char *errmsg, errtxt[80], *keyname, strtmp[80], *wat[2], *watstr;
+	int  alts[27], dpq[27], inttmp, ndp[27], ndq[27], nps[27], npv[27],
+	     rectype;
 	double dbltmp, dbl2tmp[2], dsstmp[20];
-	void *vptr, *wptr;
-	struct auxprm *auxp, auxtem;
-	struct disprm *disp, distem;
-	struct wcsprm *wcsp, wcstem;
-	int (*chekval)(double);
-	int (*special)(double *, const double *);
+	struct auxprm auxtem;
+	struct disprm distem;
+	struct wcsprm wcstem;
 	
-	naxis = 0;
-	for (ialt = 0; ialt < 27; ialt++) {
+	int naxis = 0;
+	for (int ialt = 0; ialt < 27; ialt++) {
 	  alts[ialt] = 0;
 	  dpq[ialt]  = 0;
 	  npv[ialt]  = 0;
@@ -241,57 +204,58 @@ jmp_buf wcspih_abort_jmp_env;
 	  ndq[ialt]  = 0;
 	}
 	
-	/* Parameters used to implement YY_INPUT. */
-	wcspih_hdr = header;
-	wcspih_nkeyrec = nkeyrec;
+	// Our handle on the input stream.
+	char *keyrec = header;
+	char *hptr = header;
+	char *keep = 0x0;
 	
-	/* Our handle on the input stream. */
-	keyrec = header;
-	hptr = header;
-	keep = 0x0;
-	
-	/* For keeping tallies of keywords found. */
+	// For keeping tallies of keywords found.
 	*nreject = 0;
-	nvalid = 0;
-	nother = 0;
+	int nvalid = 0;
+	int nother = 0;
 	
-	/* If strict, then also reject. */
+	// If strict, then also reject.
 	if (relax & WCSHDR_strict) relax |= WCSHDR_reject;
 	
-	/* Keyword parameters. */
-	i = j = 0;
-	m = 0;
-	a = ' ';
+	// Keyword indices, as used in the WCS papers, e.g. PCi_ja, PVi_ma.
+	int i = 0;
+	int j = 0;
+	int m = 0;
+	char a = ' ';
 	
-	/* For decoding the keyvalue. */
-	valtype = -1;
-	distype =  0;
-	vptr    = 0x0;
+	// For decoding the keyvalue.
+	int valtype = -1;
+	int distype =  0;
+	void *vptr  = 0x0;
 	
-	/* For keywords that require special handling. */
-	altlin  = 0;
-	npptr   = 0x0;
-	chekval = 0x0;
-	special = 0x0;
-	auxprm  = 0;
-	naux    = 0;
-	distran = 0;
-	sipflag = 0;
-	dssflag = 0;
-	watflag = 0;
-	watn    = 0;
+	// For keywords that require special handling.
+	int altlin  = 0;
+	int *npptr  = 0x0;
+	int (*chekval)(double) = 0x0;
+	int (*special)(double *, const double *) = 0x0;
+	int auxprm  = 0;
+	int naux    = 0;
+	int distran = 0;
+	int sipflag = 0;
+	int dssflag = 0;
+	int watflag = 0;
+	int watn    = 0;
 	
-	/* The data structures produced. */
+	// The data structures produced.
 	*nwcs = 0;
 	*wcs  = 0x0;
 	
-	/* Control variables. */
-	ipass = 1;
-	npass = 2;
+	// Control variables.
+	int ipass = 1;
+	int npass = 2;
 	
-	/* Return here via longjmp() invoked by yy_fatal_error(). */
-	if (setjmp(wcspih_abort_jmp_env)) {
-	  return 3;
+	// User data associated with yyscanner.
+	yyextra->hdr = header;
+	yyextra->nkeyrec = nkeyrec;
+	
+	// Return here via longjmp() invoked by yy_fatal_error().
+	if (setjmp(yyextra->abort_jmp_env)) {
+	  return WCSHDRERR_PARSER;
 	}
 	
 	BEGIN(INITIAL);
@@ -482,7 +446,7 @@ jmp_buf wcspih_abort_jmp_env;
 	    errmsg = "the VELREF keyword is deprecated, use SPECSYSa";
 	    BEGIN(ERROR);
 	
-	  } else if (a == ' ' || relax & WCSHDR_VELREFa) {
+	  } else if ((a == ' ') || (relax & WCSHDR_VELREFa)) {
 	    valtype = INTEGER;
 	    vptr    = &(wcstem.velref);
 	
@@ -588,65 +552,135 @@ jmp_buf wcspih_abort_jmp_env;
 	  BEGIN(CCCCCCCC);
 	}
 
-^DATEREF" " {
-	  valtype = STRING;
-	  vptr    = wcstem.dateref;
+^DATEREF" " |
+^DATE-REF {
+	  if ((yytext[4] == 'R') || (relax & WCSHDR_DATEREF)) {
+	    valtype = STRING;
+	    vptr    = wcstem.dateref;
 	
-	  keyname = "DATEREF";
-	  BEGIN(CCCCCCCC);
+	    keyname = "DATEREF";
+	    BEGIN(CCCCCCCC);
+	
+	  } else if (relax & WCSHDR_reject) {
+	    errmsg = "the DATE-REF keyword is non-standard";
+	    BEGIN(ERROR);
+	
+	  } else {
+	    BEGIN(DISCARD);
+	  }
 	}
 
-^MJDREF"  " {
-	  valtype = FLOAT2;
-	  vptr    = wcstem.mjdref;
+^MJDREF"  " |
+^MJD-REF" " {
+	  if ((yytext[3] == 'R') || (relax & WCSHDR_DATEREF)) {
+	    valtype = FLOAT2;
+	    vptr    = wcstem.mjdref;
 	
-	  keyname = "MJDREF";
-	  BEGIN(CCCCCCCC);
+	    keyname = "MJDREF";
+	    BEGIN(CCCCCCCC);
+	
+	  } else if (relax & WCSHDR_reject) {
+	    errmsg = "the MJD-REF keyword is non-standard";
+	    BEGIN(ERROR);
+	
+	  } else {
+	    BEGIN(DISCARD);
+	  }
 	}
 
-^MJDREFI" " {
-	  /* Actually integer, but treated as float. */
-	  valtype = FLOAT;
-	  vptr    = wcstem.mjdref;
+^MJDREFI" " |
+^MJD-REFI {
+	  if ((yytext[3] == 'R') || (relax & WCSHDR_DATEREF)) {
+	    // Actually integer, but treated as float.
+	    valtype = FLOAT;
+	    vptr    = wcstem.mjdref;
 	
-	  keyname = "MJDREFI";
-	  BEGIN(CCCCCCCC);
+	    keyname = "MJDREFI";
+	    BEGIN(CCCCCCCC);
+	
+	  } else if (relax & WCSHDR_reject) {
+	    errmsg = "the MJD-REFI keyword is non-standard";
+	    BEGIN(ERROR);
+	
+	  } else {
+	    BEGIN(DISCARD);
+	  }
 	}
 
-^MJDREFF" " {
-	  valtype = FLOAT;
-	  vptr    = wcstem.mjdref + 1;
+^MJDREFF" " |
+^MJD-REFF {
+	  if ((yytext[3] == 'R') || (relax & WCSHDR_DATEREF)) {
+	    valtype = FLOAT;
+	    vptr    = wcstem.mjdref + 1;
 	
-	  keyname = "MJDREFF";
-	  BEGIN(CCCCCCCC);
+	    keyname = "MJDREFF";
+	    BEGIN(CCCCCCCC);
+	
+	  } else if (relax & WCSHDR_reject) {
+	    errmsg = "the MJD-REFF keyword is non-standard";
+	    BEGIN(ERROR);
+	
+	  } else {
+	    BEGIN(DISCARD);
+	  }
 	}
 
-^JDREF"   " {
-	  valtype = FLOAT2;
-	  vptr    = wcstem.mjdref;
-	  special = wcspih_jdref;
+^JDREF"   " |
+^JD-REF"  " {
+	  if ((yytext[2] == 'R') || (relax & WCSHDR_DATEREF)) {
+	    valtype = FLOAT2;
+	    vptr    = wcstem.mjdref;
+	    special = wcspih_jdref;
 	
-	  keyname = "JDREF";
-	  BEGIN(CCCCCCCC);
+	    keyname = "JDREF";
+	    BEGIN(CCCCCCCC);
+	
+	  } else if (relax & WCSHDR_reject) {
+	    errmsg = "the JD-REF keyword is non-standard";
+	    BEGIN(ERROR);
+	
+	  } else {
+	    BEGIN(DISCARD);
+	  }
 	}
 
-^JDREFI"  " {
-	  /* Actually integer, but treated as float. */
-	  valtype = FLOAT;
-	  vptr    = wcstem.mjdref;
-	  special = wcspih_jdrefi;
+^JDREFI"  " |
+^JD-REFI {
+	  if ((yytext[2] == 'R') || (relax & WCSHDR_DATEREF)) {
+	    // Actually integer, but treated as float.
+	    valtype = FLOAT;
+	    vptr    = wcstem.mjdref;
+	    special = wcspih_jdrefi;
 	
-	  keyname = "JDREFI";
-	  BEGIN(CCCCCCCC);
+	    keyname = "JDREFI";
+	    BEGIN(CCCCCCCC);
+	
+	  } else if (relax & WCSHDR_reject) {
+	    errmsg = "the JD-REFI keyword is non-standard";
+	    BEGIN(ERROR);
+	
+	  } else {
+	    BEGIN(DISCARD);
+	  }
 	}
 
-^JDREFF"  " {
-	  valtype = FLOAT;
-	  vptr    = wcstem.mjdref;
-	  special = wcspih_jdreff;
+^JDREFF"  " |
+^JD-REFF {
+	  if ((yytext[2] == 'R') || (relax & WCSHDR_DATEREF)) {
+	    valtype = FLOAT;
+	    vptr    = wcstem.mjdref;
+	    special = wcspih_jdreff;
 	
-	  keyname = "JDREFF";
-	  BEGIN(CCCCCCCC);
+	    keyname = "JDREFF";
+	    BEGIN(CCCCCCCC);
+	
+	  } else if (relax & WCSHDR_reject) {
+	    errmsg = "the JD-REFF keyword is non-standard";
+	    BEGIN(ERROR);
+	
+	  } else {
+	    BEGIN(DISCARD);
+	  }
 	}
 
 ^TIMEOFFS {
@@ -1123,7 +1157,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^A_ORDER" " {
-	  /* SIP: axis 1 polynomial degree (not stored). */
+	  // SIP: axis 1 polynomial degree (not stored).
 	  valtype = INTEGER;
 	  distype = PRIOR;
 	  vptr    = 0x0;
@@ -1136,7 +1170,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^B_ORDER" " {
-	  /* SIP: axis 2 polynomial degree (not stored). */
+	  // SIP: axis 2 polynomial degree (not stored).
 	  valtype = INTEGER;
 	  distype = PRIOR;
 	  vptr    = 0x0;
@@ -1149,7 +1183,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^AP_ORDER {
-	  /* SIP: axis 1 inverse polynomial degree (not stored). */
+	  // SIP: axis 1 inverse polynomial degree (not stored).
 	  valtype = INTEGER;
 	  distype = PRIOR;
 	  vptr    = 0x0;
@@ -1162,7 +1196,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^BP_ORDER {
-	  /* SIP: axis 2 inverse polynomial degree (not stored). */
+	  // SIP: axis 2 inverse polynomial degree (not stored).
 	  valtype = INTEGER;
 	  distype = PRIOR;
 	  vptr    = 0x0;
@@ -1175,7 +1209,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^A_DMAX"  " {
-	  /* SIP: axis 1 maximum distortion. */
+	  // SIP: axis 1 maximum distortion.
 	  valtype = FLOAT;
 	  distype = PRIOR;
 	  vptr    = &(distem.maxdis);
@@ -1188,7 +1222,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^B_DMAX"  " {
-	  /* SIP: axis 2 maximum distortion. */
+	  // SIP: axis 2 maximum distortion.
 	  valtype = FLOAT;
 	  distype = PRIOR;
 	  vptr    = &(distem.maxdis);
@@ -1201,7 +1235,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^A_	{
-	  /* SIP: axis 1 polynomial coefficient. */
+	  // SIP: axis 1 polynomial coefficient.
 	  i = 1;
 	  sipflag = 2;
 	
@@ -1210,7 +1244,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^B_	{
-	  /* SIP: axis 2 polynomial coefficient. */
+	  // SIP: axis 2 polynomial coefficient.
 	  i = 2;
 	  sipflag = 2;
 	
@@ -1219,7 +1253,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^AP_	{
-	  /* SIP: axis 1 inverse polynomial coefficient. */
+	  // SIP: axis 1 inverse polynomial coefficient.
 	  i = 1;
 	  sipflag = 3;
 	
@@ -1228,7 +1262,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^BP_	{
-	  /* SIP: axis 2 inverse polynomial coefficient. */
+	  // SIP: axis 2 inverse polynomial coefficient.
 	  i = 2;
 	  sipflag = 3;
 	
@@ -1237,7 +1271,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^CNPIX1"  " {
-	  /* DSS: LLH corner pixel coordinate 1. */
+	  // DSS: LLH corner pixel coordinate 1.
 	  valtype = FLOAT;
 	  distype = SEQUENT;
 	  vptr    = dsstmp;
@@ -1249,7 +1283,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^CNPIX2"  " {
-	  /* DSS: LLH corner pixel coordinate 2. */
+	  // DSS: LLH corner pixel coordinate 2.
 	  valtype = FLOAT;
 	  distype = SEQUENT;
 	  vptr    = dsstmp+1;
@@ -1261,7 +1295,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^PPO3"    " {
-	  /* DSS: plate centre x-coordinate in micron. */
+	  // DSS: plate centre x-coordinate in micron.
 	  valtype = FLOAT;
 	  distype = SEQUENT;
 	  vptr    = dsstmp+2;
@@ -1273,7 +1307,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^PPO6"    " {
-	  /* DSS: plate centre y-coordinate in micron. */
+	  // DSS: plate centre y-coordinate in micron.
 	  valtype = FLOAT;
 	  distype = SEQUENT;
 	  vptr    = dsstmp+3;
@@ -1285,7 +1319,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^XPIXELSZ {
-	  /* DSS: pixel x-dimension in micron. */
+	  // DSS: pixel x-dimension in micron.
 	  valtype = FLOAT;
 	  distype = SEQUENT;
 	  vptr    = dsstmp+4;
@@ -1297,7 +1331,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^YPIXELSZ {
-	  /* DSS: pixel y-dimension in micron. */
+	  // DSS: pixel y-dimension in micron.
 	  valtype = FLOAT;
 	  distype = SEQUENT;
 	  vptr    = dsstmp+5;
@@ -1309,7 +1343,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^PLTRAH"  " {
-	  /* DSS: plate centre, right ascension - hours. */
+	  // DSS: plate centre, right ascension - hours.
 	  valtype = FLOAT;
 	  distype = SEQUENT;
 	  vptr    = dsstmp+6;
@@ -1321,7 +1355,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^PLTRAM"  " {
-	  /* DSS: plate centre, right ascension - minutes. */
+	  // DSS: plate centre, right ascension - minutes.
 	  valtype = FLOAT;
 	  distype = SEQUENT;
 	  vptr    = dsstmp+7;
@@ -1333,7 +1367,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^PLTRAS"  " {
-	  /* DSS: plate centre, right ascension - seconds. */
+	  // DSS: plate centre, right ascension - seconds.
 	  valtype = FLOAT;
 	  distype = SEQUENT;
 	  vptr    = dsstmp+8;
@@ -1345,7 +1379,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^PLTDECSN {
-	  /* DSS: plate centre, declination - sign. */
+	  // DSS: plate centre, declination - sign.
 	  valtype = STRING;
 	  distype = SEQUENT;
 	  vptr    = dsstmp+9;
@@ -1357,7 +1391,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^PLTDECD" " {
-	  /* DSS: plate centre, declination - degrees. */
+	  // DSS: plate centre, declination - degrees.
 	  valtype = FLOAT;
 	  distype = SEQUENT;
 	  vptr    = dsstmp+10;
@@ -1369,7 +1403,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^PLTDECM" " {
-	  /* DSS: plate centre, declination - arcmin. */
+	  // DSS: plate centre, declination - arcmin.
 	  valtype = FLOAT;
 	  distype = SEQUENT;
 	  vptr    = dsstmp+11;
@@ -1381,7 +1415,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^PLTDECS" " {
-	  /* DSS: plate centre, declination - arcsec. */
+	  // DSS: plate centre, declination - arcsec.
 	  valtype = FLOAT;
 	  distype = SEQUENT;
 	  vptr    = dsstmp+12;
@@ -1393,7 +1427,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^PLATEID" " {
-	  /* DSS: plate identification (insufficient to trigger DSS). */
+	  // DSS: plate identification (insufficient to trigger DSS).
 	  valtype = STRING;
 	  distype = SEQUENT;
 	  vptr    = dsstmp+13;
@@ -1405,7 +1439,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^AMDX	{
-	  /* DSS: axis 1 polynomial coefficient. */
+	  // DSS: axis 1 polynomial coefficient.
 	  i = 1;
 	  dssflag = 3;
 	
@@ -1414,7 +1448,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^AMDY	{
-	  /* DSS: axis 2 polynomial coefficient. */
+	  // DSS: axis 2 polynomial coefficient.
 	  i = 2;
 	  dssflag = 3;
 	
@@ -1423,7 +1457,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^WAT[12]_{Z3} {
-	  /* TNX or ZPX: string-encoded data array. */
+	  // TNX or ZPX: string-encoded data array.
 	  sscanf(yytext, "WAT%d_%d", &i, &m);
 	  if (watn < m) watn = m;
 	  watflag = 1;
@@ -1440,8 +1474,8 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 ^END" "{77} {
-	  if (wcspih_nkeyrec) {
-	    wcspih_nkeyrec = 0;
+	  if (yyextra->nkeyrec) {
+	    yyextra->nkeyrec = 0;
 	    errmsg = "keyrecords following the END keyrecord were ignored";
 	    BEGIN(ERROR);
 	  } else {
@@ -1469,13 +1503,13 @@ jmp_buf wcspih_abort_jmp_env;
 <CCCCCia>0{I1}{ALT}      |
 <CCCCCia>0{Z1}{I1} {
 	  if (relax & WCSHDR_reject) {
-	    /* Violates the basic FITS standard. */
+	    // Violates the basic FITS standard.
 	    errmsg = "indices in parameterized keywords must not have "
 	             "leading zeroes";
 	    BEGIN(ERROR);
 	
 	  } else {
-	    /* Pretend we don't recognize it. */
+	    // Pretend we don't recognize it.
 	    BEGIN(DISCARD);
 	  }
 	}
@@ -1489,27 +1523,27 @@ jmp_buf wcspih_abort_jmp_env;
 <CCCCCia>{Z1}{ALT}" " |
 <CCCCCia>{Z2}{ALT}    |
 <CCCCCia>{Z3} {
-	  /* Anything that has fallen through to this point must contain */
-	  /* an invalid axis number. */
+	  // Anything that has fallen through to this point must contain
+	  // an invalid axis number.
 	  errmsg = "axis number must exceed 0";
 	  BEGIN(ERROR);
 	}
 
 <CCia>. {
-	  /* Let it go. */
+	  // Let it go.
 	  BEGIN(DISCARD);
 	}
 
 <CCCCCia>. {
 	  if (relax & WCSHDR_reject) {
-	    /* Looks too much like a FITS WCS keyword not to flag it. */
+	    // Looks too much like a FITS WCS keyword not to flag it.
 	    errmsg = errtxt;
 	    sprintf(errmsg, "keyword looks very much like %s but isn't",
 	      keyname);
 	    BEGIN(ERROR);
 	
 	  } else {
-	    /* Let it go. */
+	    // Let it go.
 	    BEGIN(DISCARD);
 	  }
 	}
@@ -1555,7 +1589,7 @@ jmp_buf wcspih_abort_jmp_env;
 	    BEGIN(ERROR);
 	
 	  } else {
-	    /* Pretend we don't recognize it. */
+	    // Pretend we don't recognize it.
 	    BEGIN(DISCARD);
 	  }
 	}
@@ -1570,8 +1604,8 @@ jmp_buf wcspih_abort_jmp_env;
 <CCi_ja>{Z3}_{Z2} |
 <CCi_ja>{Z2}_{Z3} |
 <CCi_ja>{Z1}_{Z4} {
-	  /* Anything that has fallen through to this point must contain */
-	  /* an invalid axis number. */
+	  // Anything that has fallen through to this point must contain
+	  // an invalid axis number.
 	  errmsg = "axis number must exceed 0";
 	  BEGIN(ERROR);
 	}
@@ -1593,7 +1627,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 <CCi_ja>{Z2}{I1}{Z2}{I1} {
-	  /* This covers the defunct forms CD00i00j and PC00i00j. */
+	  // This covers the defunct forms CD00i00j and PC00i00j.
 	  if (((altlin == 1) && (relax & WCSHDR_PC00i00j)) ||
 	      ((altlin == 2) && (relax & WCSHDR_CD00i00j))) {
 	    sscanf(yytext, "%3d%3d", &i, &j);
@@ -1608,7 +1642,7 @@ jmp_buf wcspih_abort_jmp_env;
 	    BEGIN(ERROR);
 	
 	  } else {
-	    /* Pretend we don't recognize it. */
+	    // Pretend we don't recognize it.
 	    BEGIN(DISCARD);
 	  }
 	}
@@ -1631,14 +1665,14 @@ jmp_buf wcspih_abort_jmp_env;
 
 <CCCCCCCa>. {
 	  if (relax & WCSHDR_reject) {
-	    /* Looks too much like a FITS WCS keyword not to flag it. */
+	    // Looks too much like a FITS WCS keyword not to flag it.
 	    errmsg = errtxt;
 	    sprintf(errmsg, "invalid alternate code, keyword resembles %s "
 	      "but isn't", keyname);
 	    BEGIN(ERROR);
 	
 	  } else {
-	    /* Pretend we don't recognize it. */
+	    // Pretend we don't recognize it.
 	    BEGIN(DISCARD);
 	  }
 	}
@@ -1683,7 +1717,7 @@ jmp_buf wcspih_abort_jmp_env;
 	    BEGIN(ERROR);
 	
 	  } else {
-	    /* Pretend we don't recognize it. */
+	    // Pretend we don't recognize it.
 	    BEGIN(DISCARD);
 	  }
 	}
@@ -1698,8 +1732,8 @@ jmp_buf wcspih_abort_jmp_env;
 <CCi_ma>{Z3}_{Z2} |
 <CCi_ma>{Z2}_{Z3} |
 <CCi_ma>{Z1}_{Z4} {
-	  /* Anything that has fallen through to this point must contain */
-	  /* an invalid axis number. */
+	  // Anything that has fallen through to this point must contain
+	  // an invalid axis number.
 	  errmsg = "axis number must exceed 0";
 	  BEGIN(ERROR);
 	}
@@ -1734,7 +1768,7 @@ jmp_buf wcspih_abort_jmp_env;
 	    errmsg = "the CROTAn keyword is deprecated, use PCi_ja";
 	    BEGIN(ERROR);
 	
-	  } else if (a == ' ' || relax & WCSHDR_CROTAia) {
+	  } else if ((a == ' ') || (relax & WCSHDR_CROTAia)) {
 	    yyless(0);
 	    BEGIN(CCCCCia);
 	
@@ -1743,7 +1777,7 @@ jmp_buf wcspih_abort_jmp_env;
 	    BEGIN(ERROR);
 	
 	  } else {
-	    /* Pretend we don't recognize it. */
+	    // Pretend we don't recognize it.
 	    BEGIN(DISCARD);
 	  }
 	}
@@ -1786,7 +1820,7 @@ jmp_buf wcspih_abort_jmp_env;
 
 <SIP2>{Z1}_{Z1}"   " |
 <SIP3>{Z1}_{Z1}"  " {
-	  /* SIP keywords. */
+	  // SIP keywords.
 	  valtype = FLOAT;
 	  distype = PRIOR;
 	  vptr    = &(distem.dp);
@@ -1806,7 +1840,7 @@ jmp_buf wcspih_abort_jmp_env;
 
 <DSSAMDXY>{I1}"   " |
 <DSSAMDXY>{I2}"  " {
-	  /* DSS keywords. */
+	  // DSS keywords.
 	  valtype = FLOAT;
 	  distype = SEQUENT;
 	  vptr    = &(distem.dp);
@@ -1824,9 +1858,9 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 <PLTDECSN>=" "+{STRING} {
-	  /* Special handling for this iconic DSS keyword. */
+	  // Special handling for this iconic DSS keyword.
 	  if (1 < ipass) {
-	    /* Look for a minus sign. */
+	    // Look for a minus sign.
 	    sscanf(yytext, "= '%s", strtmp);
 	    dbltmp = strcmp(strtmp, "-") ? 1.0 : -1.0;
 	  }
@@ -1839,7 +1873,7 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 <VALUE>=" "+ {
-	  /* Do checks on i, j & m. */
+	  // Do checks on i, j & m.
 	  if (99 < i || 99 < j || 99 < m) {
 	    if (relax & WCSHDR_reject) {
 	      if (99 < i || 99 < j) {
@@ -1850,7 +1884,7 @@ jmp_buf wcspih_abort_jmp_env;
 	      BEGIN(ERROR);
 	
 	    } else {
-	      /* Pretend we don't recognize it. */
+	      // Pretend we don't recognize it.
 	      BEGIN(DISCARD);
 	    }
 	
@@ -1884,7 +1918,7 @@ jmp_buf wcspih_abort_jmp_env;
 	    BEGIN(COMMENT);
 	
 	  } else {
-	    /* Read the keyvalue. */
+	    // Read the keyvalue.
 	    sscanf(yytext, "%d", &inttmp);
 	
 	    BEGIN(COMMENT);
@@ -1901,7 +1935,7 @@ jmp_buf wcspih_abort_jmp_env;
 	    BEGIN(COMMENT);
 	
 	  } else {
-	    /* Read the keyvalue. */
+	    // Read the keyvalue.
 	    wcsutil_str2double(yytext, &dbltmp);
 
 	    if (chekval && chekval(dbltmp)) {
@@ -1923,7 +1957,7 @@ jmp_buf wcspih_abort_jmp_env;
 	    BEGIN(COMMENT);
 	
 	  } else {
-	    /* Read the keyvalue as integer and fractional parts. */
+	    // Read the keyvalue as integer and fractional parts.
 	    wcsutil_str2double2(yytext, dbl2tmp);
 	
 	    BEGIN(COMMENT);
@@ -1940,12 +1974,12 @@ jmp_buf wcspih_abort_jmp_env;
 	    BEGIN(COMMENT);
 	
 	  } else {
-	    /* Read the keyvalue. */
+	    // Read the keyvalue.
 	    strcpy(strtmp, yytext+1);
 	
-	    /* Squeeze out repeated quotes. */
-	    ix = 0;
-	    for (jx = 0; jx < 72; jx++) {
+	    // Squeeze out repeated quotes.
+	    int ix = 0;
+	    for (int jx = 0; jx < 72; jx++) {
 	      if (ix < jx) {
 	        strtmp[ix] = strtmp[jx];
 	      }
@@ -2027,16 +2061,16 @@ jmp_buf wcspih_abort_jmp_env;
 
 <COMMENT>{INLINE}$ {
 	  if (ipass == 1) {
-	    /* Do first-pass bookkeeping. */
+	    // Do first-pass bookkeeping.
 	    wcspih_pass1(naxis, i, j, a, distype, alts, dpq, npptr);
 	    BEGIN(FLUSH);
 	
 	  } else if (*wcs) {
-	    /* Store the value now that the keyrecord has been validated. */
-	    gotone = 0;
-	    for (ialt = 0; ialt < *nwcs; ialt++) {
-	      /* The loop here is for keywords that apply */
-	      /* to every alternate; these have a == 0. */
+	    // Store the value now that the keyrecord has been validated.
+	    int gotone = 0;
+	    for (int ialt = 0; ialt < *nwcs; ialt++) {
+	      // The loop here is for keywords that apply
+	      // to every alternate; these have a == 0.
 	      if (a >= 'A') {
 	        ialt = alts[a-'A'+1];
 	        if (ialt < 0) break;
@@ -2045,11 +2079,12 @@ jmp_buf wcspih_abort_jmp_env;
 	
 	      if (vptr) {
 	        if (sipflag) {
-	          /* Translate a SIP keyword into DPja. */
-	          disp = (*wcs)->lin.dispre;
-	          ipx = (disp->ndp)++;
+	          // Translate a SIP keyword into DPja.
+	          struct disprm *disp = (*wcs)->lin.dispre;
+	          int ipx = (disp->ndp)++;
 	
-	          /* SIP doesn't have alternates. */
+	          // SIP doesn't have alternates.
+		  char keyword[16];
 	          sprintf(keyword, "DP%d", i);
 	          sprintf(strtmp, "SIP.%s.%d_%d", (sipflag==2)?"FWD":"REV",
 	                  p, q);
@@ -2060,27 +2095,28 @@ jmp_buf wcspih_abort_jmp_env;
 	          }
 	
 	        } else if (dssflag) {
-	          /* All DSS keywords require special handling. */
+	          // All DSS keywords require special handling.
 	          if (dssflag == 1) {
-	            /* Temporary parameter for DSS used by wcspih_final(). */
+	            // Temporary parameter for DSS used by wcspih_final().
 	            *((double *)vptr) = dbltmp;
 	
 	          } else if (dssflag == 2) {
-	            /* Temporary parameter for DSS used by wcspih_final(). */
+	            // Temporary parameter for DSS used by wcspih_final().
 	            strcpy((char *)vptr, strtmp);
 	
 	          } else {
-	            /* Translate a DSS keyword into DQia. */
+	            // Translate a DSS keyword into DQia.
 	            if (m <= 13 || dbltmp != 0.0) {
-	              disp = (*wcs)->lin.disseq;
-	              ipx = (disp->ndp)++;
+	              struct disprm *disp = (*wcs)->lin.disseq;
+	              int ipx = (disp->ndp)++;
 	
-	              /* DSS doesn't have alternates. */
+	              // DSS doesn't have alternates.
+		      char keyword[16];
 	              sprintf(keyword, "DQ%d", i);
 	              sprintf(strtmp, "DSS.AMD.%d", m);
 	              dpfill(disp->dp+ipx, keyword, strtmp, i, 1, 0, dbltmp);
 	
-	              /* Also required by wcspih_final(). */
+	              // Also required by wcspih_final().
 	              if (m <= 3) {
 	                dsstmp[13+(i-1)*3+m] = dbltmp;
 	              }
@@ -2088,32 +2124,35 @@ jmp_buf wcspih_abort_jmp_env;
 	          }
 	
 	        } else if (watflag) {
-	          /* String array for TNX and ZPX used by wcspih_final(). */
+	          // String array for TNX and ZPX used by wcspih_final().
 	          strcpy((char *)vptr, strtmp);
 	
 	        } else {
-	          /* An "ordinary" keyword. */
-	          wcsp = *wcs + ialt;
+	          // An "ordinary" keyword.
+	          struct wcsprm *wcsp = *wcs + ialt;
+		  struct disprm *disp;
+	          void *wptr;
+	          ptrdiff_t voff;
 	          if (auxprm) {
-	            /* Additional auxiliary parameter. */
-	            auxp = wcsp->aux;
+	            // Additional auxiliary parameter.
+	            struct auxprm *auxp = wcsp->aux;
 	            voff = (char *)vptr - (char *)(&auxtem);
 	            wptr = (void *)((char *)auxp + voff);
 	
 	          } else if (distype) {
-	            /* Distortion parameter of some kind. */
+	            // Distortion parameter of some kind.
 	            if (distype == PRIOR) {
-	              /* Prior distortion. */
+	              // Prior distortion.
 	              disp = wcsp->lin.dispre;
 	            } else {
-	              /* Sequent distortion. */
+	              // Sequent distortion.
 	              disp = wcsp->lin.disseq;
 	            }
 	            voff = (char *)vptr - (char *)(&distem);
 	            wptr = (void *)((char *)disp + voff);
 	
 	          } else {
-	            /* A parameter that lives directly in wcsprm. */
+	            // A parameter that lives directly in wcsprm.
 	            voff = (char *)vptr - (char *)(&wcstem);
 	            wptr = (void *)((char *)wcsp + voff);
 	          }
@@ -2122,9 +2161,9 @@ jmp_buf wcspih_abort_jmp_env;
 	            *((int *)wptr) = inttmp;
 	
 	          } else if (valtype == FLOAT) {
-	            /* Apply keyword parameterization. */
+	            // Apply keyword parameterization.
 	            if (npptr == npv) {
-	              ipx = (wcsp->npv)++;
+	              int ipx = (wcsp->npv)++;
 	              wcsp->pv[ipx].i = i;
 	              wcsp->pv[ipx].m = m;
 	              wptr = &(wcsp->pv[ipx].value);
@@ -2143,14 +2182,14 @@ jmp_buf wcspih_abort_jmp_env;
 	              *((double *)wptr) = dbltmp;
 	            }
 	
-	            /* Flag presence of PCi_ja, or CDi_ja and/or CROTAia. */
+	            // Flag presence of PCi_ja, or CDi_ja and/or CROTAia.
 	            if (altlin) {
 	              wcsp->altlin |= altlin;
 	              altlin = 0;
 	            }
 	
 	          } else if (valtype == FLOAT2) {
-	            /* Split MJDREF and JDREF into integer and fraction.*/
+	            // Split MJDREF and JDREF into integer and fraction.
 	            if (special) {
 	              special(wptr, dbl2tmp);
 	            } else {
@@ -2159,9 +2198,9 @@ jmp_buf wcspih_abort_jmp_env;
 	            }
 	
 	          } else if (valtype == STRING) {
-	            /* Apply keyword parameterization. */
+	            // Apply keyword parameterization.
 	            if (npptr == nps) {
-	              ipx = (wcsp->nps)++;
+	              int ipx = (wcsp->nps)++;
 	              wcsp->ps[ipx].i = i;
 	              wcsp->ps[ipx].m = m;
 	              wptr = wcsp->ps[ipx].value;
@@ -2174,12 +2213,13 @@ jmp_buf wcspih_abort_jmp_env;
 	              wptr = *((char (**)[72])wptr) + (i - 1);
 	            }
 	
-	            cptr = (char *)wptr;
+	            char *cptr = (char *)wptr;
 	            strcpy(cptr, strtmp);
 	
 	          } else if (valtype == RECORD) {
-	            ipx = (disp->ndp)++;
+	            int ipx = (disp->ndp)++;
 	
+		    char keyword[16];
 	            if (a == ' ') {
 	              sprintf(keyword, "%.2s%d", keyname, i);
 	            } else {
@@ -2200,7 +2240,7 @@ jmp_buf wcspih_abort_jmp_env;
 	      if (ctrl == 4) {
 	        if (distran || dssflag) {
 	          wcsfprintf(stderr, "%.80s\n  Accepted (%d) as a "
-	            "recognised WCS convention.\n", keyrec, nvalid);
+	            "recognized WCS convention.\n", keyrec, nvalid);
 	        } else {
 	          wcsfprintf(stderr, "%.80s\n  Accepted (%d) as a "
 	            "valid WCS keyrecord.\n", keyrec, nvalid);
@@ -2242,7 +2282,7 @@ jmp_buf wcspih_abort_jmp_env;
 <DISCARD>.*$ {
 	  if (ipass == npass) {
 	    if (ctrl < 0) {
-	      /* Preserve discards. */
+	      // Preserve discards.
 	      keep = keyrec;
 	
 	    } else if (2 < ctrl) {
@@ -2259,7 +2299,7 @@ jmp_buf wcspih_abort_jmp_env;
 	    (*nreject)++;
 	
 	    if (ctrl%10 == -1) {
-	      /* Preserve rejects. */
+	      // Preserve rejects.
 	      keep = keyrec;
 	    }
 	
@@ -2281,7 +2321,7 @@ jmp_buf wcspih_abort_jmp_env;
 	
 	  naux += auxprm;
 	
-	  /* Throw away the rest of the line and reset for the next one. */
+	  // Throw away the rest of the line and reset for the next one.
 	  i = j = 0;
 	  m = 0;
 	  a = ' ';
@@ -2306,7 +2346,8 @@ jmp_buf wcspih_abort_jmp_env;
 	}
 
 <<EOF>>	 {
-	  /* End-of-input. */
+	  // End-of-input.
+	  int status;
 	  if (ipass == 1) {
 	    if ((status = wcspih_init1(naxis, alts, dpq, npv, nps, ndp, ndq,
 	                               naux, distran, nwcs, wcs)) ||
@@ -2331,8 +2372,8 @@ jmp_buf wcspih_abort_jmp_env;
 	  }
 	
 	  if (ipass++ < npass) {
-	    wcspih_hdr = header;
-	    wcspih_nkeyrec = nkeyrec;
+	    yyextra->hdr = header;
+	    yyextra->nkeyrec = nkeyrec;
 	    keyrec = header;
 	    *nreject = 0;
 	
@@ -2381,6 +2422,35 @@ jmp_buf wcspih_abort_jmp_env;
 %%
 
 /*----------------------------------------------------------------------------
+* External interface to the scanner.
+*---------------------------------------------------------------------------*/
+
+int wcspih(
+  char *header,
+  int nkeyrec,
+  int relax,
+  int ctrl,
+  int *nreject,
+  int *nwcs,
+  struct wcsprm **wcs)
+
+{
+  // Function prototypes.
+  int yylex_init_extra(YY_EXTRA_TYPE extra, yyscan_t *yyscanner);
+  int yylex_destroy(yyscan_t yyscanner);
+
+  struct wcspih_extra extra;
+  yyscan_t yyscanner;
+  yylex_init_extra(&extra, &yyscanner);
+  int status = wcspih_scanner(header, nkeyrec, relax, ctrl, nreject, nwcs,
+                              wcs, yyscanner);
+  yylex_destroy(yyscanner);
+
+  return status;
+}
+
+
+/*----------------------------------------------------------------------------
 * Determine the number of coordinate representations (up to 27) and the
 * number of coordinate axes in each, which distortions are present, and the
 * number of PVi_ma, PSi_ma, DPja, and DQia keywords in each representation.
@@ -2397,26 +2467,24 @@ void wcspih_pass1(
   int *npptr)
 
 {
-  /* On the first pass alts[] is used to determine the number of axes */
-  /* for each of the 27 possible alternate coordinate descriptions.   */
-  int ialt, *ip;
-
+  // On the first pass alts[] is used to determine the number of axes
+  // for each of the 27 possible alternate coordinate descriptions.
   if (a == 0) {
     return;
   }
 
-  ialt = 0;
+  int ialt = 0;
   if (a != ' ') {
     ialt = a - 'A' + 1;
   }
 
-  ip = alts + ialt;
+  int *ip = alts + ialt;
 
   if (*ip < naxis) {
     *ip = naxis;
   }
 
-  /* i or j can be greater than naxis. */
+  // i or j can be greater than naxis.
   if (*ip < i) {
     *ip = i;
   }
@@ -2425,10 +2493,10 @@ void wcspih_pass1(
     *ip = j;
   }
 
-  /* Type of distortions present. */
+  // Type of distortions present.
   dpq[ialt] |= distype;
 
-  /* Count PVi_ma, PSi_ma, DPja, or DQia keywords. */
+  // Count PVi_ma, PSi_ma, DPja, or DQia keywords.
   if (npptr) {
     npptr[ialt]++;
   }
@@ -2454,115 +2522,115 @@ int wcspih_init1(
   struct wcsprm **wcs)
 
 {
-  int ialt, defaults, ndis, ndpmax, npsmax, npvmax, status = 0;
-  struct wcsprm *wcsp;
-  struct disprm *dis;
+  int status = 0;
 
-  /* Find the number of coordinate descriptions. */
+  // Find the number of coordinate descriptions.
   *nwcs = 0;
-  for (ialt = 0; ialt < 27; ialt++) {
+  for (int ialt = 0; ialt < 27; ialt++) {
     if (alts[ialt]) (*nwcs)++;
   }
 
+  int defaults;
   if ((defaults = !(*nwcs) && naxis)) {
-    /* NAXIS is non-zero but there were no WCS keywords with an alternate
-       version code; create a default WCS with blank alternate version. */
+    // NAXIS is non-zero but there were no WCS keywords with an alternate
+    // version code; create a default WCS with blank alternate version.
     wcspih_pass1(naxis, 0, 0, ' ', 0, alts, dpq, 0x0);
     *nwcs = 1;
   }
 
   if (*nwcs) {
-    /* Allocate memory for the required number of wcsprm structs. */
+    // Allocate memory for the required number of wcsprm structs.
     if ((*wcs = calloc(*nwcs, sizeof(struct wcsprm))) == 0x0) {
       return WCSHDRERR_MEMORY;
     }
 
-    ndis = 0;
+    int ndis = 0;
     if (distran == SIP) {
-      /* DPja.NAXES and DPja.OFFSET.j to be added for SIP (see below and
-         wcspih_final()). */
+      // DPja.NAXES and DPja.OFFSET.j to be added for SIP (see below and
+      // wcspih_final()).
       ndp[0] += 6;
 
     } else if (distran == DSS) {
-      /* DPja.NAXES to be added for DSS (see below and wcspih_final()). */
+      // DPja.NAXES to be added for DSS (see below and wcspih_final()).
       ndq[0] += 2;
     }
 
-    /* Initialize each wcsprm struct. */
-    wcsp = *wcs;
+    // Initialize each wcsprm struct.
+    struct wcsprm *wcsp = *wcs;
     *nwcs = 0;
-    for (ialt = 0; ialt < 27; ialt++) {
+    for (int ialt = 0; ialt < 27; ialt++) {
       if (alts[ialt]) {
         wcsp->flag = -1;
-        npvmax = npv[ialt];
-        npsmax = nps[ialt];
+        int npvmax = npv[ialt];
+        int npsmax = nps[ialt];
         if ((status = wcsinit(1, alts[ialt], wcsp, npvmax, npsmax, -1))) {
           wcsvfree(nwcs, wcs);
           break;
         }
 
-        /* Record the alternate version code. */
+        // Record the alternate version code.
         if (ialt) {
           wcsp->alt[0] = 'A' + ialt - 1;
         }
 
-        /* Record in wcsname whether this is a default description. */
+        // Record in wcsname whether this is a default description.
         if (defaults) {
           strcpy(wcsp->wcsname, "DEFAULTS");
         }
 
-        /* Any additional auxiliary keywords present? */
+        // Any additional auxiliary keywords present?
         if (naux) {
           if (wcsauxi(1, wcsp)) {
             return WCSHDRERR_MEMORY;
           }
         }
 
-        /* Any distortions present? */
+        // Any distortions present?
+        struct disprm *disp;
         if (dpq[ialt] & 1) {
-          if ((dis = calloc(1, sizeof(struct disprm))) == 0x0) {
+          if ((disp = calloc(1, sizeof(struct disprm))) == 0x0) {
             return WCSHDRERR_MEMORY;
           }
 
-          /* Attach it to linprm.  Also inits it. */
+          // Attach it to linprm.  Also inits it.
           ndis++;
-          ndpmax = ndp[ialt];
-          dis->flag = -1;
-          lindist(1, &(wcsp->lin), dis, ndpmax);
+          int ndpmax = ndp[ialt];
+          disp->flag = -1;
+          lindist(1, &(wcsp->lin), disp, ndpmax);
         }
 
         if (dpq[ialt] & 2) {
-          if ((dis = calloc(1, sizeof(struct disprm))) == 0x0) {
+          if ((disp = calloc(1, sizeof(struct disprm))) == 0x0) {
             return WCSHDRERR_MEMORY;
           }
 
-          /* Attach it to linprm.  Also inits it. */
+          // Attach it to linprm.  Also inits it.
           ndis++;
-          ndpmax = ndq[ialt];
-          dis->flag = -1;
-          lindist(2, &(wcsp->lin), dis, ndpmax);
+          int ndpmax = ndq[ialt];
+          disp->flag = -1;
+          lindist(2, &(wcsp->lin), disp, ndpmax);
         }
 
-        /* On the second pass alts[] indexes the array of wcsprm structs. */
+        // On the second pass alts[] indexes the array of wcsprm structs.
         alts[ialt] = (*nwcs)++;
 
         wcsp++;
 
       } else {
-        /* Signal that there is no wcsprm for this alt. */
+        // Signal that there is no wcsprm for this alt.
         alts[ialt] = -1;
       }
     }
 
 
-    /* Translated distortion?  Neither SIP nor DSS have alternates, so the */
-    /* presence of keywords for either (not both together), as flagged by  */
-    /* distran, necessarily refers to the primary representation.          */
+    // Translated distortion?  Neither SIP nor DSS have alternates, so the
+    // presence of keywords for either (not both together), as flagged by
+    // distran, necessarily refers to the primary representation.
     if (distran == SIP) {
       strcpy((*wcs)->lin.dispre->dtype[0], "SIP");
       strcpy((*wcs)->lin.dispre->dtype[1], "SIP");
 
-      /* SIP doesn't have axis mapping. */
+      // SIP doesn't have axis mapping.
       (*wcs)->lin.dispre->ndp = 6;
       dpfill((*wcs)->lin.dispre->dp,   "DP1", "NAXES",  0, 0, 2, 0.0);
       dpfill((*wcs)->lin.dispre->dp+3, "DP2", "NAXES",  0, 0, 2, 0.0);
@@ -2571,7 +2639,7 @@ int wcspih_init1(
       strcpy((*wcs)->lin.disseq->dtype[0], "DSS");
       strcpy((*wcs)->lin.disseq->dtype[1], "DSS");
 
-      /* The Paper IV translation of DSS doesn't require an axis mapping. */
+      // The Paper IV translation of DSS doesn't require an axis mapping.
       (*wcs)->lin.disseq->ndp = 2;
       dpfill((*wcs)->lin.disseq->dp,   "DQ1", "NAXES",  0, 0, 2, 0.0);
       dpfill((*wcs)->lin.disseq->dp+1, "DQ2", "NAXES",  0, 0, 2, 0.0);
@@ -2589,7 +2657,7 @@ int wcspih_init1(
 int wcspih_jdref(double *mjdref, const double *jdref)
 
 {
-  /* Set MJDREF from JDREF. */
+  // Set MJDREF from JDREF.
   if (undefined(mjdref[0] && undefined(mjdref[1]))) {
     mjdref[0] = jdref[0] - 2400000.0;
     mjdref[1] = jdref[1] - 0.5;
@@ -2606,7 +2674,7 @@ int wcspih_jdref(double *mjdref, const double *jdref)
 int wcspih_jdrefi(double *mjdref, const double *jdrefi)
 
 {
-  /* Set the integer part of MJDREF from JDREFI. */
+  // Set the integer part of MJDREF from JDREFI.
   if (undefined(mjdref[0])) {
     mjdref[0] = *jdrefi - 2400000.5;
   }
@@ -2618,7 +2686,7 @@ int wcspih_jdrefi(double *mjdref, const double *jdrefi)
 int wcspih_jdreff(double *mjdref, const double *jdreff)
 
 {
-  /* Set the fractional part of MJDREF from JDREFF. */
+  // Set the fractional part of MJDREF from JDREFF.
   if (undefined(mjdref[1])) {
     mjdref[1] = *jdreff;
   }
@@ -2634,7 +2702,7 @@ int wcspih_jdreff(double *mjdref, const double *jdreff)
 int wcspih_epoch(double *equinox, const double *epoch)
 
 {
-  /* If EQUINOXa is currently undefined then set it from EPOCHa. */
+  // If EQUINOXa is currently undefined then set it from EPOCHa.
   if (undefined(*equinox)) {
     *equinox = *epoch;
   }
@@ -2650,12 +2718,12 @@ int wcspih_epoch(double *equinox, const double *epoch)
 int wcspih_vsource(double *zsource, const double *vsource)
 
 {
-  double beta, c = 299792458.0;
+  const double c = 299792458.0;
 
-  /* If ZSOURCEa is currently undefined then set it from VSOURCEa. */
+  // If ZSOURCEa is currently undefined then set it from VSOURCEa.
   if (undefined(*zsource)) {
-    /* Convert relativistic Doppler velocity to redshift. */
-    beta = *vsource/c;
+    // Convert relativistic Doppler velocity to redshift.
+    double beta = *vsource/c;
     *zsource = (1.0 + beta)/sqrt(1.0 - beta*beta) - 1.0;
   }
 
@@ -2688,58 +2756,52 @@ int wcspih_final(
   struct wcsprm **wcs)
 
 {
-  char   field[32], *wp, wpoly[12], wtype[8];
-  int    i, ialt, idp, ipv, m, npv, n, nterms, omax, omin, status, wctrl[4];
-  double A1, A2, A3, B1, B2, B3, CNPIX1, CNPIX2, *crval, Rx, Ry, S, wval,
-         X0, Y0, Xc, Yc;
-  struct disprm *disp;
-  struct wcsprm *wcsp;
-
-  for (ialt = 0; ialt < *nwcs; ialt++) {
-    /* Interpret -TAB header keywords. */
+  for (int ialt = 0; ialt < *nwcs; ialt++) {
+    // Interpret -TAB header keywords.
+    int status;
     if ((status = wcstab(*wcs+ialt))) {
        wcsvfree(nwcs, wcs);
        return status;
     }
 
     if (ndp[ialt] && ndq[ialt]) {
-      /* Prior and sequent distortions co-exist in this representation;
-         ensure the latter gets DVERRa. */
+      // Prior and sequent distortions co-exist in this representation;
+      // ensure the latter gets DVERRa.
       (*wcs+ialt)->lin.disseq->totdis = (*wcs+ialt)->lin.dispre->totdis;
     }
   }
 
-  /* Translated distortion functions; apply only to the primary WCS. */
-  wcsp = *wcs;
+  // Translated distortion functions; apply only to the primary WCS.
+  struct wcsprm *wcsp = *wcs;
   if (distran == SIP) {
-    /* SIP doesn't have alternates, nor axis mapping. */
-    disp = wcsp->lin.dispre;
+    // SIP doesn't have alternates, nor axis mapping.
+    struct disprm *disp = wcsp->lin.dispre;
     dpfill(disp->dp+1, "DP1", "OFFSET.1",  0, 1, 0, wcsp->crpix[0]);
     dpfill(disp->dp+2, "DP1", "OFFSET.2",  0, 1, 0, wcsp->crpix[1]);
     dpfill(disp->dp+4, "DP2", "OFFSET.1",  0, 1, 0, wcsp->crpix[0]);
     dpfill(disp->dp+5, "DP2", "OFFSET.2",  0, 1, 0, wcsp->crpix[1]);
 
   } else if (distran == DSS) {
-    /* DSS doesn't have alternates, nor axis mapping.  This translation */
-    /* follows Paper IV, Sect. 5.2 using the same variable names.       */
-    CNPIX1 = dsstmp[0];
-    CNPIX2 = dsstmp[1];
+    // DSS doesn't have alternates, nor axis mapping.  This translation
+    // follows Paper IV, Sect. 5.2 using the same variable names.
+    double CNPIX1 = dsstmp[0];
+    double CNPIX2 = dsstmp[1];
 
-    Xc = dsstmp[2]/1000.0;
-    Yc = dsstmp[3]/1000.0;
-    Rx = dsstmp[4]/1000.0;
-    Ry = dsstmp[5]/1000.0;
+    double Xc = dsstmp[2]/1000.0;
+    double Yc = dsstmp[3]/1000.0;
+    double Rx = dsstmp[4]/1000.0;
+    double Ry = dsstmp[5]/1000.0;
 
-    A1 = dsstmp[14];
-    A2 = dsstmp[15];
-    A3 = dsstmp[16];
-    B1 = dsstmp[17];
-    B2 = dsstmp[18];
-    B3 = dsstmp[19];
-    S  = sqrt(fabs(A1*B1 - A2*B2));
+    double A1 = dsstmp[14];
+    double A2 = dsstmp[15];
+    double A3 = dsstmp[16];
+    double B1 = dsstmp[17];
+    double B2 = dsstmp[18];
+    double B3 = dsstmp[19];
+    double S  = sqrt(fabs(A1*B1 - A2*B2));
 
-    X0 = (A2*B3 - A3*B1) / (A1*B1 - A2*B2);
-    Y0 = (A3*B2 - A1*B3) / (A1*B1 - A2*B2);
+    double X0 = (A2*B3 - A3*B1) / (A1*B1 - A2*B2);
+    double Y0 = (A3*B2 - A1*B3) / (A1*B1 - A2*B2);
 
     wcsp->crpix[0] = (Xc - X0)/Rx - (CNPIX1 - 0.5);
     wcsp->crpix[1] = (Yc + Y0)/Ry - (CNPIX2 - 0.5);
@@ -2753,7 +2815,7 @@ int wcspih_final(
     wcsp->cdelt[0] = -S/3600.0;
     wcsp->cdelt[1] =  S/3600.0;
 
-    crval = wcsp->crval;
+    double *crval = wcsp->crval;
     crval[0] = (dsstmp[6]  + (dsstmp[7]  + dsstmp[8] /60.0)/60.0)*15.0;
     crval[1] =  dsstmp[10] + (dsstmp[11] + dsstmp[12]/60.0)/60.0;
     if (dsstmp[9] == -1.0) crval[1] *= -1.0;
@@ -2763,19 +2825,23 @@ int wcspih_final(
 
     sprintf(wcsp->wcsname, "DSS PLATEID %.4s", (char *)(dsstmp+13));
 
-    /* Erase the approximate WCS provided in modern DSS headers. */
+    // Erase the approximate WCS provided in modern DSS headers.
     wcsp->cd[0] = 0.0;
     wcsp->cd[1] = 0.0;
     wcsp->cd[2] = 0.0;
     wcsp->cd[3] = 0.0;
 
   } else if (distran == WAT) {
-    /* TNX and ZPX don't have alternates, nor axis mapping. */
-    disp = wcsp->lin.disseq;
+    // TNX and ZPX don't have alternates, nor axis mapping.
+    char *wp;
+    int  omax, omin, wctrl[4];
+    double wval;
+    struct disprm *disp = wcsp->lin.disseq;
 
-    /* Disassemble the core dump stored in the WATi_m strings. */
-    nterms = 0;
+    // Disassemble the core dump stored in the WATi_m strings.
+    int i, nterms = 0;
     for (i = 0; i < 2; i++) {
+      char wtype[8];
       sscanf(wat[i], "wtype=%s", wtype);
 
       if (strcmp(wtype, "tnx") == 0) {
@@ -2783,22 +2849,23 @@ int wcspih_final(
       } else if (strcmp(wtype, "zpx") == 0) {
         strcpy(disp->dtype[i], "WAT-ZPX");
       } else {
-        /* Could contain "tan" or something else to be ignored. */
+        // Could contain "tan" or something else to be ignored.
         lindist(2, &(wcsp->lin), 0x0, 0);
         return 0;
       }
 
-      /* The PROJPn parameters are duplicated on each ZPX axis. */
+      // The PROJPn parameters are duplicated on each ZPX axis.
       if (i == 1 && strcmp(wtype, "zpx") == 0) {
-        /* Take those on the second (latitude) axis ignoring the other. */
-        /* First we have to count them and allocate space in wcsprm.    */
-        wp  = wat[i];
+        // Take those on the second (latitude) axis ignoring the other.
+        // First we have to count them and allocate space in wcsprm.
+        wp = wat[i];
+	int npv;
         for (npv = 0; npv < 30; npv++) {
           if ((wp = strstr(wp, "projp")) == 0x0) break;
           wp += 5;
         }
 
-        /* Allocate space. */
+        // Allocate space.
         if (npv) {
           wcsp->npvmax += npv;
           wcsp->pv = realloc(wcsp->pv, wcsp->npvmax*sizeof(struct pvcard));
@@ -2809,11 +2876,12 @@ int wcspih_final(
           wcsp->m_pv = wcsp->pv;
         }
 
-        /* Copy the values. */
+        // Copy the values.
         wp = wat[i];
-        for (ipv = wcsp->npv; ipv < wcsp->npvmax; ipv++) {
+        for (int ipv = wcsp->npv; ipv < wcsp->npvmax; ipv++) {
           if ((wp = strstr(wp, "projp")) == 0x0) break;
 
+          int m;
           sscanf(wp, "projp%d=%lf", &m, &wval);
           wcsp->pv[ipv].i = 2;
           wcsp->pv[ipv].m = m;
@@ -2825,13 +2893,13 @@ int wcspih_final(
         wcsp->npv += npv;
       }
 
-      /* Read the control parameters. */
+      // Read the control parameters.
       if ((wp = strchr(wat[i], '"')) == 0x0) {
         return WCSHDRERR_PARSER;
       }
       wp++;
 
-      for (m = 0; m < 4; m++) {
+      for (int m = 0; m < 4; m++) {
         sscanf(wp, "%d", wctrl+m);
         if ((wp = strchr(wp, ' ')) == 0x0) {
           return WCSHDRERR_PARSER;
@@ -2839,24 +2907,24 @@ int wcspih_final(
         wp++;
       }
 
-      /* How many coefficients are we expecting? */
+      // How many coefficients are we expecting?
       omin = (wctrl[1] < wctrl[2]) ? wctrl[1] : wctrl[2];
       omax = (wctrl[1] < wctrl[2]) ? wctrl[2] : wctrl[1];
       if (wctrl[3] == 0) {
-        /* No cross terms. */
+        // No cross terms.
         nterms += omin + omax;
 
       } else if (wctrl[3] == 1) {
-        /* Full cross terms. */
+        // Full cross terms.
         nterms += omin*omax;
 
       } else if (wctrl[3] == 2) {
-        /* Half cross terms. */
+        // Half cross terms.
         nterms += omin*omax - omin*(omin-1)/2;
       }
     }
 
-    /* Allocate memory for dpkeys. */
+    // Allocate memory for dpkeys.
     ndq[0] += 2*(1 + 1 + 4) + nterms;
 
     disp->ndpmax += ndq[0];
@@ -2868,18 +2936,18 @@ int wcspih_final(
     disp->m_dp = disp->dp;
 
 
-    /* Populate dpkeys. */
-    idp = disp->ndp;
+    // Populate dpkeys.
+    int idp = disp->ndp;
     for (i = 0; i < 2; i++) {
       dpfill(disp->dp+(idp++), "DQ", "NAXES", i+1, 0, 2, 0.0);
 
-      /* Read the control parameters. */
+      // Read the control parameters.
       if ((wp = strchr(wat[i], '"')) == 0x0) {
         return WCSHDRERR_PARSER;
       }
       wp++;
 
-      for (m = 0; m < 4; m++) {
+      for (int m = 0; m < 4; m++) {
         sscanf(wp, "%d", wctrl+m);
         if ((wp = strchr(wp, ' ')) == 0x0) {
           return WCSHDRERR_PARSER;
@@ -2887,24 +2955,26 @@ int wcspih_final(
         wp++;
       }
 
-      /* Polynomial type. */
+      // Polynomial type.
+      char wpoly[12];
       dpfill(disp->dp+(idp++), "DQ", "WAT.POLY", i+1, 0, wctrl[0], 0.0);
       if (wctrl[0] == 1) {
-        /* Chebyshev polynomial. */
+        // Chebyshev polynomial.
         strcpy(wpoly, "CHBY");
       } else if (wctrl[0] == 2) {
-        /* Legendre polynomial. */
+        // Legendre polynomial.
         strcpy(wpoly, "LEGR");
       } else if (wctrl[0] == 3) {
-        /* Polynomial is the sum of monomials. */
+        // Polynomial is the sum of monomials.
         strcpy(wpoly, "MONO");
       } else {
-        /* Unknown code. */
+        // Unknown code.
         strcpy(wpoly, "UNKN");
       }
 
-      /* Read the scaling parameters. */
-      for (m = 0; m < 4; m++) {
+      // Read the scaling parameters.
+      char field[40];
+      for (int m = 0; m < 4; m++) {
         sscanf(wp, "%lf", &wval);
         sprintf(field, "WAT.%c%s", (m<2)?'X':'Y', (m%2)?"MAX":"MIN");
         dpfill(disp->dp+(idp++), "DQ", field, i+1, 1, 0, wval);
@@ -2915,9 +2985,9 @@ int wcspih_final(
         wp++;
       }
 
-      /* Read the coefficients. */
-      for (n = 0; n < wctrl[2]; n++) {
-        for (m = 0; m < wctrl[1]; m++) {
+      // Read the coefficients.
+      for (int n = 0; n < wctrl[2]; n++) {
+        for (int m = 0; m < wctrl[1]; m++) {
           if (wctrl[3] == 0) {
             if (m && n) continue;
           } else if (wctrl[3] == 2) {

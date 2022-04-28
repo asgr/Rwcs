@@ -1,7 +1,6 @@
 /*============================================================================
-
-  WCSLIB 7.1 - an implementation of the FITS WCS standard.
-  Copyright (C) 1995-2020, Mark Calabretta
+  WCSLIB 7.9 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2022, Mark Calabretta
 
   This file is part of WCSLIB.
 
@@ -18,18 +17,16 @@
   You should have received a copy of the GNU Lesser General Public License
   along with WCSLIB.  If not, see http://www.gnu.org/licenses.
 
-  Direct correspondence concerning WCSLIB to mark@calabretta.id.au
-
   Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
   http://www.atnf.csiro.au/people/Mark.Calabretta
-  $Id: wcsunits.c,v 7.1 2019/12/31 13:25:19 mcalabre Exp $
+  $Id: wcsunits.c,v 7.9 2022/03/25 15:14:48 mcalabre Exp $
 *===========================================================================*/
 
 #include <math.h>
 
 #include "wcsunits.h"
 
-/* Map status return value to message. */
+// Map status return value to message.
 const char *wcsunits_errmsg[] = {
   "Success",
   "Invalid numeric multiplier",
@@ -46,7 +43,7 @@ const char *wcsunits_errmsg[] = {
   "Potentially unsafe translation"};
 
 
-/* Unit types. */
+// Unit types.
 const char *wcsunits_types[] = {
   "plane angle",
   "solid angle",
@@ -84,7 +81,7 @@ const char *wcsunits_funcs[] = {
   "ln",
   "exp"};
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int wcsunits(
   const char have[],
@@ -97,7 +94,7 @@ int wcsunits(
   return wcsunitse(have, want, scale, offset, power, 0x0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int wcsunitse(
   const char have[],
@@ -110,19 +107,22 @@ int wcsunitse(
 {
   static const char *function = "wcsunitse";
 
-  int    func1, func2, i, status;
-  double scale1, scale2, units1[WCSUNITS_NTYPE], units2[WCSUNITS_NTYPE];
+  int status;
 
+  int    func1;
+  double scale1, units1[WCSUNITS_NTYPE];
   if ((status = wcsulexe(have, &func1, &scale1, units1, err))) {
     return status;
   }
 
+  int    func2;
+  double scale2, units2[WCSUNITS_NTYPE];
   if ((status = wcsulexe(want, &func2, &scale2, units2, err))) {
     return status;
   }
 
-  /* Check conformance. */
-  for (i = 0; i < WCSUNITS_NTYPE; i++) {
+  // Check conformance.
+  for (int i = 0; i < WCSUNITS_NTYPE; i++) {
     if (units1[i] != units2[i]) {
       return wcserr_set(WCSERR_SET(UNITSERR_BAD_UNIT_SPEC),
         "Mismatched units type '%s': have '%s', want '%s'",
@@ -136,7 +136,7 @@ int wcsunitse(
 
   switch (func1) {
   case 0:
-    /* No function. */
+    // No function.
     if (func2) {
       return wcserr_set(WCSERR_SET(UNITSERR_BAD_FUNCS),
         "Mismatched unit functions: have '%s' (%s), want '%s' (%s)",
@@ -147,14 +147,14 @@ int wcsunitse(
     break;
 
   case 1:
-    /* log(). */
+    // log().
     if (func2 == 1) {
-      /* log(). */
+      // log().
       *scale  = 1.0;
       *offset = log10(scale1 / scale2);
 
     } else if (func2 == 2) {
-      /* ln(). */
+      // ln().
       *scale  = log(10.0);
       *offset = log(scale1 / scale2);
 
@@ -167,14 +167,14 @@ int wcsunitse(
     break;
 
   case 2:
-    /* ln(). */
+    // ln().
     if (func2 == 1) {
-      /* log(). */
+      // log().
       *scale  = 1.0 / log(10.0);
       *offset = log(scale1 / scale2);
 
     } else if (func2 == 2) {
-      /* ln(). */
+      // ln().
       *scale  = 1.0;
       *offset = log(scale1 / scale2);
 
@@ -187,7 +187,7 @@ int wcsunitse(
     break;
 
   case 3:
-    /* exp(). */
+    // exp().
     if (func2 != 3) {
       return wcserr_set(WCSERR_SET(UNITSERR_BAD_FUNCS),
         "Mismatched unit functions: have '%s' (%s), want '%s' (%s)",
@@ -199,7 +199,7 @@ int wcsunitse(
     break;
 
   default:
-    /* Internal parser error. */
+    // Internal parser error.
     return wcserr_set(WCSERR_SET(UNITSERR_PARSER_ERROR),
       "Internal units parser error");
   }
@@ -207,7 +207,7 @@ int wcsunitse(
   return 0;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int wcsutrn(int ctrl, char unitstr[])
 
@@ -215,9 +215,13 @@ int wcsutrn(int ctrl, char unitstr[])
   return wcsutrne(ctrl, unitstr, 0x0);
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
-int wcsulex(const char unitstr[], int *func, double *scale, double units[])
+int wcsulex(
+  const char unitstr[],
+  int    *func,
+  double *scale,
+  double units[WCSUNITS_NTYPE])
 
 {
   return wcsulexe(unitstr, func, scale, units, 0x0);

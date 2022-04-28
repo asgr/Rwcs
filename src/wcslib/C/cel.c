@@ -1,7 +1,6 @@
 /*============================================================================
-
-  WCSLIB 7.1 - an implementation of the FITS WCS standard.
-  Copyright (C) 1995-2020, Mark Calabretta
+  WCSLIB 7.9 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2022, Mark Calabretta
 
   This file is part of WCSLIB.
 
@@ -18,11 +17,9 @@
   You should have received a copy of the GNU Lesser General Public License
   along with WCSLIB.  If not, see http://www.gnu.org/licenses.
 
-  Direct correspondence concerning WCSLIB to mark@calabretta.id.au
-
   Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
   http://www.atnf.csiro.au/people/Mark.Calabretta
-  $Id: cel.c,v 7.1 2019/12/31 13:25:19 mcalabre Exp $
+  $Id: cel.c,v 7.9 2022/03/25 15:14:48 mcalabre Exp $
 *===========================================================================*/
 
 #include <math.h>
@@ -38,7 +35,7 @@
 
 const int CELSET = 137;
 
-/* Map status return value to message. */
+// Map status return value to message.
 const char *cel_errmsg[] = {
   "Success",
   "Null celprm pointer passed",
@@ -48,19 +45,19 @@ const char *cel_errmsg[] = {
   "One or more of the (x,y) coordinates were invalid",
   "One or more of the (lng,lat) coordinates were invalid"};
 
-/* Map error returns for lower-level routines. */
+// Map error returns for lower-level routines.
 const int cel_prjerr[] = {
-  CELERR_SUCCESS,		/*  0: PRJERR_SUCCESS         */
-  CELERR_NULL_POINTER,		/*  1: PRJERR_NULL_POINTER    */
-  CELERR_BAD_PARAM,		/*  2: PRJERR_BAD_PARAM       */
-  CELERR_BAD_PIX,		/*  3: PRJERR_BAD_PIX         */
-  CELERR_BAD_WORLD		/*  4: PRJERR_BAD_WORLD       */
+  CELERR_SUCCESS,		//  0: PRJERR_SUCCESS
+  CELERR_NULL_POINTER,		//  1: PRJERR_NULL_POINTER
+  CELERR_BAD_PARAM,		//  2: PRJERR_BAD_PARAM
+  CELERR_BAD_PIX,		//  3: PRJERR_BAD_PIX
+  CELERR_BAD_WORLD		//  4: PRJERR_BAD_WORLD
 };
 
-/* Convenience macro for invoking wcserr_set(). */
+// Convenience macro for invoking wcserr_set().
 #define CEL_ERRMSG(status) WCSERR_SET(status), cel_errmsg[status]
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int celini(struct celprm *cel)
 
@@ -81,13 +78,14 @@ int celini(struct celprm *cel)
 
   for (k = 0; k < 5; cel->euler[k++] = 0.0);
   cel->latpreq = -1;
+  cel->isolat  =  0;
 
   cel->err = 0x0;
 
   return cel_prjerr[prjini(&(cel->prj))];
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int celfree(struct celprm *cel)
 
@@ -99,7 +97,36 @@ int celfree(struct celprm *cel)
   return cel_prjerr[prjfree(&(cel->prj))];
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
+
+int celsize(const struct celprm *cel, int sizes[2])
+
+{
+  if (cel == 0x0) {
+    sizes[0] = sizes[1] = 0;
+    return CELERR_SUCCESS;
+  }
+
+  // Base size, in bytes.
+  sizes[0] = sizeof(struct celprm);
+
+  // Total size of allocated memory, in bytes.
+  sizes[1] = 0;
+
+  int exsizes[2];
+
+  // celprm::prj.
+  prjsize(&(cel->prj), exsizes);
+  sizes[1] += exsizes[1];
+
+  // celprm::err.
+  wcserr_size(cel->err, exsizes);
+  sizes[1] += exsizes[0] + exsizes[1];
+
+  return CELERR_SUCCESS;
+}
+
+//----------------------------------------------------------------------------
 
 int celprt(const struct celprm *cel)
 
@@ -156,7 +183,7 @@ int celprt(const struct celprm *cel)
   return 0;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int celperr(const struct celprm *cel, const char *prefix)
 
@@ -171,7 +198,7 @@ int celperr(const struct celprm *cel, const char *prefix)
 }
 
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int celset(struct celprm *cel)
 
@@ -189,13 +216,13 @@ int celset(struct celprm *cel)
   if (cel == 0x0) return CELERR_NULL_POINTER;
   err = &(cel->err);
 
-  /* Initialize the projection driver routines. */
+  // Initialize the projection driver routines.
   celprj = &(cel->prj);
   if (cel->offset) {
     celprj->phi0   = cel->phi0;
     celprj->theta0 = cel->theta0;
   } else {
-    /* Ensure that these are undefined - no fiducial offset. */
+    // Ensure that these are undefined - no fiducial offset.
     celprj->phi0   = UNDEFINED;
     celprj->theta0 = UNDEFINED;
   }
@@ -204,7 +231,7 @@ int celset(struct celprm *cel)
     return wcserr_set(CEL_ERRMSG(cel_prjerr[status]));
   }
 
-  /* Defaults set by the projection routines. */
+  // Defaults set by the projection routines.
   if (undefined(cel->phi0)) {
     cel->phi0 = celprj->phi0;
   }
@@ -231,7 +258,7 @@ int celset(struct celprm *cel)
   phip = cel->ref[2];
   latp = cel->ref[3];
 
-  /* Set default for native longitude of the celestial pole? */
+  // Set default for native longitude of the celestial pole?
   if (undefined(phip) || phip == 999.0) {
     phip = (lat0 < cel->theta0) ? 180.0 : 0.0;
     phip += cel->phi0;
@@ -246,15 +273,15 @@ int celset(struct celprm *cel)
   }
 
 
-  /* Compute celestial coordinates of the native pole. */
+  // Compute celestial coordinates of the native pole.
   cel->latpreq = 0;
   if (cel->theta0 == 90.0) {
-    /* Fiducial point at the native pole. */
+    // Fiducial point at the native pole.
     lngp = lng0;
     latp = lat0;
 
   } else {
-    /* Fiducial point away from the native pole. */
+    // Fiducial point away from the native pole.
     sincosd(lat0, &slat0, &clat0);
     sincosd(cel->theta0, &sthe0, &cthe0);
 
@@ -278,7 +305,7 @@ int celset(struct celprm *cel)
             "lat0 == 0 is required for |phip - phi0| = 90 and theta0 == 0");
         }
 
-        /* latp determined solely by LATPOLEa in this case. */
+        // latp determined solely by LATPOLEa in this case.
         cel->latpreq = 2;
         if (latp > 90.0) {
           latp = 90.0;
@@ -286,7 +313,7 @@ int celset(struct celprm *cel)
           latp = -90.0;
         }
 
-        /* Avert a spurious compiler warning. */
+        // Avert a spurious compiler warning.
 	u = v = 0.0;
 
       } else {
@@ -327,7 +354,7 @@ int celset(struct celprm *cel)
 
       if (fabs(latp1) < 90.0+tol &&
           fabs(latp2) < 90.0+tol) {
-        /* There are two valid solutions for latp. */
+        // There are two valid solutions for latp.
         cel->latpreq = 1;
       }
 
@@ -345,7 +372,7 @@ int celset(struct celprm *cel)
         }
       }
 
-      /* Account for rounding error. */
+      // Account for rounding error.
       if (fabs(latp) < 90.0+tol) {
         if (latp > 90.0) {
           latp =  90.0;
@@ -358,15 +385,15 @@ int celset(struct celprm *cel)
     z = cosd(latp)*clat0;
     if (fabs(z) < tol) {
       if (fabs(clat0) < tol) {
-        /* Celestial pole at the fiducial point. */
+        // Celestial pole at the fiducial point.
         lngp = lng0;
 
       } else if (latp > 0.0) {
-        /* Celestial north pole at the native pole.*/
+        // Celestial north pole at the native pole.
         lngp = lng0 + phip - cel->phi0 - 180.0;
 
       } else {
-        /* Celestial south pole at the native pole. */
+        // Celestial south pole at the native pole.
         lngp = lng0 - phip + cel->phi0;
       }
 
@@ -374,15 +401,15 @@ int celset(struct celprm *cel)
       x = (sthe0 - sind(latp)*slat0)/z;
       y =  sphip*cthe0/clat0;
       if (x == 0.0 && y == 0.0) {
-        /* Sanity check (shouldn't be possible). */
+        // Sanity check (shouldn't be possible).
         return wcserr_set(WCSERR_SET(CELERR_BAD_COORD_TRANS),
           "Invalid coordinate transformation parameters, internal error");
       }
       lngp = lng0 - atan2d(y,x);
     }
 
-    /* Make celestial longitude of the native pole the same sign as at the
-       fiducial point. */
+    // Make celestial longitude of the native pole the same sign as at the
+    // fiducial point.
     if (lng0 >= 0.0) {
       if (lngp < 0.0) {
         lngp += 360.0;
@@ -398,10 +425,10 @@ int celset(struct celprm *cel)
     }
   }
 
-  /* Reset LATPOLEa. */
+  // Reset LATPOLEa.
   cel->ref[3] = latp;
 
-  /* Set the Euler angles. */
+  // Set the Euler angles.
   cel->euler[0] = lngp;
   cel->euler[1] = 90.0 - latp;
   cel->euler[2] = phip;
@@ -409,7 +436,7 @@ int celset(struct celprm *cel)
   cel->isolat = (cel->euler[4] == 0.0);
   cel->flag = CELSET;
 
-  /* Check for ill-conditioned parameters. */
+  // Check for ill-conditioned parameters.
   if (fabs(latp) > 90.0+tol) {
     return wcserr_set(WCSERR_SET(CELERR_ILL_COORD_TRANS),
       "Ill-conditioned coordinate transformation parameters\nNo valid "
@@ -419,7 +446,7 @@ int celset(struct celprm *cel)
   return 0;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int celx2s(
   struct celprm *cel,
@@ -442,7 +469,7 @@ int celx2s(
   struct prjprm *celprj;
   struct wcserr **err;
 
-  /* Initialize. */
+  // Initialize.
   if (cel == 0x0) return CELERR_NULL_POINTER;
   err = &(cel->err);
 
@@ -450,7 +477,7 @@ int celx2s(
     if ((status = celset(cel))) return status;
   }
 
-  /* Apply spherical deprojection. */
+  // Apply spherical deprojection.
   celprj = &(cel->prj);
   if ((istat = celprj->prjx2s(celprj, nx, ny, sxy, 1, x, y, phi, theta,
                                stat))) {
@@ -464,13 +491,13 @@ int celx2s(
 
   nphi = (ny > 0) ? (nx*ny) : nx;
 
-  /* Compute celestial coordinates. */
+  // Compute celestial coordinates.
   sphx2s(cel->euler, nphi, 0, 1, sll, phi, theta, lng, lat);
 
   return status;
 }
 
-/*--------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int cels2x(
   struct celprm *cel,
@@ -493,7 +520,7 @@ int cels2x(
   struct prjprm *celprj;
   struct wcserr **err;
 
-  /* Initialize. */
+  // Initialize.
   if (cel == 0x0) return CELERR_NULL_POINTER;
   err = &(cel->err);
 
@@ -501,11 +528,11 @@ int cels2x(
     if ((status = celset(cel))) return status;
   }
 
-  /* Compute native coordinates. */
+  // Compute native coordinates.
   sphs2x(cel->euler, nlng, nlat, sll, 1, lng, lat, phi, theta);
 
   if (cel->isolat) {
-    /* Constant celestial latitude -> constant native latitude. */
+    // Constant celestial latitude -> constant native latitude.
     nphi   = nlng;
     ntheta = nlat;
   } else {
@@ -513,7 +540,7 @@ int cels2x(
     ntheta = 0;
   }
 
-  /* Apply the spherical projection. */
+  // Apply the spherical projection.
   celprj = &(cel->prj);
   if ((istat = celprj->prjs2x(celprj, nphi, ntheta, 1, sxy, phi, theta, x, y,
                                stat))) {

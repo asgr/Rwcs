@@ -1,3 +1,349 @@
+WCSLIB version 7.9 (2022/03/26)
+-------------------------------
+
+* C library
+
+  - In wcsset(), bug fix for identifying time coordinate axes.
+    Reported by Mihai Cara with patch.
+
+
+WCSLIB version 7.8 (2022/03/25)
+-------------------------------
+
+* C library
+
+  - In wcssub(), bug fix for tabular coordinates that change axis
+    number, thus requiring tabprm::map to be updated.  Reported by
+    Mihai Cara with patch.
+
+    Also in wcssub():
+      - check that all axes of a multi-dimensional table are extracted
+        together,
+      - fixed potential memory leaks for tabular coordinate axes when
+        an attempt to subimage non-separable axes fails,
+      - the error messages for non-separable coordinate systems are
+        generally more informative,
+      - subimage extraction by coordinate type now recognises time
+        coordinate axis types via WCSSUB_TIME.
+
+  - wcsset() now identifies time coordinate axes in wcsprm::types.
+
+  - Extended test program twcssub to test the above modifications.
+
+* Installation
+
+  - Bug fix in the utils makefile for creating $(MANDIR)/man1.
+    Reported by Aleksander Kurek.
+
+  - Bug fix in the Fortran makefile for compiling and using 'tofits'.
+    Reported by Stefan Brüns.
+
+* User manual
+
+  - Documentation generation moved to doxygen 1.9.3 (was 1.9.1).
+
+
+WCSLIB version 7.7 (2021/07/12)
+-------------------------------
+
+* C library
+
+  - In disfree() and disset(), removed potential for double invokation
+    of free() on allocated memory.  Reported by Cyril Richard.
+
+  - In wcsutil_fptr2str(), fixed a bug reported by Ralf Palsa (with fix)
+    that caused it to be overly enthusiastic in stripping leading zeroes
+    off addresses of function pointers.
+
+  - In wcspcx(), replaced variable length arrays with allocated memory
+    (portability issue).  Reported by Mihai Cara with patch.
+
+  - Fixed buglets in wcsbth() and linsize() uncovered by gcc 11.1.0.
+
+  - Quelled inconsequential compiler warnings from gcc 11.1.0 concerning
+    wcsmix() (function prototype in wcs.h), wcstrim(), wcseulexe(),
+    wcsulex(), and wcsutrne().
+
+  - Defined _POSIX_C_SOURCE appropriately in tprj2.c and tspc.c to get
+    the function prototype etc. for nanosleep() from time.h.
+
+* Fortran wrappers
+
+  - Quelled numerous inconsequential compiler warnings from gfortran
+    11.1.0.
+
+  - Fixed minor bugs uncovered by gfortran 11.1.0 in test programs tdis2
+    and ttab3.
+
+* Utilities
+
+  - Moved 'tofits' from ./C/test/ into the utilities directory as it's
+    generally useful, and added usage (converted to man page).
+
+    Also made it a bit smarter in dealing with ISO/IEC 8859 and UTF-8
+    encoded byte streams, in particular translating non-breaking spaces
+    into ordinary spaces.
+
+* Installation
+
+  - Two patches for configure.ac provided by Mosè Giordano:
+    1. makes it possible to build the Windows library using the MinGW
+       cross-compiler,
+    2. makes the soname of the MacOSX library consistent with other
+       Unix systems.
+
+
+WCSLIB version 7.6 (2021/04/13)
+-------------------------------
+
+* C library
+
+  - Bug fix in tabs2x() triggered for 1-dimensional coordinate lookup
+    tables on axes > 1.  Reported by Mihai Cara.
+
+  - In datfix(), don't return status 0 if no change was made (fix for
+    change made at release 7.4).  Reported by Derek Homeier.
+
+  - New function wcspcx() in the wcsfix suite regularizes the linear
+    transformation component of a coordinate description to make it more
+    human-readable.  It decomposes CDi_ja into PCi_ja and CDELTia in
+    such a way that CDELTia forms meaningful scaling parameters, often
+    leaving an orthogonal or near-orthogonal matrix.  Optionally, it can
+    then permute rows of this matrix to unscramble axis permutations.
+
+    A test header may be generated from wcspcx.keyrec for input to
+    wcsware (not exercised as part of the standard test suite).
+
+  - New function wcstrim() frees memory allocated by wcsinit() for
+    arrays in a wcsprm struct that remain unused after the struct has
+    been set up.
+
+  - New functions wcssize(), auxsize(), tabsize(), linsize(), dissize(),
+    celsize(), prjsize(), spcsize(), and wcserr_size() compute the total
+    size of the relevant structs, including allocated memory.
+
+  - In the C test suite, inserted a brief pause in tprj2 and tspc, which
+    otherwise have now become a blur.
+
+* Fortran wrappers
+
+  - Added wrappers for wcspcx(), wcstrim(), wcssize(), auxsize(),
+    tabsize(), linsize(), dissize(), celsize(), prjsize(), spcsize(),
+    and wcserr_size().
+
+* Utilities
+
+  - Added -c, -cp, -C, and -Cp options to wcsware to apply wcspcx()
+    in a variety of ways, -m to apply wcstrim(), and -z to report the
+    total size of the wcsprm struct with a breakdown of the sizes of
+    its constituent structs.
+
+  - Fixed compiler warnings for sundazel (portability issue).
+
+* Installation
+
+  - Upped the required version of Flex to 2.6.0 (was 2.5.9).  Problems
+    with Flex 2.5.39 reported by Derek Homeier.
+
+    Also added '--disable-flex' as a new configure option to force the
+    use of the pre-generated Flex sources.
+
+
+WCSLIB version 7.5 (2021/03/20)
+-------------------------------
+
+The C code in WCSLIB is moving piecemeal to the C99 standard.  In fact,
+various indispensible C99 constructs have been used in WCSLIB for many
+years: the long long int data type (in fitshdr() only); stdint.h,
+inttypes.h, and the use of PRI formatting control (in wcsprintf(), which
+is widely used by the library); and the C99-extended library function
+vsnprintf() (used by wcserr for a decade).  Flex-generated C code also
+uses C99 extensions, though with workarounds if they are not available.
+
+Except in the header prologues, which are formatted in a special way for
+generating the user manual, comments were changed en masse to C99 style
+in release 7.3.1, and variable declarations in code that I have occasion
+to modify will transition to the more general placement allowed by C99.
+However, I have no plans to use any of the more esoteric features of
+C99.
+
+* C library
+
+  - New function, wcsccs(), changes the celestial coordinate system of a
+    wcsprm struct, for example, from equatorial to galactic coordinates.
+    The parameters that define the spherical coordinate transformation
+    must be provided.  This allows WCSLIB to provide this functionality
+    without needing to know anything about specific celestial coordinate
+    systems, and has the advantage of making the routine completely
+    general.  Requested by Mohammad Akhlaghi.
+
+    Modified test program twcsfix also to test wcsccs().
+
+  - Fixed a problem common to all of the Flex code (fitshdr, wcsbth,
+    wcspih, wcsulex, and wcsutrn) that made it thread-unsafe.  Reported
+    by Cyril Richard.
+
+    Added a new test program, tpthreads, to test thread safety.  It is
+    only used for code development, and not exercised as part of the
+    standard test suite.
+
+  - In fitshdr(), fixed a problem that potentially could arise on
+    systems where sizeof(long long int) is greater than 8 (64 bits).
+
+* Fortran wrappers
+
+  - Match changes to the C library: added a wrapper for wcsccs(), and
+    modified twcsfix.f.
+
+  - Because null addresses cannot be passed to functions in Fortran,
+    wcssub_() now interprets *nsub == -1 && *axes == -1 as a signal to
+    do a deep copy of one wcsprm struct to another.
+
+* Utilities
+
+  - New utility, sundazel, computes the local time of the Sun's passage
+    through the specified apparent longitude or latitude in a user-
+    defined coordinate system.  It can also perform several other Solar
+    related calculations.  (It is unrelated to FITS WCS, and does not
+    use WCSLIB.)
+
+* Installation
+
+  - Added an 'uninstall' rule to the makefiles.  Suggested by
+    Cyril Richard.
+
+
+WCSLIB version 7.4 (2021/01/31)
+-------------------------------
+
+* C library
+
+  - In wcshdo(), fixed a bug introduced in release 5.9 that potentially
+    caused loss of numerical precision in the sprintf() formatting of
+    floating point keyvalues.  This was triggered when a large range of
+    CRPIXja, PCi_ja, or CDELTia values (as three separate groups) were
+    formatted using an 'f' format descriptor, the range not being so
+    large that it would have forced wcshdo() to revert to 'E' format.
+    Reported by Mohammad Akhlaghi.
+
+    Also in wcshdo(), fixed a bug introduced in release 7.1 that caused
+    the coefficients of the TPD distortion function not to be written to
+    the header.  TPD and Polynomial distortion function headers will now
+    always include the DPja.DOCORR keyword.  Reported by Derek Homeier
+    with patch.
+
+  - In wcsset(), fixed a segv generated in attempting to report a non-
+    standard units string with wcserr message reporting disabled.
+    Reported by Mohammad Akhlaghi.
+
+    In wcsutrne(), allow 'Angstroms' and 'angstroms' as additional
+    synonyms for 'Angstrom'.
+
+  - In datfix(), ensure that 0 is returned if an informational message
+    is set in wcsprm::err.  Consequent on feedback independently from
+    Mihai Cara and Bruce Merry.
+
+    Clarified that informational messages may be set in wcsprm::err
+    for returns of 0 from datfix(), obsfix(), unitfix(), and spcfix().
+
+* User manual
+
+  - Added cautions about translating CDi_ja to PCi_ja plus CDELTia for
+    those historical distortion functions (TPV, TNX, ZPX) that expect to
+    operate on intermediate world coordinates, rather than intermediate
+    pixel coordinates.  Consequent on feedback from Mohammad Akhlaghi.
+
+  - Documentation generation moved to doxygen 1.9.1 (was 1.8.19).
+
+
+WCSLIB version 7.3.1 (2020/08/17)
+---------------------------------
+
+There are no functional changes in this release.
+
+* C library
+* Fortran wrappers
+* PGSBOX
+* Utilities
+
+  - Changed all C code, including within the flex sources, Fortran and
+    PGSBOX wrappers, and test suite, to use C99 style commenting (i.e.
+    using //), excluding the header prologues used to generate the user
+    manual.
+
+* User manual
+
+  - Documentation generation moved to doxygen 1.8.19 (was 1.8.18).
+
+
+WCSLIB version 7.3 (2020/06/03)
+-------------------------------
+
+* C library
+
+  - wcshdo() was writing MJD-OBS twice to the header, and MJD-BEG not
+    at all.
+
+  - In wcshdo(), if MJDREF assumes its default value, just write
+    MJDREF = 0 (not MJDREFI & MJDREFF), and omit writing DATEREF,
+    which, with a value of '1858-11-17', looks strange and is
+    potentially confusing.  Reported by Thomas Robitaille.
+
+    If the fractional part of MJDREF is zero, then just write the
+    integer part as MJDREF (i.e. not as MJDREFI & MJDREFF).
+
+  - Bug fix in wcsfix() - it was writing error messages that referred
+    to DATE-REF and MJD-REF rather then DATEREF and MJDREF.  Reported
+    by Mihai Cara.
+
+  - Under control of a new flag, WCSHDR_DATEREF, added the option to
+    wcspih() and wcsbth() to accept DATE-REF, MJD-REF, MJD-REFI,
+    MJD-REFF, JDREF, JD-REFI, and JD-REFF as synonyms for the standard
+    keywords, DATEREF, MJDREF, MJDREFI, MJDREFF, JDREF, JDREFI, and
+    JDREFF.  The latter buck the pattern set by the other date keywords
+    ({DATE,MJD}-{OBS,BEG,AVG,END}), thereby increasing the potential
+    for confusion and error.
+
+* Fortran wrappers
+
+  - As compilers are becoming much stricter (gfortran 10), modified all
+    Fortran test programs to use the type-specific equivalents of the
+    various *PUT and *GET routines.  Reported by Ole Streicher.
+
+  - For the fitshdr wrappers, added type-specific equivalents of
+    KEYGET: KEYGTI, KEYGTD, and KEYGTC.
+
+* PGSBOX
+
+  - Modified pgtest to use the type-specific equivalents of WCSPUT.
+
+* User manual
+
+  - In the section "WCSLIB Fortran wrappers", promoted use of the type-
+    specific equivalents of the various *PUT and *GET routines.
+
+  - In the section "FITS-WCS and related software", added ASCL and ADS
+    codes, where they exist, for all software packages mentioned.
+
+  - Documentation generation moved to doxygen 1.8.18 (was 1.8.17).
+
+
+WCSLIB version 7.2 (2020/03/09)
+-------------------------------
+
+* C library
+
+  - In wcssub(), fixed a bug relating to handling coordinate lookup
+    tables.  Reported by Mihai Cara with fix.
+
+    Also increased the number of coordinate axes handled from 10 to 32.
+
+* Installation
+
+  - New configure option, --disable-shared, defeats generation of the
+    sharable library.
+
+
 WCSLIB version 7.1 (2020/01/01)
 -------------------------------
 
@@ -18,7 +364,7 @@ the major version number from 6 to 7 (i.e. the ABI changed).
 
     In tab.c, declare static three helper functions, tabedge(),
     tabrow(), and tabvox(), used by tabs2x().  Increased the number of
-    coordinate axes handled by tabvox() from 16 to 32.  
+    coordinate axes handled by tabvox() from 16 to 32.
 
   - Extended datfix() to handle MJDREF/DATEREF, overlooked in the
     changes in release 6.1.  Also fixed the handling of MJD < 0.
@@ -2962,4 +3308,4 @@ WCSLIB version 1.0 (1995/01/31)
   Initial release.
 
 ------------------------------------------------------------------------
-$Id: CHANGES,v 7.1 2019/12/31 13:25:19 mcalabre Exp $
+$Id: CHANGES,v 7.9 2022/03/25 15:14:49 mcalabre Exp $

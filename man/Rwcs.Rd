@@ -12,10 +12,12 @@ Offers basic high level access to the C \code{wcslib} library for projecting and
 }
 \usage{
 Rwcs_s2p(RA, Dec, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
-  coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, WCSref = NULL, ...)
+  coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, WCSref = NULL, ctrl = 2L,
+  ...)
   
 Rwcs_p2s(x, y, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
-  coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, WCSref = NULL, ...)
+  coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, WCSref = NULL, ctrl = 2L,
+  ...)
   
 Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, type = 'old',
   dim = NULL)
@@ -75,6 +77,9 @@ Logical; manual over-ride for inheriting the current WCS. This is usually only a
 }
   \item{WCSref}{
 Scalar; either NULL for base WCS (default), or a letter [a-z] for the relevant projection desired. Only used if using a raw \option{header}, and obviously this has to exist within the provided raw \option{header}.  
+}
+  \item{ctrl}{
+Integer scalar; if using raw headers, this will specify the level of verbosity printed by wcslib when passing it. 0 = none, 1 = summary, 2 = fails, 3 = fails + non-WCS, 4 = all.
 }
   \item{\dots}{
 Optional keyvalues to overwrite the \option{keyvalues} entries with. If not present, the defaults are CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0, CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS", EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV2_1 = NA, PV2_2 = NA.

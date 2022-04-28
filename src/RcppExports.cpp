@@ -75,32 +75,34 @@ BEGIN_RCPP
 END_RCPP
 }
 // Cwcs_head_p2s
-SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String header, int nkeyrec, int WCSref);
-RcppExport SEXP _Rwcs_Cwcs_head_p2s(SEXP xSEXP, SEXP ySEXP, SEXP headerSEXP, SEXP nkeyrecSEXP, SEXP WCSrefSEXP) {
+SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String header, int nkey, int WCSref, int ctrl);
+RcppExport SEXP _Rwcs_Cwcs_head_p2s(SEXP xSEXP, SEXP ySEXP, SEXP headerSEXP, SEXP nkeySEXP, SEXP WCSrefSEXP, SEXP ctrlSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type y(ySEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type header(headerSEXP);
-    Rcpp::traits::input_parameter< int >::type nkeyrec(nkeyrecSEXP);
+    Rcpp::traits::input_parameter< int >::type nkey(nkeySEXP);
     Rcpp::traits::input_parameter< int >::type WCSref(WCSrefSEXP);
-    rcpp_result_gen = Rcpp::wrap(Cwcs_head_p2s(x, y, header, nkeyrec, WCSref));
+    Rcpp::traits::input_parameter< int >::type ctrl(ctrlSEXP);
+    rcpp_result_gen = Rcpp::wrap(Cwcs_head_p2s(x, y, header, nkey, WCSref, ctrl));
     return rcpp_result_gen;
 END_RCPP
 }
 // Cwcs_head_s2p
-SEXP Cwcs_head_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec, Rcpp::String header, int nkeyrec, int WCSref);
-RcppExport SEXP _Rwcs_Cwcs_head_s2p(SEXP RASEXP, SEXP DecSEXP, SEXP headerSEXP, SEXP nkeyrecSEXP, SEXP WCSrefSEXP) {
+SEXP Cwcs_head_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec, Rcpp::String header, int nkey, int WCSref, int ctrl);
+RcppExport SEXP _Rwcs_Cwcs_head_s2p(SEXP RASEXP, SEXP DecSEXP, SEXP headerSEXP, SEXP nkeySEXP, SEXP WCSrefSEXP, SEXP ctrlSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type RA(RASEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Dec(DecSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type header(headerSEXP);
-    Rcpp::traits::input_parameter< int >::type nkeyrec(nkeyrecSEXP);
+    Rcpp::traits::input_parameter< int >::type nkey(nkeySEXP);
     Rcpp::traits::input_parameter< int >::type WCSref(WCSrefSEXP);
-    rcpp_result_gen = Rcpp::wrap(Cwcs_head_s2p(RA, Dec, header, nkeyrec, WCSref));
+    Rcpp::traits::input_parameter< int >::type ctrl(ctrlSEXP);
+    rcpp_result_gen = Rcpp::wrap(Cwcs_head_s2p(RA, Dec, header, nkey, WCSref, ctrl));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -108,8 +110,8 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_Rwcs_Cwcs_s2p", (DL_FUNC) &_Rwcs_Cwcs_s2p, 22},
     {"_Rwcs_Cwcs_p2s", (DL_FUNC) &_Rwcs_Cwcs_p2s, 22},
-    {"_Rwcs_Cwcs_head_p2s", (DL_FUNC) &_Rwcs_Cwcs_head_p2s, 5},
-    {"_Rwcs_Cwcs_head_s2p", (DL_FUNC) &_Rwcs_Cwcs_head_s2p, 5},
+    {"_Rwcs_Cwcs_head_p2s", (DL_FUNC) &_Rwcs_Cwcs_head_p2s, 6},
+    {"_Rwcs_Cwcs_head_s2p", (DL_FUNC) &_Rwcs_Cwcs_head_s2p, 6},
     {NULL, NULL, 0}
 };
 

@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-# GNU makefile for building WCSLIB 7.1
+# GNU makefile for building WCSLIB 7.9
 #
 # Summary of the main targets
 # ---------------------------
@@ -8,6 +8,8 @@
 #   tests:     Do 'make tests' in each subdirectory (compile test programs but
 #              don't run them).
 #   install:   Do 'make install' in each subdirectory.
+#   uninstall: Deletes installed files (this release only), including the
+#              sharable library.
 #   clean:     Recursively delete intermediate files produced as part of the
 #              build, e.g. object modules, core dumps, etc.
 #   cleaner:   Recursively clean, and also delete test executables, test
@@ -32,7 +34,7 @@
 #
 # Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
 # http://www.atnf.csiro.au/people/Mark.Calabretta
-# $Id: GNUmakefile,v 7.1 2019/12/31 13:25:19 mcalabre Exp $
+# $Id: GNUmakefile,v 7.9 2022/03/25 15:14:49 mcalabre Exp $
 #-----------------------------------------------------------------------------
 # Get configure settings.
 SUBDIR := .
@@ -43,7 +45,7 @@ ifeq "$(CHECK)" "nopgplot"
 endif
 
 .PHONY : build check chmod clean cleaner cleanest distclean install \
-         realclean show tests writable
+         realclean show tests uninstall writable
 
 build :
 	-@ for DIR in $(SUBDIRS) ; do \
@@ -81,6 +83,10 @@ install :
 	 @ for DIR in $(INSTDIR) ; do \
 	     $(MAKE) -k -C $$DIR $@ ; \
 	   done
+	   if [ ! -d "$(LIBDIR)/pkgconfig" ] ; then \
+	     $(INSTALL) -d -m 775 $(LIBDIR)/pkgconfig ; \
+	   fi
+	   $(INSTALL) -m 444 wcslib.pc $(LIBDIR)/pkgconfig/wcslib.pc
 	   $(INSTALL) -m 444 wcsconfig.h wcsconfig_f77.h $(INCDIR)
 	-  if [ ! -d "$(DOCDIR)" ] ; then \
 	     $(INSTALL) -d -m 775 $(DOCDIR) ; \
@@ -98,18 +104,25 @@ install :
 	     $(INSTALL) -d -m 775 $(HTMLDIR)/html ; \
 	   fi
 	   $(INSTALL) -m 444 html/* $(HTMLDIR)/html
-	   if [ ! -d "$(LIBDIR)/pkgconfig" ] ; then \
-	     $(INSTALL) -d -m 775 $(LIBDIR)/pkgconfig ; \
-	   fi
-	   $(INSTALL) -m 444 wcslib.pc $(LIBDIR)/pkgconfig/wcslib.pc
+
+uninstall :
+	 @ for DIR in $(INSTDIR) ; do \
+	     $(MAKE) -k -C $$DIR $@ ; \
+	   done
+	-  cd $(LIBDIR) && $(RM) pkgconfig/wcslib.pc
+	-  cd $(INCDIR) && $(RM) wcsconfig*.h
+	-  $(RM) $(DOCLINK)
+	-  $(RM) $(DOCDIR)
+	-  $(RM) $(PDFDIR)
+	-  $(RM) $(HTMLDIR)
 
 clean cleaner :
-	   for DIR in $(SUBDIRS) ; do \
+	   for DIR in $(SUBDIRS) doxygen ; do \
 	     $(MAKE) -C $$DIR $@ ; \
 	   done
 
 cleanest distclean realclean :
-	   for DIR in $(SUBDIRS) ; do \
+	   for DIR in $(SUBDIRS) doxygen ; do \
 	     $(MAKE) -C $$DIR $@ ; \
 	   done
 	-  $(RM) *.log
@@ -162,12 +175,13 @@ config.status : configure
 .PHONY : dist
 
 dist :
-	   $(MAKE) -C cleanest build
+	   $(MAKE) -C doxygen cleanest build
 	   $(MAKE) -C utils man
 	   $(MAKE) distclean
 	-@ echo $(WCSLIBPKG)/C/RCS        >  wcslib.X
 	-@ echo $(WCSLIBPKG)/C/flexed/RCS >> wcslib.X
 	-@ echo $(WCSLIBPKG)/C/test/RCS   >> wcslib.X
+	-@ echo $(WCSLIBPKG)/doxygen/RCS  >> wcslib.X
 	-@ echo $(WCSLIBPKG)/Fortran/RCS  >> wcslib.X
 	-@ echo $(WCSLIBPKG)/Fortran/test/RCS >> wcslib.X
 	-@ echo $(WCSLIBPKG)/makedefs     >> wcslib.X
