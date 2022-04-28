@@ -198,7 +198,7 @@ struct wcsprm* _read_from_header(int *nwcs, struct wcsprm** wcs, Rcpp::String he
   
   if (status) {
     Rcerr << "Failed WCS header read :(\n";
-    fprintf(stderr, "ERROR %d from wcspih(): %s.\n", status, wcs_errmsg[status]);
+    Rcerr << "ERROR " << status << " from wcspih(): " << wcs_errmsg[status] << '\n';
     return nullptr;
   }
   
