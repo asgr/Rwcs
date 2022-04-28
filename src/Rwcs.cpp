@@ -28,7 +28,7 @@ static const int naxis = 2;
 static void enable_wcsperr()
 {
   wcserr_enable(1);
-  wcsprintf_set(stderr);
+  wcsprintf_set(nullptr);
 }
 
 static SEXP _wcss2p(struct wcsprm *wcs, NumericVector RA, NumericVector Dec)
@@ -48,12 +48,13 @@ static SEXP _wcss2p(struct wcsprm *wcs, NumericVector RA, NumericVector Dec)
   auto status = wcss2p(wcs, ncoord, naxis,
                        &(world[0]), &(phi[0]), &(theta[0]), &(img[0]),
                        &(pixel_matrix[0]), &(stat[0]));
-                       if (status) {
-                         wcsperr(wcs, "");
-                         Rcerr << "Failed s2p conversion :(\n";
-                         return stat;
-                       }
-                       return transpose(pixel_matrix);
+
+  if (status) {
+    wcsperr(wcs, "");
+    Rcerr << "Failed s2p conversion :(:\n" << wcsprintf_buf();
+    return stat;
+  }
+  return transpose(pixel_matrix);
 }
 
 static SEXP _wcsp2s(struct wcsprm *wcs, NumericVector x, NumericVector y)
@@ -74,12 +75,13 @@ static SEXP _wcsp2s(struct wcsprm *wcs, NumericVector x, NumericVector y)
   auto status = wcsp2s(wcs, ncoord, naxis,
                        &(pixel[0]), &(img[0]), &(phi[0]), &(theta[0]),
                        &(world_matrix[0]), &(stat[0]));
-                       if (status) {
-                         wcsperr(wcs, "");
-                         Rcerr << "Failed p2s conversion :(\n";
-                         return stat;
-                       }
-                       return transpose(world_matrix);
+
+  if (status) {
+    wcsperr(wcs, "");
+    Rcerr << "Failed p2s conversion :(:\n" << wcsprintf_buf();
+    return stat;
+  }
+  return transpose(world_matrix);
 }
 
 // [[Rcpp::export]]
