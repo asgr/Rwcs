@@ -307,7 +307,7 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
 
 // [[Rcpp::export]]
 SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String header, 
-                  int nkeyrec, int WCSref=0){
+                  int nkey, int WCSref=0, int ctrl=2){
   int i;
   const int ncoord = x.length();
   const int naxis = 2;
@@ -317,7 +317,7 @@ SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String he
   struct wcsprm* wcs;
   
   //pass header into wcs
-  int status = wcspih((char *)header.get_cstring(), nkeyrec, WCSHDR_all, 2, &nreject, &nwcs, &wcs);
+  int status = wcspih((char *)header.get_cstring(), nkey, WCSHDR_all, ctrl, &nreject, &nwcs, &wcs);
   
   if(status > 0){
     Rcout << "Failed WCS header read!" << "\n";
@@ -362,7 +362,7 @@ SEXP Cwcs_head_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String he
 
 // [[Rcpp::export]]
 SEXP Cwcs_head_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec, Rcpp::String header, 
-                   int nkeyrec, int WCSref=0){
+                   int nkey, int WCSref=0, int ctrl=2){
   int i;
   const int ncoord = RA.length();
   const int naxis = 2;
@@ -372,7 +372,7 @@ SEXP Cwcs_head_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec, Rcpp::String
   struct wcsprm* wcs;
   
   //pass header into wcs
-  int status = wcspih((char *)header.get_cstring(), nkeyrec, WCSHDR_all, 2, &nreject, &nwcs, &wcs);
+  int status = wcspih((char *)header.get_cstring(), nkey, WCSHDR_all, ctrl, &nreject, &nwcs, &wcs);
   
   if(status > 0){
     Rcout << "Failed WCS header read!" << "\n";

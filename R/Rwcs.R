@@ -1,4 +1,4 @@
-Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', header=NULL, inherit=TRUE, WCSref=NULL, ...){
+Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', header=NULL, inherit=TRUE, WCSref=NULL, ctrl=2L, ...){
   assertList(keyvalues, null.ok = TRUE)
   if(is.character(header) & is.null(keyvalues)){
     if(length(header) > 1){
@@ -42,11 +42,11 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   if(length(header)==1){
     
     nkey = nchar(header)/80
-    header_temp = substring(header, 1+(80*((1:nkey)-1)), 80*(1:nkey))
+    #header_temp = substring(header, 1+(80*((1:nkey)-1)), 80*(1:nkey))
     
-    nkeyrec_total = length(grep('=', header_temp))
-    nkeyrec_empty = length(grep('=                                                                       ', header_temp))
-    nkeyrec = nkeyrec_total - nkeyrec_empty
+    #nkeyrec_total = length(grep('=', header_temp))
+    #nkeyrec_empty = length(grep('=                                                                       ', header_temp))
+    #nkeyrec = nkeyrec_total - nkeyrec_empty
     
     if(!is.null(WCSref)){
       WCSref = tolower(WCSref)
@@ -64,8 +64,9 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
       RA = RA,
       Dec = Dec,
       header = header,
-      nkeyrec = nkeyrec,
-      WCSref = WCSref
+      nkey = nkey,
+      WCSref = WCSref,
+      ctrl=ctrl
     )
     
     if(is.null(dim(output))){
@@ -76,7 +77,7 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
           RA = RA[good],
           Dec = Dec[good],
           header = header,
-          nkeyrec = nkeyrec,
+          nkey = nkey,
           WCSref = WCSref
         )
       }
@@ -154,7 +155,7 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   return(output)
 }
 
-Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', header=NULL, inherit=TRUE, WCSref=NULL, ...){
+Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg', sep=':', header=NULL, inherit=TRUE, WCSref=NULL, ctrl=2L, ...){
   assertList(keyvalues, null.ok = TRUE)
   if(is.character(header) & is.null(keyvalues)){
     if(length(header) > 1){
@@ -208,11 +209,11 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
   if(length(header)==1){
     
     nkey = nchar(header)/80
-    header_temp = substring(header, 1+(80*((1:nkey)-1)), 80*(1:nkey))
-    
-    nkeyrec_total = length(grep('=', header_temp))
-    nkeyrec_empty = length(grep('=                                                                       ', header_temp))
-    nkeyrec = nkeyrec_total - nkeyrec_empty
+    # header_temp = substring(header, 1+(80*((1:nkey)-1)), 80*(1:nkey))
+    # 
+    # nkeyrec_total = length(grep('=', header_temp))
+    # nkeyrec_empty = length(grep('=                                                                       ', header_temp))
+    # nkeyrec = nkeyrec_total - nkeyrec_empty
     
     if(!is.null(WCSref)){
       WCSref = tolower(WCSref)
@@ -230,7 +231,7 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
       x = x,
       y = y,
       header = header,
-      nkeyrec = nkeyrec,
+      nkey = nkey,
       WCSref = WCSref
     )
     
@@ -242,8 +243,9 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
           x = x[good],
           y = y[good],
           header = header,
-          nkeyrec = nkeyrec,
-          WCSref = WCSref
+          nkey = nkey,
+          WCSref = WCSref,
+          ctrl=ctrl
         )
       }
     }

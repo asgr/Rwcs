@@ -22,9 +22,9 @@ Cwcs_p2s(x, y, CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0,
   EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV1_3 = NA, PV2_1 = NA, PV2_2 = NA, PV2_3 = NA,
   PV2_4 = NA, PV2_5 = NA)
   
-Cwcs_head_s2p(RA, Dec, header, nkeyrec, WCSref)
+Cwcs_head_s2p(RA, Dec, header, nkey, WCSref = 0, ctrl = 2)
 
-Cwcs_head_p2s(x, y, header, nkeyrec, WCSref)
+Cwcs_head_p2s(x, y, header, nkey, WCSref = 0, ctrl = 2)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -103,11 +103,14 @@ Numeric scalar; additional axis 2 projection parameter 5.
   \item{header}{
 Character scalar; a fully concatenated form of long header (where each key takes up exactly 80 characters) as produced by \code{Rfits_read_header_raw}.  
 }
-  \item{nkeyrec}{
-Integer scalar; the exact number of keys present in \option{header}.
+  \item{nkey}{
+Integer scalar; the exact number of keys present in \option{header}. This should agree with \code{Rfits_nkey}.
 }
   \item{WCSref}{
-Integer scalar; 0 is the base WCS, and 1-26 correspond with letters [a-z].  
+Integer scalar; 0 is the base/NULL WCS (default), and 1-26 correspond with letters [a-z].  
+}
+  \item{ctrl}{
+Integer scalar; if using raw headers, this will specify the level of verbosity printed by wcslib when passing it. 0 = none, 1 = summary, 2 = fails, 3 = fails + non-WCS, 4 = all.
 }
 }
 \details{
