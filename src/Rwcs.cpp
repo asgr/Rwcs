@@ -28,7 +28,7 @@ static const int naxis = 2;
 static void enable_wcsperr()
 {
   wcserr_enable(1);
-  wcsprintf_set(stderr);
+  wcsprintf_set(nullptr);
 }
 
 static SEXP _wcss2p(struct wcsprm *wcs, NumericVector RA, NumericVector Dec)
@@ -50,7 +50,7 @@ static SEXP _wcss2p(struct wcsprm *wcs, NumericVector RA, NumericVector Dec)
                        &(pixel_matrix[0]), &(stat[0]));
   if (status) {
     wcsperr(wcs, "");
-    Rcerr << "Failed s2p conversion :(\n";
+    Rcerr << "Failed s2p conversion :(:\n" << wcsprintf_buf();
     return stat;
   }
   return transpose(pixel_matrix);
@@ -76,7 +76,7 @@ static SEXP _wcsp2s(struct wcsprm *wcs, NumericVector x, NumericVector y)
                        &(world_matrix[0]), &(stat[0]));
   if (status) {
     wcsperr(wcs, "");
-    Rcerr << "Failed p2s conversion :(\n";
+    Rcerr << "Failed p2s conversion :(:\n" << wcsprintf_buf();
     return stat;
   }
   return transpose(world_matrix);
