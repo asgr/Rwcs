@@ -86,7 +86,7 @@ The \code{Rwcs_warp} function allows for arbitrary WCS remapping from any \code{
   \item Rwcs_s2p; maps the pixel RA and Dec coordinates onto the desired output pixel grid using the output header
 }  
 
-There are a few different ways to consider doing pixel remapping (or warping). The main question is usually whether to operate on a forward or backwards manner (see \code{imwarp}). Backwards mapping (the default) finds the best interpolation of every output pixel in the input image, whereas forward mapping finds the best interpolation of every input pixel on the output image. Backwards mapping usually provides the fewest artefacts (hence it is the default), but in general if the input image is higher resolution then you might prefer forward mapping and vica-versa.
+There are a few different ways to consider doing pixel remapping (or warping). The main question is usually whether to operate on a forward or backwards manner (see \code{imwarp}). Backwards mapping finds the best interpolation of every output pixel in the input image, whereas forward mapping finds the best interpolation of every input pixel on the output image. Backwards mapping usually provides the fewest artefacts, but in general if the input image is higher resolution then you might prefer forward mapping and vica-versa.
 
 The actual warping is done using the \code{imwarp} function in the \code{imager} package, so this will need to be installed prior to use (it is available on CRAN).
 
@@ -110,6 +110,8 @@ Aaron Robotham
 }
 \note{
 This function uses a bi-cubic interpolation scheme by default. It should approximately conserve the flux in \option{image_in}, but this is not guaranteed. The 'linear' interpolation scheme may be closer to conserving flux in images with sharp features. The conservation is usually good to about 0.1\% (i.e. 0.01 mag). If you require better conservation than this then alternative schemes (e.g. SWarp) will be required.
+
+For working with segmentation maps, the following options should usually be used: \option{doscale} = FALSE, \option{interpolation} = 'nearest', \option{direction} = 'backward'.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
