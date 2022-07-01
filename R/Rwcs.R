@@ -586,3 +586,8 @@ Rwcs_pixscale = function(keyvalues=NULL, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1, typ
     return(2545.584412*sqrt(diff(output[,1])^2 + diff(output[,2])^2)) # 2545.584412 = 3600/sqrt(2)
   }
 }
+
+Rwcs_in_domain = function(RA, Dec, xlim=c(0,1024), ylim=c(0,1024), ...){
+  test_xy = Rwcs_s2p(RA=RA, Dec=Dec, ...)
+  return(test_xy[,'x'] >= xlim[1] & test_xy[,'x'] <= xlim[2] & test_xy[,'y'] >= ylim[1] & test_xy[,'y'] <= ylim[2])
+}

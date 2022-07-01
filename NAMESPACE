@@ -4,6 +4,7 @@ export(Rwcs_s2p)
 export(Rwcs_p2s)
 export(Rwcs_keypass)
 export(Rwcs_pixscale)
+export(Rwcs_in_domain)
 export(Rwcs_setscreen)
 
 export(Cwcs_s2p)

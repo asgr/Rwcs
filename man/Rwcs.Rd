@@ -3,6 +3,7 @@
 \alias{Rwcs_s2p}
 \alias{Rwcs_p2s}
 \alias{Rwcs_pixscale}
+\alias{Rwcs_in_domain}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 High Level WCSlib Interface
@@ -21,6 +22,8 @@ Rwcs_p2s(x, y, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
   
 Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, type = 'old',
   dim = NULL)
+  
+Rwcs_in_domain(RA, Dec, xlim = c(0,1024), ylim = c(0,1024), ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -81,8 +84,16 @@ Scalar; either NULL for base WCS (default), or a letter [a-z] for the relevant p
   \item{ctrl}{
 Integer scalar; if using raw headers, this will specify the level of verbosity printed by wcslib when passing it. 0 = none, 1 = summary, 2 = fails, 3 = fails + non-WCS, 4 = all.
 }
+  \item{xlim}{
+Numeric vector; x extent of frame domain to test.  
+}
+  \item{ylim}{
+Numeric vector; y extent of frame domain to test.  
+}
   \item{\dots}{
-Optional keyvalues to overwrite the \option{keyvalues} entries with. If not present, the defaults are CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0, CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS", EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV2_1 = NA, PV2_2 = NA.
+For \code{Rwcs_p2s} and \code{Rwcs_s2p} optional keyvalues to overwrite the \option{keyvalues} entries with. If not present, the defaults are CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0, CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS", EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV2_1 = NA, PV2_2 = NA.
+
+For \code{Rwcs_in_domain} arguments to pass into \code{Rwcs_s2p} to project your \option{RA} and \option{Dec} points of interest into your test frame domain.
 }
 }
 \details{
@@ -155,6 +166,8 @@ GAPPT \tab  geocentric apparent place,  IAU 1984 system
 \code{Rwcs_p2s} is the pixel to spherical (hence p2s) projection function, i.e. x/y to RA/Dec. The output is a two column numeric matrix containing [RA,Dec] data.
 
 \code{Rwcs_pixscale} is the scalar image pixel scale in asec/pixel (so typically a value of 0.1-0.5 for modern survey instruments).
+
+\code{Rwcs_in_domain} returns a logical vector for the positions given by \option{RA} and \option{Dec}, answering the questions whether in projection they exist within the domain of \option{xlim} and \option{ylim}. This might be used to find out whether sources fall onto a frame for instance.
 }
 \references{
 Greisen, E.W. & Calabretta, M.R. (2002), Astronomy & Astrophysics, 395, 1061-1075
@@ -260,6 +273,19 @@ longhead = Rfits_read_header_raw(file_image)
 
 Rwcs_p2s(1, 1, temp_image$keyvalues, coord.type='sex')
 Rwcs_p2s(1, 1, header=longhead, coord.type='sex')
+}
+
+#test if position is in frame
+
+\dontrun{
+library(Rfits)
+file_image = system.file('extdata', 'image.fits', package = "Rfits")
+temp_image = Rfits_read_image(file_image)
+
+Rwcs_in_domain(352.2917, -31.825, xlim=c(0,temp_image$keyvalues$NAXIS1),
+  ylim=c(0,temp_image$keyvalues$NAXIS2), keyvalues = temp_image$keyvalues)
+Rwcs_in_domain(352.2917 + 1, -31.825, xlim=c(0,temp_image$keyvalues$NAXIS1),
+  ylim=c(0,temp_image$keyvalues$NAXIS2), keyvalues = temp_image$keyvalues)
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
