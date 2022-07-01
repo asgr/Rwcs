@@ -587,7 +587,29 @@ Rwcs_pixscale = function(keyvalues=NULL, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1, typ
   }
 }
 
-Rwcs_in_domain = function(RA, Dec, xlim=c(0,1024), ylim=c(0,1024), ...){
+Rwcs_in_domain = function(RA, Dec, xlim, ylim, ...){
+  dots = list(...)
+  
+  if(missing(xlim) & !is.null(dots$keyvalues)){
+    if(isTRUE(dots$keyvalues$ZIMAGE)){
+      xlim = c(0, dots$keyvalues$ZNAXIS1)
+    }else if(!is.null(dots$keyvalues$NAXIS1)){
+      xlim = c(0, dots$keyvalues$NAXIS1)
+    }else{
+      stop('Missing NAXIS1 in keyvalues, please specify xlim manually!')
+    }
+  }
+  
+  if(missing(ylim) & !is.null(dots$keyvalues)){
+    if(isTRUE(dots$keyvalues$ZIMAGE)){
+      ylim = c(0, dots$keyvalues$ZNAXIS2)
+    }else if(!is.null(dots$keyvalues$NAXIS2)){
+      ylim = c(0, dots$keyvalues$NAXIS2)
+    }else{
+      stop('Missing NAXIS2 in keyvalues, please specify ylim manually!')
+    }
+  }
+  
   test_xy = Rwcs_s2p(RA=RA, Dec=Dec, ...)
   return(test_xy[,'x'] >= xlim[1] & test_xy[,'x'] <= xlim[2] & test_xy[,'y'] >= ylim[1] & test_xy[,'y'] <= ylim[2])
 }

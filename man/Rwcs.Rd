@@ -23,7 +23,7 @@ Rwcs_p2s(x, y, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
 Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, type = 'old',
   dim = NULL)
   
-Rwcs_in_domain(RA, Dec, xlim = c(0,1024), ylim = c(0,1024), ...)
+Rwcs_in_domain(RA, Dec, xlim, ylim, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -85,10 +85,10 @@ Scalar; either NULL for base WCS (default), or a letter [a-z] for the relevant p
 Integer scalar; if using raw headers, this will specify the level of verbosity printed by wcslib when passing it. 0 = none, 1 = summary, 2 = fails, 3 = fails + non-WCS, 4 = all.
 }
   \item{xlim}{
-Numeric vector; x extent of frame domain to test.  
+Numeric vector; x extent of frame domain to test. If missing and \option{keyvalues} is provided then default will be c(0, NAXIS1) extent.
 }
   \item{ylim}{
-Numeric vector; y extent of frame domain to test.  
+Numeric vector; y extent of frame domain to test. If missing and \option{keyvalues} is provided then default will be c(0, NAXIS2) extent.
 }
   \item{\dots}{
 For \code{Rwcs_p2s} and \code{Rwcs_s2p} optional keyvalues to overwrite the \option{keyvalues} entries with. If not present, the defaults are CTYPE1 = "RA---TAN", CTYPE2 = "DEC--TAN", CRVAL1 = 0, CRVAL2 = 0, CRPIX1 = 0, CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, RADESYS = "ICRS", EQUINOX = 2000L, PV1_1 = NA, PV1_2 = NA, PV2_1 = NA, PV2_2 = NA.
@@ -282,10 +282,8 @@ library(Rfits)
 file_image = system.file('extdata', 'image.fits', package = "Rfits")
 temp_image = Rfits_read_image(file_image)
 
-Rwcs_in_domain(352.2917, -31.825, xlim=c(0,temp_image$keyvalues$NAXIS1),
-  ylim=c(0,temp_image$keyvalues$NAXIS2), keyvalues = temp_image$keyvalues)
-Rwcs_in_domain(352.2917 + 1, -31.825, xlim=c(0,temp_image$keyvalues$NAXIS1),
-  ylim=c(0,temp_image$keyvalues$NAXIS2), keyvalues = temp_image$keyvalues)
+Rwcs_in_domain(352.2917, -31.825, keyvalues = temp_image$keyvalues)
+Rwcs_in_domain(352.2917 + 1, -31.825, keyvalues = temp_image$keyvalues)
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
