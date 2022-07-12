@@ -587,7 +587,7 @@ Rwcs_pixscale = function(keyvalues=NULL, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1, typ
   }
 }
 
-Rwcs_in_image = function(RA, Dec, xlim, ylim, buffer=0, plot=FALSE, style='points', ...){
+Rwcs_in_image = function(RA, Dec, xlim, ylim, buffer=0, plot=FALSE, style='points', pad=0, ...){
   dots = list(...)
   
   if(missing(xlim) & !is.null(dots$keyvalues)){
@@ -612,7 +612,7 @@ Rwcs_in_image = function(RA, Dec, xlim, ylim, buffer=0, plot=FALSE, style='point
   
   test_xy = Rwcs_s2p(RA=RA, Dec=Dec, pixcen='R', ...)
   if(plot){
-    magplot(NA, NA, xlim=xlim, ylim=ylim, pch='.', asp=1)
+    magplot(NA, NA, xlim=xlim + c(-pad,pad), ylim=ylim + c(-pad,pad), pch='.', asp=1)
     if(style=='points'){
       points(test_xy, col='red')
     }else if(style=='polygon'){
@@ -625,21 +625,38 @@ Rwcs_in_image = function(RA, Dec, xlim, ylim, buffer=0, plot=FALSE, style='point
   return(as.logical(test_xy[,'x'] >= xlim[1] + buffer & test_xy[,'x'] <= xlim[2] - buffer & test_xy[,'y'] >= ylim[1] + buffer & test_xy[,'y'] <= ylim[2] - buffer))
 }
 
-Rwcs_overlap = function(keyvalues_test, keyvalues_ref, buffer=0.5, plot=FALSE){
-  left = Rwcs_p2s(rep(0,keyvalues_test$NAXIS2 + 1L), 0:keyvalues_test$NAXIS2, keyvalues=keyvalues_test, pixcen='R')
-  top = Rwcs_p2s(0:keyvalues_test$NAXIS1, rep(keyvalues_test$NAXIS2,keyvalues_test$NAXIS1 + 1L), keyvalues=keyvalues_test, pixcen='R')
-  right = Rwcs_p2s(rep(keyvalues_test$NAXIS1,keyvalues_test$NAXIS2 + 1L), keyvalues_test$NAXIS2:0 , keyvalues=keyvalues_test, pixcen='R')
-  bottom = Rwcs_p2s(keyvalues_test$NAXIS1:0, rep(0,keyvalues_test$NAXIS1 + 1L), keyvalues=keyvalues_test, pixcen='R')
+Rwcs_overlap = function(keyvalues_test, keyvalues_ref, buffer=0.5, plot=FALSE, pad=0){
   
-  test_in_ref = any(Rwcs_in_image(RA=c(left[,'RA'], top[,'RA'], right[,'RA'], bottom[,'RA']), Dec=c(left[,'Dec'], top[,'Dec'], right[,'Dec'], bottom[,'Dec']), buffer=buffer, plot=plot, style='polygon', keyvalues=keyvalues_ref))
+  if(isTRUE(keyvalues_test$ZIMAGE)){
+    NAXIS1_test = keyvalues_test$ZNAXIS1
+    NAXIS2_test = keyvalues_test$ZNAXIS2
+  }else{
+    NAXIS1_test = keyvalues_test$NAXIS1
+    NAXIS2_test = keyvalues_test$NAXIS2
+  }
+  
+  if(isTRUE(keyvalues_ref$ZIMAGE)){
+    NAXIS1_ref = keyvalues_ref$ZNAXIS1
+    NAXIS2_ref = keyvalues_ref$ZNAXIS2
+  }else{
+    NAXIS1_ref = keyvalues_ref$NAXIS1
+    NAXIS2_ref = keyvalues_ref$NAXIS2
+  }
+  
+  left = Rwcs_p2s(rep(0,NAXIS2_test + 1L), 0:NAXIS2_test, keyvalues=keyvalues_test, pixcen='R')
+  top = Rwcs_p2s(0:NAXIS1_test, rep(NAXIS2_test,NAXIS1_test + 1L), keyvalues=keyvalues_test, pixcen='R')
+  right = Rwcs_p2s(rep(NAXIS1_test,NAXIS2_test + 1L), NAXIS2_test:0 , keyvalues=keyvalues_test, pixcen='R')
+  bottom = Rwcs_p2s(NAXIS1_test:0, rep(0,NAXIS1_test + 1L), keyvalues=keyvalues_test, pixcen='R')
+  
+  test_in_ref = any(Rwcs_in_image(RA=c(left[,'RA'], top[,'RA'], right[,'RA'], bottom[,'RA']), Dec=c(left[,'Dec'], top[,'Dec'], right[,'Dec'], bottom[,'Dec']), buffer=buffer, plot=plot, style='polygon', pad=pad, keyvalues=keyvalues_ref))
   
   if(test_in_ref){
     return(test_in_ref)
   }else{
-    left = Rwcs_p2s(rep(0,keyvalues_ref$NAXIS2 + 1L), 0:keyvalues_ref$NAXIS2, keyvalues=keyvalues_ref, pixcen='R')
-    top = Rwcs_p2s(0:keyvalues_ref$NAXIS1, rep(keyvalues_ref$NAXIS2,keyvalues_ref$NAXIS1 + 1L), keyvalues=keyvalues_ref, pixcen='R')
-    right = Rwcs_p2s(rep(keyvalues_ref$NAXIS1,keyvalues_ref$NAXIS2 + 1L), keyvalues_ref$NAXIS2:0 , keyvalues=keyvalues_ref, pixcen='R')
-    bottom = Rwcs_p2s(keyvalues_ref$NAXIS1:0, rep(0,keyvalues_ref$NAXIS1 + 1L), keyvalues=keyvalues_ref, pixcen='R')
+    left = Rwcs_p2s(rep(0,NAXIS2_ref + 1L), 0:NAXIS2_ref, keyvalues=keyvalues_ref, pixcen='R')
+    top = Rwcs_p2s(0:NAXIS1_ref, rep(NAXIS2_ref,NAXIS1_ref + 1L), keyvalues=keyvalues_ref, pixcen='R')
+    right = Rwcs_p2s(rep(NAXIS1_ref,NAXIS2_ref + 1L), NAXIS2_ref:0 , keyvalues=keyvalues_ref, pixcen='R')
+    bottom = Rwcs_p2s(NAXIS1_ref:0, rep(0,NAXIS1_ref + 1L), keyvalues=keyvalues_ref, pixcen='R')
     
     ref_in_test = any(Rwcs_in_image(RA=c(left[,'RA'], top[,'RA'], right[,'RA'], bottom[,'RA']), Dec=c(left[,'Dec'], top[,'Dec'], right[,'Dec'], bottom[,'Dec']), buffer=buffer, keyvalues=keyvalues_test))
     

@@ -24,9 +24,10 @@ Rwcs_p2s(x, y, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
 Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, type = 'old',
   dim = NULL)
   
-Rwcs_in_image(RA, Dec, xlim, ylim, buffer = 0, plot = FALSE, style = 'points', ...)
+Rwcs_in_image(RA, Dec, xlim, ylim, buffer = 0, plot = FALSE, style = 'points', pad = 0,
+  ...)
 
-Rwcs_overlap(keyvalues_test, keyvalues_ref, buffer = 0.5, plot = FALSE)
+Rwcs_overlap(keyvalues_test, keyvalues_ref, buffer = 0.5, plot = FALSE, pad = 0)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -101,6 +102,9 @@ Logical; should a plot be shown showing the location of test points on the WCS o
 }
   \item{style}{
 Character scalar; way to show overlap, either red 'points' or a red filled 'polygon'.
+}
+  \item{pad}{
+Numeric scalar; extra padding on the plotting region shown if \option{plot}=TRUE.  
 }
   \item{keyvalues_test}{
 List; a WCS header to test. The question of interest is whether any of \option{keyvalues_test} overlaps with \option{keyvalues_ref}.
@@ -313,7 +317,8 @@ Rwcs_overlap(temp_image[1:200,1:200]$keyvalues, temp_image[201:356,200:356]$keyv
 #Show the overlap plot:
 Rwcs_overlap(temp_image[100:200,100:200]$keyvalues, temp_image$keyvalues, plot=TRUE)
 #Swapping the order still works but changes the sense of the plot since ref is in test:
-Rwcs_overlap(temp_image$keyvalues, temp_image[100:200,100:200]$keyvalues, plot=TRUE)
+Rwcs_overlap(temp_image$keyvalues, temp_image[100:200,100:200]$keyvalues, plot=TRUE,
+  pad=100)
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
