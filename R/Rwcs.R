@@ -613,9 +613,9 @@ Rwcs_in_image = function(RA, Dec, xlim, ylim, buffer=0, plot=FALSE, style='point
   test_xy = Rwcs_s2p(RA=RA, Dec=Dec, pixcen='R', ...)
   if(plot){
     magplot(NA, NA, xlim=xlim, ylim=ylim, pch='.', asp=1)
-    if(type=='points'){
+    if(style=='points'){
       points(test_xy, col='red')
-    }else if(type=='polygon'){
+    }else if(style=='polygon'){
       polygon(test_xy, col=hsv(alpha=0.2), border='red')
     }else{
       stop('style must be points or polygon!')
