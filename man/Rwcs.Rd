@@ -24,9 +24,9 @@ Rwcs_p2s(x, y, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
 Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, type = 'old',
   dim = NULL)
   
-Rwcs_in_image(RA, Dec, xlim, ylim, buffer = 0, ...)
+Rwcs_in_image(RA, Dec, xlim, ylim, buffer = 0, plot = FALSE, style = 'points', ...)
 
-Rwcs_overlap(keyvalues_test, keyvalues_ref, buffer = 0.5)
+Rwcs_overlap(keyvalues_test, keyvalues_ref, buffer = 0.5, plot = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -95,6 +95,12 @@ Numeric vector; y extent of frame domain to test. If missing and \option{keyvalu
 }
   \item{buffer}{
 Numeric scalar; an additional buffer to apply to the 'in domain' test. You might want to set this to a low value (like 1e-9) to avoid spurious overlap error due to inperfections in forward and inverse WCS projections.
+}
+  \item{plot}{
+Logical; should a plot be shown showing the location of test points on the WCS of interest?  
+}
+  \item{style}{
+Character scalar; way to show overlap, either red 'points' or a red filled 'polygon'.
 }
   \item{keyvalues_test}{
 List; a WCS header to test. The question of interest is whether any of \option{keyvalues_test} overlaps with \option{keyvalues_ref}.
@@ -303,6 +309,11 @@ Rwcs_in_image(352.2917 + 1, -31.825, keyvalues = temp_image$keyvalues)
 Rwcs_overlap(temp_image[1:200,1:200]$keyvalues, temp_image[200:356,200:356]$keyvalues)
 #No pixel of overlap:
 Rwcs_overlap(temp_image[1:200,1:200]$keyvalues, temp_image[201:356,200:356]$keyvalues)
+
+#Show the overlap plot:
+Rwcs_overlap(temp_image[100:200,100:200]$keyvalues, temp_image$keyvalues, plot=TRUE)
+#Swapping the order still works but changes the sense of the plot since ref is in test:
+Rwcs_overlap(temp_image$keyvalues, temp_image[100:200,100:200]$keyvalues, plot=TRUE)
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

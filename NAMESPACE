@@ -30,4 +30,5 @@ import(magicaxis)
 
 importFrom(celestial, hms2deg, dms2deg, deg2hms, deg2dms)
 importFrom("graphics", "arrows", "axis", "box", "lines", "mtext",
-               "par", "text", "image")
+               "par", "text", "image", "points", "polygon", "rect")
+importFrom("grDevices", "hsv")
