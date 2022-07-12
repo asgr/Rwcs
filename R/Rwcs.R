@@ -587,7 +587,7 @@ Rwcs_pixscale = function(keyvalues=NULL, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1, typ
   }
 }
 
-Rwcs_in_domain = function(RA, Dec, xlim, ylim, ...){
+Rwcs_in_image = function(RA, Dec, xlim, ylim, buffer=0, ...){
   dots = list(...)
   
   if(missing(xlim) & !is.null(dots$keyvalues)){
@@ -610,6 +610,15 @@ Rwcs_in_domain = function(RA, Dec, xlim, ylim, ...){
     }
   }
   
-  test_xy = Rwcs_s2p(RA=RA, Dec=Dec, ...)
-  return(test_xy[,'x'] >= xlim[1] & test_xy[,'x'] <= xlim[2] & test_xy[,'y'] >= ylim[1] & test_xy[,'y'] <= ylim[2])
+  test_xy = Rwcs_s2p(RA=RA, Dec=Dec, pixcen='R', ...)
+  return(as.logical(test_xy[,'x'] >= xlim[1] + buffer & test_xy[,'x'] <= xlim[2] - buffer & test_xy[,'y'] >= ylim[1] + buffer & test_xy[,'y'] <= ylim[2] - buffer))
+}
+
+Rwcs_overlap = function(keyvalues_test, keyvalues_ref, buffer=0.5){
+  left = Rwcs_p2s(rep(0,keyvalues_test$NAXIS2 + 1L), 0:keyvalues_test$NAXIS2, keyvalues=keyvalues_test, pixcen='R')
+  right = Rwcs_p2s(rep(keyvalues_test$NAXIS1,keyvalues_test$NAXIS2 + 1L), 0:keyvalues_test$NAXIS2 , keyvalues=keyvalues_test, pixcen='R')
+  bottom = Rwcs_p2s(0:keyvalues_test$NAXIS1, rep(0,keyvalues_test$NAXIS1 + 1L), keyvalues=keyvalues_test, pixcen='R')
+  top = Rwcs_p2s(0:keyvalues_test$NAXIS1, rep(keyvalues_test$NAXIS2,keyvalues_test$NAXIS1 + 1L), keyvalues=keyvalues_test, pixcen='R')
+  
+  return(any(Rwcs_in_image(RA=c(left[,'RA'], right[,'RA'], bottom[,'RA'], top[,'RA']), Dec=c(left[,'Dec'], right[,'Dec'], bottom[,'Dec'], top[,'Dec']), buffer=buffer, keyvalues=keyvalues_ref)))
 }
