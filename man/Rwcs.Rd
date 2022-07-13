@@ -25,9 +25,10 @@ Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, type
   dim = NULL)
   
 Rwcs_in_image(RA, Dec, xlim, ylim, buffer = 0, plot = FALSE, style = 'points', pad = 0,
-  ...)
+  add = FALSE, ...)
 
-Rwcs_overlap(keyvalues_test, keyvalues_ref, buffer = 0.5, plot = FALSE, pad = 0)
+Rwcs_overlap(keyvalues_test, keyvalues_ref, buffer = 0.5, plot = FALSE, pad = 0,
+  add = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -105,6 +106,9 @@ Character scalar; way to show overlap, either red 'points' or a red filled 'poly
 }
   \item{pad}{
 Numeric scalar; extra padding on the plotting region shown if \option{plot}=TRUE.  
+}
+  \item{add}{
+Logical; should the WCS of \option{keyvalues_test} be added to the current plot. Note this only makes sense if \option{keyvalues_ref} is the same as the current WCS projection displayed.
 }
   \item{keyvalues_test}{
 List; a WCS header to test. The question of interest is whether any of \option{keyvalues_test} overlaps with \option{keyvalues_ref}.
@@ -319,6 +323,11 @@ Rwcs_overlap(temp_image[100:200,100:200]$keyvalues, temp_image$keyvalues, plot=T
 #Swapping the order still works but changes the sense of the plot since ref is in test:
 Rwcs_overlap(temp_image$keyvalues, temp_image[100:200,100:200]$keyvalues, plot=TRUE,
   pad=100)
+  
+#We can add another image to the current view too:
+Rwcs_overlap(temp_image[100:200,50:150]$keyvalues, temp_image$keyvalues, plot=TRUE)
+#Note it will automatically inherit the last user provided keyvalues_ref (with a message):
+Rwcs_overlap(temp_image[-50:50,200:300]$keyvalues, plot=TRUE, add=TRUE)
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
