@@ -22,6 +22,9 @@ export(Rwcs_compass)
 export(Rwcs_warp)
 export(Rwcs_rebin)
 
+export(Rwcs_in_poly)
+export(Rwcs_overlap_poly)
+
 useDynLib(Rwcs, .registration=TRUE)
 
 import(Rcpp)

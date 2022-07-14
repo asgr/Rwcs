@@ -106,12 +106,27 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// pnpoly
+LogicalVector pnpoly(NumericVector testx, NumericVector testy, NumericVector vertx, NumericVector verty);
+RcppExport SEXP _Rwcs_pnpoly(SEXP testxSEXP, SEXP testySEXP, SEXP vertxSEXP, SEXP vertySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type testx(testxSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type testy(testySEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type vertx(vertxSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type verty(vertySEXP);
+    rcpp_result_gen = Rcpp::wrap(pnpoly(testx, testy, vertx, verty));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_Rwcs_Cwcs_s2p", (DL_FUNC) &_Rwcs_Cwcs_s2p, 22},
     {"_Rwcs_Cwcs_p2s", (DL_FUNC) &_Rwcs_Cwcs_p2s, 22},
     {"_Rwcs_Cwcs_head_p2s", (DL_FUNC) &_Rwcs_Cwcs_head_p2s, 6},
     {"_Rwcs_Cwcs_head_s2p", (DL_FUNC) &_Rwcs_Cwcs_head_s2p, 6},
+    {"_Rwcs_pnpoly", (DL_FUNC) &_Rwcs_pnpoly, 4},
     {NULL, NULL, 0}
 };
 

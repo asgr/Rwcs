@@ -17,3 +17,7 @@ Cwcs_head_s2p <- function(RA, Dec, header, nkey, WCSref = 0L, ctrl = 2L) {
     .Call(`_Rwcs_Cwcs_head_s2p`, RA, Dec, header, nkey, WCSref, ctrl)
 }
 
+.pnpoly <- function(testx, testy, vertx, verty) {
+    .Call(`_Rwcs_pnpoly`, testx, testy, vertx, verty)
+}
+
