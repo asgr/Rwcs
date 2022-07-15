@@ -350,14 +350,17 @@ Rwcs_keypass=function(keyvalues=NULL,
       if(!is.null(keyvalues$CD1_1)){
         CD1_1 = keyvalues$CD1_1
       }else{
-        if((!is.null(keyvalues$CDELT1)) & (is.null(keyvalues$CROTA2))){
-          CD1_1 = keyvalues$CDELT1
-          CD2_1 = 0 #for clarity
+        if((!is.null(keyvalues$CDELT1)) & (!is.null(keyvalues$PC1_1)) &  (!is.null(keyvalues$PC2_1))){
+          CD1_1 = keyvalues$CDELT1 * keyvalues$PC1_1
+          CD2_1 = keyvalues$CDELT1 * keyvalues$PC2_1
         }else if((!is.null(keyvalues$CDELT1)) & (!is.null(keyvalues$CROTA2))){
           CD1_1 = keyvalues$CDELT1 * cos(keyvalues$CROTA2*pi/180)
           CD2_1 = keyvalues$CDELT1 * sin(keyvalues$CROTA2*pi/180)
+        }else if((!is.null(keyvalues$CDELT1)) & (is.null(keyvalues$CROTA2))){
+          CD1_1 = keyvalues$CDELT1
+          CD2_1 = 0 #for clarity
         }else{
-          stop('CD1_1 is not definable!')
+          stop('CD1_1 and/or CD2_1 is not definable!')
         }
       }
     }
@@ -365,14 +368,17 @@ Rwcs_keypass=function(keyvalues=NULL,
       if(!is.null(keyvalues$CD2_2)) {
         CD2_2 = keyvalues$CD2_2
       }else{
-        if((!is.null(keyvalues$CDELT2)) & (is.null(keyvalues$CROTA2))){
-          CD2_2 = keyvalues$CDELT2
-          CD1_2 = 0 #for clarity
+        if((!is.null(keyvalues$CDELT2)) & (!is.null(keyvalues$PC2_2)) & (!is.null(keyvalues$PC1_2))){
+          CD2_2 = keyvalues$CDELT2 * keyvalues$PC2_2
+          CD1_2 = keyvalues$CDELT2 * keyvalues$PC1_2
         }else if((!is.null(keyvalues$CDELT2)) & (!is.null(keyvalues$CROTA2))){
           CD2_2 = keyvalues$CDELT2 * cos(keyvalues$CROTA2*pi/180)
           CD1_2 = -keyvalues$CDELT2 * sin(keyvalues$CROTA2*pi/180)
+        }else  if((!is.null(keyvalues$CDELT2)) & (is.null(keyvalues$CROTA2))){
+          CD2_2 = keyvalues$CDELT2
+          CD1_2 = 0 #for clarity
         }else{
-          stop('CD2_2 is not definable!')
+          stop('CD2_2 and/or CD1_2 is not definable!')
         }
       }
     }
