@@ -14,7 +14,7 @@ Rwcs_imageRGB(R, G, B, keyvalues_out = NULL, Rkeyvalues = NULL, Gkeyvalues = NUL
   lab.col = "green", coord.type = "sex", margin = TRUE, loc.diff = c(0, 0),
   xlab = "Right Ascension", ylab = "Declination", mgp = c(2, 0.5, 0), mtline = 2,
   position = "topright", com.col = "green", com.length = 0.05, coord.axis = "auto",
-  pretty = "auto", ...)
+  pretty = "auto", decorate = TRUE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -96,11 +96,14 @@ Colour of the compass.
   \item{com.length}{
 Length of the edges of the arrow head.
 }
-\item{coord.axis}{
+  \item{coord.axis}{
 Integer vector; specifies whether the RA and Dec axes should be 1 or 2 (i.e. x or y axis). The default 'auto' tries to guess based on the header information (and this usually works okay). Otherwise \option{coord.axis}=c(1,2) would be sensible for a N/S vertical aligend frame and \option{coord.axis}=c(2,1) would be sensible for a E/W vertically aligned frame. When the orientation is between the two then it is not always obvious which will work better.
 }
-\item{pretty}{
+  \item{pretty}{
 If 'auto' then it will try to compute the prettiest grid and label scaling *usually this is pretty good). Otherwise set to 1 to be degrees major ticks, 60 for minutes (DMS or HMS) and 3600 for seconds (DMS or HMS).
+}
+  \item{decorate}{
+Logical; should image decorations be shown (like axes labels, tick, grid line and a compass via \code{\link{Rwcs_image}}). Not showing these might seem odd (since you could use \code{\link{magimageRGB}} in most cases), but it does allow you to generate plain WCS matched images easily.  
 }
   \item{\dots}{
 \code{\dots} are passed to \code{\link{magimageRGB}}.

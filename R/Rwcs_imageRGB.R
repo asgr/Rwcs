@@ -1,4 +1,4 @@
-Rwcs_imageRGB=function(R, G, B, keyvalues_out=NULL, Rkeyvalues=NULL, Gkeyvalues=NULL, Bkeyvalues=NULL, dowarp='auto', direction = "auto", boundary = "dirichlet", interpolation = "cubic", n, grid.col='grey', grid.lty=2, grid.lwd=0.5, lab.col='green', coord.type='sex', margin=TRUE, loc.diff=c(0,0), xlab='Right Ascension', ylab='Declination', mgp=c(2,0.5,0), mtline=2, position='topright', com.col="green", com.length=0.05, coord.axis='auto', pretty='auto', ...){
+Rwcs_imageRGB=function(R, G, B, keyvalues_out=NULL, Rkeyvalues=NULL, Gkeyvalues=NULL, Bkeyvalues=NULL, dowarp='auto', direction = "auto", boundary = "dirichlet", interpolation = "cubic", n, grid.col='grey', grid.lty=2, grid.lwd=0.5, lab.col='green', coord.type='sex', margin=TRUE, loc.diff=c(0,0), xlab='Right Ascension', ylab='Declination', mgp=c(2,0.5,0), mtline=2, position='topright', com.col="green", com.length=0.05, coord.axis='auto', pretty='auto', decorate=TRUE, ...){
   
   if(missing(xlab)){
     if(coord.type=='sex'){
@@ -89,25 +89,29 @@ Rwcs_imageRGB=function(R, G, B, keyvalues_out=NULL, Rkeyvalues=NULL, Gkeyvalues=
   }
   
   if(dowarp){
-    Rim = Rwcs_warp(image_in=Rim, keyvalues_out=keyvalues_out, keyvalues_in=Rkeyvalues, dim_out=dim_out, direction=direction, boundary=boundary, interpolation=interpolation)$imDat
-    Gim = Rwcs_warp(image_in=Gim, keyvalues_out=keyvalues_out, keyvalues_in=Gkeyvalues, dim_out=dim_out, direction=direction, boundary=boundary, interpolation=interpolation)$imDat
-    Bim = Rwcs_warp(image_in=Bim, keyvalues_out=keyvalues_out, keyvalues_in=Bkeyvalues, dim_out=dim_out, direction=direction, boundary=boundary, interpolation=interpolation)$imDat
+    suppressMessages({
+      Rim = Rwcs_warp(image_in=Rim, keyvalues_out=keyvalues_out, keyvalues_in=Rkeyvalues, dim_out=dim_out, direction=direction, boundary=boundary, interpolation=interpolation)$imDat
+      Gim = Rwcs_warp(image_in=Gim, keyvalues_out=keyvalues_out, keyvalues_in=Gkeyvalues, dim_out=dim_out, direction=direction, boundary=boundary, interpolation=interpolation)$imDat
+      Bim = Rwcs_warp(image_in=Bim, keyvalues_out=keyvalues_out, keyvalues_in=Bkeyvalues, dim_out=dim_out, direction=direction, boundary=boundary, interpolation=interpolation)$imDat
+    })
   }
   
   output = magimageRGB(R=Rim, G=Gim, B=Bim, axes=FALSE, ...)
-  box()
   
-  suppressMessages({
-    Rwcs_grid(keyvalues=keyvalues_out, n=n, grid.col=grid.col, grid.lty=grid.lty, grid.lwd=grid.lwd,
-              coord.type=coord.type, loc.diff=loc.diff, pretty=pretty)
-    
-    Rwcs_labels(keyvalues=keyvalues_out, n=n, lab.col=lab.col, coord.type=coord.type, margin=margin,
-                loc.diff=loc.diff, xlab=xlab, ylab=ylab, mgp=mgp, mtline=mtline,
-                pretty=pretty)
-    
-    Rwcs_compass(keyvalues=keyvalues_out, position=position, com.col=com.col, com.length=com.length,
-                 loc.diff=loc.diff)
-  })
+  if(decorate){
+    box()
+    suppressMessages({
+      Rwcs_grid(keyvalues=keyvalues_out, n=n, grid.col=grid.col, grid.lty=grid.lty, grid.lwd=grid.lwd,
+                coord.type=coord.type, loc.diff=loc.diff, pretty=pretty)
+      
+      Rwcs_labels(keyvalues=keyvalues_out, n=n, lab.col=lab.col, coord.type=coord.type, margin=margin,
+                  loc.diff=loc.diff, xlab=xlab, ylab=ylab, mgp=mgp, mtline=mtline,
+                  pretty=pretty)
+      
+      Rwcs_compass(keyvalues=keyvalues_out, position=position, com.col=com.col, com.length=com.length,
+                   loc.diff=loc.diff)
+    })
+  }
   
   return(invisible(output))
 }
