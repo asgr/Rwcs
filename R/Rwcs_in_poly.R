@@ -55,7 +55,7 @@ Rwcs_overlap_poly = function(poly_x1, poly_y1, poly_x2, poly_y2, plot=FALSE){
       N1 = N1 - 1L
     }
     
-    if(poly_x2[1] == poly_x2[N1] & poly_y2[1] == poly_y2[N1]){
+    if(poly_x2[1] == poly_x2[N2] & poly_y2[1] == poly_y2[N2]){
       poly_x2 = poly_x2[-N2]
       poly_y2 = poly_y2[-N2]
       N2 = N2 - 1L
