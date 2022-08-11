@@ -41,6 +41,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          install.packages('imager')
           install.packages('remotes')
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
