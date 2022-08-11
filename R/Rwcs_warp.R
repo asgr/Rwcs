@@ -61,6 +61,9 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     header_out = options()$current_header
   }
   
+  keyvalues_in = keyvalues_in[!is.na(keyvalues_in)]
+  keyvalues_out = keyvalues_out[!is.na(keyvalues_out)]
+  
   if (!is.null(keyvalues_out) & is.null(dim_out)){
     if(is.null(keyvalues_out$ZNAXIS1)){
       NAXIS1 = keyvalues_out$NAXIS1
@@ -73,6 +76,9 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
       NAXIS2 = keyvalues_out$ZNAXIS2
     }
     dim_out = c(NAXIS1, NAXIS2)
+  }else{
+    keyvalues_out$NAXIS1 = dim_out[1]
+    keyvalues_out$NAXIS2 = dim_out[2]
   }
   
   if(is.null(dim_out)){
@@ -156,8 +162,6 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     }
   })
   
-  norm = matrix(1, max(dim(image_in)[1], dim(image_out)[1]),max(dim(image_in)[2], dim(image_out)[2]))
-  
   if (direction == "auto") {
     if (pixscale_in < pixscale_out) {
       direction = "forward"
@@ -171,6 +175,7 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
                          map = .warpfunc_in2out, direction = direction, coordinates = "absolute", 
                          boundary = boundary, interpolation = interpolation)
     if(doscale){
+      norm = matrix(1, max(dim(image_in)[1], dim(image_out)[1]),max(dim(image_in)[2], dim(image_out)[2]))
       renorm = imager::imwarp(im = imager::as.cimg(norm), 
                            map = .warpfunc_in2out, direction = direction, coordinates = "absolute", 
                            boundary = boundary, interpolation = interpolation)
@@ -182,6 +187,7 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
                          map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
                          boundary = boundary, interpolation = interpolation)
     if(doscale){
+      norm = matrix(1, max(dim(image_in)[1], dim(image_out)[1]),max(dim(image_in)[2], dim(image_out)[2]))
       renorm = imager::imwarp(im = imager::as.cimg(norm), 
                            map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
                            boundary = boundary, interpolation = interpolation)

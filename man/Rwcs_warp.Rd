@@ -51,7 +51,7 @@ boundary conditions: "dirichlet", "neumann", "periodic" (default "dirichlet"), s
 Character/integer scalar; For \code{Rwcs_warp}: "nearest", "linear", "cubic" (default "linear"), see \code{imwarp}. For \code{imresize}: Linear is 3, Cubic is 5, Lanczos (higher quality), default) is 6.
 }
   \item{doscale}{
-Logical; if TRUE (default) then the image is scaled by the relative change the change in flux per pixel found in a refernece normalisation image. This is usually what you want when converting images between different WCS (since we really want to make sure we conserve overall flux). If FALSE then nothing is done to rescale the image. This is useful when the input \option{image_in} is something like a segmentation map, where the actual values matter.
+Logical; if TRUE (default) then the image is scaled by the relative change the change in flux per pixel found in a reference normalisation image. This is usually what you want when converting images between different WCS (since we really want to make sure we conserve overall flux). If FALSE then nothing is done to rescale the image. This is useful when the input \option{image_in} is something like a segmentation map, where the actual values matter.
 }
   \item{plot}{
 Logical; should a \code{\link{Rwcs_image}} plot of the output be generated? 
