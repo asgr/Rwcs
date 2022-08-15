@@ -21,6 +21,9 @@ export(Rwcs_compass)
 
 export(Rwcs_warp)
 export(Rwcs_rebin)
+export(Rwcs_stack)
+#export(Rwcs_tweak)
+#export(Rwcs_tran)
 
 export(Rwcs_in_poly)
 export(Rwcs_overlap_poly)
@@ -30,8 +33,12 @@ useDynLib(Rwcs, .registration=TRUE)
 import(Rcpp)
 import(checkmate)
 import(magicaxis)
+import(foreach)
 
 importFrom(celestial, hms2deg, dms2deg, deg2hms, deg2dms)
 importFrom("graphics", "arrows", "axis", "box", "lines", "mtext",
                "par", "text", "image", "points", "polygon", "rect")
 importFrom("grDevices", "hsv")
+importFrom("stats", "median", "optim")
+importFrom("utils", "packageVersion")
+importFrom("doParallel", 'registerDoParallel')
