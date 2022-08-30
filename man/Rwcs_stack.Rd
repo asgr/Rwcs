@@ -9,7 +9,8 @@ Given a list of images with WCS, this function will re-project and stack all un-
 }
 \usage{
 Rwcs_stack(image_list = NULL, inVar_list = NULL, mask_list = NULL, magzero_in = 0,
-  magzero_out = 0, keyvalues_out = NULL, dim_out = NULL, cores = 4, ...)
+  magzero_out = 0, keyvalues_out = NULL, dim_out = NULL, cores = 4, return_all = FALSE,
+  ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -37,6 +38,9 @@ Integer vector; this defines the desired dimensions of the output image. If this
   \item{cores}{
 Integer scalar; the number of cores to run on.
 }
+  \item{return_all}{
+Logical; should the pre stack projected images and inverse variances be returns also? Note if this is TRUE then the stacking can no longer be computed in batch mode, so be sure that you have enough memory to hold all pre stack projected images and inverse variances in memory (where note these will each have the dimensions of the desired output stacked image, which can be very large).
+}
   \item{\dots}{
 Other arguments to pass into \code{\link{Rwcs_warp}}.
 }
@@ -45,9 +49,16 @@ Other arguments to pass into \code{\link{Rwcs_warp}}.
 The warping code used here is effectively \code{\link{Rwcs_warp}}, and the stacking part is very similar to that used in \code{profoundMakeStack}.
 }
 \value{
+The output is an object of class 'ProMo' containing:
+
 \item{image}{The stacked image, of class Rfits_image.}
 \item{weight}{The number of available un-masked pixels in every output pixel of \option{image}. Class Rfits_image.}
 \item{inVar}{The stacked inverse variance of the output \option{image}. Class Rfits_image.}
+
+And optionally (if \option{returnall} = TRUE):
+
+\item{image_pre_stack}{The projected pre stack images.}
+\item{inVar_pre_stack}{The projected pre stack inverse variance.}
 }
 \author{
 Aaron Robotham

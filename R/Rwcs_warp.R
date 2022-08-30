@@ -12,6 +12,10 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     stop("The Rfits package is needed!")
   }
   
+  if(inherits(image_in, 'Rfits_pointer')){
+    image_in = image_in[,]
+  }
+  
   if(any(names(image_in)=='imDat') | any(names(image_in)=='image')){
     if(is.null(header_in)){
       if(is.null(keyvalues_in)){
@@ -118,10 +122,12 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   class(image_out) = c('Rfits_image', class(image_out))
   
   if(dotightcrop){
-    BL = Rwcs_p2s(0, 0, keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
-    TL = Rwcs_p2s(0, dim(image_in)[2], keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
-    TR = Rwcs_p2s(dim(image_in)[1], dim(image_in)[2], keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
-    BR = Rwcs_p2s(dim(image_in)[1], 0, keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
+    suppressMessages({
+      BL = Rwcs_p2s(0, 0, keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
+      TL = Rwcs_p2s(0, dim(image_in)[2], keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
+      TR = Rwcs_p2s(dim(image_in)[1], dim(image_in)[2], keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
+      BR = Rwcs_p2s(dim(image_in)[1], 0, keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
+    })
     corners = rbind(BL, TL, TR, BR)
     tightcrop = ceiling(Rwcs_s2p(corners, keyvalues = keyvalues_out, header=raw_out, pixcen='R', WCSref=WCSref_out))
     min_x = max(1L, min(tightcrop[,1]))

@@ -1,8 +1,8 @@
 Package: Rwcs
 Type: Package
 Title: High Level 'WCSlib' Interface
-Version: 1.3.3
-Date: 2022-08-15
+Version: 1.3.4
+Date: 2022-08-24
 Authors@R: c(
     person(given='Aaron', family='Robotham', email='aaron.robotham@uwa.edu.au',
         role=c('aut', 'cre'), comment=c(ORCID='0000-0003-0429-3579')),
@@ -11,7 +11,7 @@ Authors@R: c(
 Maintainer: Aaron Robotham <aaron.robotham@uwa.edu.au>
 Description: Offers basic high level access to the C 'wcslib' library for projecting and deprojecting [x,y] and [RA,Dec] image data using a target WCS. Comes bundled with 'wcslib' v7.1 downloaded from <https://www.atnf.csiro.au/people/mcalabre/WCS/>.
 License: GPL (>= 2)
-Imports: Rcpp (>= 1.0.2), checkmate, celestial, magicaxis, foreach
+Imports: Rcpp (>= 1.0.2), checkmate, celestial, magicaxis, foreach, doParallel
 Suggests: testthat, Rfits, FITSio, imager
 Encoding: UTF-8
 LazyData: true

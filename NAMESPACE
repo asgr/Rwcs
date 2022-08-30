@@ -30,10 +30,11 @@ export(Rwcs_overlap_poly)
 
 useDynLib(Rwcs, .registration=TRUE)
 
-import(Rcpp)
-import(checkmate)
-import(magicaxis)
-import(foreach)
+import("Rcpp")
+import("checkmate")
+import("magicaxis")
+import("foreach")
+import("doParallel")
 
 importFrom(celestial, hms2deg, dms2deg, deg2hms, deg2dms)
 importFrom("graphics", "arrows", "axis", "box", "lines", "mtext",
