@@ -9,4 +9,4 @@ $(SHLIB): wcslib/C/libwcs-PIC.a
 wcslib/C/libwcs-PIC.a:
 	(cd wcslib/C; $(MAKE) libwcs-PIC.a AR="$(AR)")
 
-OBJECTS = RcppExports.o Rwcs.o pnpoly.o
+OBJECTS = RcppExports.o Rwcs.o pnpoly.o mat_diff_sum.o

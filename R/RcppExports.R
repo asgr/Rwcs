@@ -17,6 +17,10 @@ Cwcs_head_s2p <- function(RA, Dec, header, nkey, WCSref = 0L, ctrl = 2L) {
     .Call(`_Rwcs_Cwcs_head_s2p`, RA, Dec, header, nkey, WCSref, ctrl)
 }
 
+.mat_diff_sum <- function(mat1, mat2, scale = 1, delta_x = 0L, delta_y = 0L) {
+    .Call(`_Rwcs_mat_diff_sum`, mat1, mat2, scale, delta_x, delta_y)
+}
+
 .pnpoly <- function(testx, testy, vertx, verty) {
     .Call(`_Rwcs_pnpoly`, testx, testy, vertx, verty)
 }
