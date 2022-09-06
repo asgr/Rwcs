@@ -27,7 +27,7 @@ List of numeric matrices; pixel matched matrix per \option{image_list} entry. An
 Numeric vector; the input mag-zero points. If length 1 then it is assumed all input frames have the same mag-zero point.
 }
   \item{magzero_out}{
-Numeric scalar; the output mag-zero point desired.
+Numeric scalar; the output mag-zero point desired. A nice \option{magzero_out} is perhaps 23.9, because this means all measured fluxed are in micro-Jansky (rather than arbitrary ADUs). \option{magzero_out} = 8.9 gives Jansky; 16.4 gives milli-Jansky and 31.4 gives nano-Jansky.
 }
   \item{keyvalues_out}{
 List; output header values to be used for the WCS. This is the target WCS projection that each image in \option{image_list} will be mapped onto.

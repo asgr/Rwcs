@@ -1,6 +1,7 @@
 \name{Rwcs_warp}
 \alias{Rwcs_warp}
 \alias{Rwcs_rebin}
+\alias{Rwcs_tran}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Remap and Rebin Image WCS via Warping
@@ -14,9 +15,13 @@ Remaps an input projection system to a different target WCS.
 Rwcs_warp(image_in, keyvalues_out = NULL, keyvalues_in = NULL, dim_out = NULL,
   pixscale_out = NULL, pixscale_in = NULL, direction = "auto", boundary = "dirichlet",
   interpolation = "cubic", doscale = TRUE, plot = FALSE, header_out = NULL,
-  header_in = NULL, dotightcrop = TRUE, WCSref_out = NULL, WCSref_in = NULL, ...)
+  header_in = NULL, dotightcrop = TRUE, WCSref_out = NULL, WCSref_in = NULL,
+  magzero_out = NULL, magzero_in = NULL, ...)
 
 Rwcs_rebin(image, scale = 1, interpolation = 6)
+
+Rwcs_tran(image, delta_x = 0, delta_y = 0, direction = 'backward', padNA = TRUE,
+  shift_int = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -71,8 +76,26 @@ Scalar; optional output \option{WCSref}. Either NULL for base WCS (default), or 
   \item{WCSref_in}{
 Scalar; optional input \option{WCSref}. Either NULL for base WCS (default), or a letter [a-z] for the relevant projection desired. Only used if using a raw \option{header}, and obviously this has to exist within the provided raw \option{header}.  
 }
+  \item{magzero_out}{
+Numeric scalar; the output mag-zero point desired. Note \option{magzero_in} must also be provided for any scaling to be applied. A nice \option{magzero_out} is perhaps 23.9, because this means all measured fluxed are in micro-Jansky (rather than arbitrary ADUs). \option{magzero_out} = 8.9 gives Jansky; 16.4 gives milli-Jansky and 31.4 gives nano-Jansky.
+}
+  \item{magzero_in}{
+Numeric scalar; the input mag-zero point. Note \option{magzero_out} must also be provided for any scaling to be applied.
+}
   \item{scale}{
-Numeric scalar; resolution increasing factor, i.e. value larger thatn 1 will increase the number of output pixels (decrease the asec/pix pixel scale) and vica-versa.  
+Numeric scalar; resolution increasing factor, i.e. value larger than 1 will increase the number of output pixels (decrease the asec/pix pixel scale) and vica-versa.  
+}
+  \item{delta_x}{
+Numeric scalar; the shift in apply in the x-axis of the input \option{image}. Positive means a visual shift to the right (with padding applied to the left).  
+}
+  \item{delta_y}{
+Numeric scalar; the shift in apply in the y-axis of the input \option{image}. Positive means a visual shift up (with padding applied to the bottom).  
+}
+  \item{padNA}{
+Logical; should vacant pixels be padded with NA (TRUE) or left as 0 (FALSE).  
+}
+  \item{shift_int}{
+Logical; should the shift applied be purely integer (TRUE) or fractional pixel (FALSE). Integer shifts are much faster to compute, and are better at conserving flux and not introducing pixel covariance, so think carefully before setting to FALSE.
 }
   \item{\dots}{
 Dots are parsed to \code{\link{Rwcs_image}} (only relevant if \option{plot}=TRUE).

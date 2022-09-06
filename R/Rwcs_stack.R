@@ -88,17 +88,17 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, mask_list=NULL, magzero_
       }
     }
     
-    message('Stacking Images',seq_start,' to ',seq_end,' of ',Nim)
-    
-    addID = which(!is.na(pre_stack_image_list[[i]]))
+    message('Stacking Images ',seq_start,' to ',seq_end,' of ',Nim)
     
     if(is.null(pre_stack_inVar_list)){
       for(i in 1:length(pre_stack_image_list)){
+        addID = which(!is.na(pre_stack_image_list[[i]]))
         post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
         post_stack_weight[addID] = post_stack_weight[addID] + 1L
       }
     }else{
       for(i in 1:length(pre_stack_image_list)){
+        addID = which(!is.na(pre_stack_image_list[[i]]))
         post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
         post_stack_weight[addID] = post_stack_weight[addID] + 1L
         post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
@@ -106,11 +106,13 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, mask_list=NULL, magzero_
     }
   }
   
-  post_stack_image[post_stack_weight > 0] = post_stack_image[post_stack_weight > 0]/post_stack_weight[post_stack_weight > 0]
-  post_stack_image[post_stack_weight == 0L] = NA
-  if(!is.null(post_stack_inVar)){
+  if(is.null(pre_stack_inVar_list)){
+    post_stack_image[post_stack_weight > 0] = post_stack_image[post_stack_weight > 0]/post_stack_weight[post_stack_weight > 0]
+  }else{
+    post_stack_image[post_stack_weight > 0] = post_stack_image[post_stack_weight > 0]/post_stack_inVar[post_stack_weight > 0]
     post_stack_inVar[post_stack_weight == 0L] = NA
   }
+  post_stack_image[post_stack_weight == 0L] = NA
   
   # post_stack = .internalStack(image_list=pre_stack_image,
   #                             skyRMS_list=pre_stack_skyRMS,

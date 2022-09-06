@@ -1,6 +1,6 @@
-Rwcs_tweak = function(image_ref, image_pre_fix, dir='backward', delta_max=3, quan_cut=0.99,
-                      Nmeta=3, cores=4, shift_int=TRUE, final_centre=TRUE, return_image=FALSE,
-                      verbose=TRUE){
+Rwcs_tweak = function(image_ref, image_pre_fix, delta_max=3, quan_cut=0.99, Nmeta=3,
+                      cores=4, shift_int=TRUE, return_image=FALSE, direction='backward',
+                      final_centre=TRUE, verbose=TRUE){
   
   if(!requireNamespace("imager", quietly = TRUE)){
     stop('The imager package is needed for smoothing to work. Please install from CRAN.', call. = FALSE)
@@ -31,6 +31,7 @@ Rwcs_tweak = function(image_ref, image_pre_fix, dir='backward', delta_max=3, qua
   image_pre_fix[image_pre_fix < 1] = NA
   
   scale = 1 # not really used anymore
+  i = NULL #to avoid warnings
   
   #pix_cost_use = which(!is.na(image_ref) & !is.na(image_pre_fix))
   
@@ -118,7 +119,7 @@ Rwcs_tweak = function(image_ref, image_pre_fix, dir='backward', delta_max=3, qua
                       image_ref = image_ref,
                       image_pre_fix = image_pre_fix,
                       scale = scale,
-                      dir = dir,
+                      direction = direction,
                       pix_cost_use = NULL,
                       shift_int = FALSE
     )
@@ -133,7 +134,7 @@ Rwcs_tweak = function(image_ref, image_pre_fix, dir='backward', delta_max=3, qua
                                    image_ref = image_ref,
                                    image_pre_fix = image_pre_fix_orig,
                                    scale = scale,
-                                   dir = dir,
+                                   direction = direction,
                                    return = 'image_post_fix',
                                    shift_int = FALSE)
     
@@ -150,7 +151,7 @@ Rwcs_tweak = function(image_ref, image_pre_fix, dir='backward', delta_max=3, qua
   }
 }
 
-Rwcs_tran = function(image, delta_x=0, delta_y=0, dir='backward', padNA=TRUE, shift_int=TRUE){
+Rwcs_tran = function(image, delta_x=0, delta_y=0, direction='backward', padNA=TRUE, shift_int=TRUE){
   #delta refers to the direction we shift the image, not the view point.
   #postive delta_x moves image to the right
   #positive delta_y moves image up
@@ -171,11 +172,11 @@ Rwcs_tran = function(image, delta_x=0, delta_y=0, dir='backward', padNA=TRUE, sh
       return(as.matrix(imager::imshift(imager::as.cimg(image), delta_x=round(delta_x), delta_y=round(delta_y))))
     }
   }else{
-    if(dir == 'forward'){
+    if(direction == 'forward'){
       formals(.map.tran)$delta_x = delta_x
       formals(.map.tran)$delta_y = delta_y
     }
-    if(dir == 'backward'){
+    if(direction == 'backward'){
       formals(.map.tran)$delta_x = -delta_x
       formals(.map.tran)$delta_y = -delta_y
     }
@@ -183,17 +184,17 @@ Rwcs_tran = function(image, delta_x=0, delta_y=0, dir='backward', padNA=TRUE, sh
       .map.tran(x = x, y = y)
     }
     norm_mat = matrix(1, dim(image)[1], dim(image)[2])
-    norm_mat = as.matrix(imager::imwarp(imager::as.cimg(norm_mat), map=local_fun, dir=dir, coordinates='absolute'))
+    norm_mat = as.matrix(imager::imwarp(imager::as.cimg(norm_mat), map=local_fun, direction=direction, coordinates='absolute'))
     if(padNA){
       min_val = min(image, na.rm=TRUE)
       image = image - min_val + 1
-      image = as.matrix(imager::imwarp(imager::as.cimg(image), map=local_fun, dir=dir, coordinates='absolute'))
+      image = as.matrix(imager::imwarp(imager::as.cimg(image), map=local_fun, direction=direction, coordinates='absolute'))
       image[image == 0] = NA
       image = image/norm_mat
       image = image + min_val - 1
       return(image)
     }else{
-      return(as.matrix(imager::imwarp(imager::as.cimg(image), map=local_fun, dir=dir, coordinates='absolute'))/norm_mat)
+      return(as.matrix(imager::imwarp(imager::as.cimg(image), map=local_fun, direction=direction, coordinates='absolute'))/norm_mat)
     }
   }
 }
@@ -202,7 +203,7 @@ Rwcs_tran = function(image, delta_x=0, delta_y=0, dir='backward', padNA=TRUE, sh
   list(x = x + delta_x, y = y + delta_y)
 }
 
-.cost_fn = function(par, image_ref, image_pre_fix, scale=1, dir='backward', pix_cost_use=NULL, shift_int = TRUE, return='cost'){
+.cost_fn = function(par, image_ref, image_pre_fix, scale=1, direction='backward', pix_cost_use=NULL, shift_int = TRUE, return='cost'){
   if(shift_int){
     cost = .mat_diff_sum(image_ref, image_pre_fix, scale, par[1], par[2])
     message(par[1],' ',par[2],' ',cost)

@@ -1,7 +1,8 @@
 Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out = NULL,
                       pixscale_out = NULL, pixscale_in = NULL,
           direction = "auto", boundary = "dirichlet", interpolation = "cubic", 
-          doscale = TRUE, plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE, WCSref_out=NULL, WCSref_in=NULL, ...) 
+          doscale = TRUE, plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE,
+          WCSref_out = NULL, WCSref_in = NULL, magzero_out = NULL, magzero_in = NULL, ...) 
 {
   if (!requireNamespace("imager", quietly = TRUE)) {
     stop("The imager package is needed for this function to work. Please install it from CRAN.", 
@@ -87,6 +88,11 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   
   if(is.null(dim_out)){
     stop('Missing NAXIS1 / NAXIS2 in header keyvalues! Specify dim_out.')
+  }
+  
+  if(!is.null(magzero_in) & !is.null(magzero_out)){
+    image_in = image_in*10^(-0.4*(magzero_in - magzero_out))
+    keyvalues_out$MAGZERO = magzero_out
   }
   
   if (interpolation == "nearest") {
