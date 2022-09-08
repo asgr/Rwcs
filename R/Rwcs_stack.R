@@ -1,6 +1,6 @@
 Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list=NULL, magzero_in=0,
-                      magzero_out=23.9, keyvalues_out=NULL, dim_out=NULL, cores=4, return_all=FALSE,
-                      ...){
+                      magzero_out=23.9, keyvalues_out=NULL, dim_out=NULL, cores=4,
+                      keep_extreme_pix=FALSE, return_all=FALSE, ...){
   
   if(!requireNamespace("Rfits", quietly = TRUE)){
     stop('The Rfits package is needed for smoothing to work. Please install from GitHub asgr/Rfits.', call. = FALSE)
@@ -58,6 +58,14 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
     post_stack_exp = matrix(0, dim_im[1], dim_im[2])
   }else{
     post_stack_exp = NULL
+  }
+  
+  if(keep_extreme_pix){
+    post_stack_cold = matrix(Inf, dim_im[1], dim_im[2])
+    post_stack_hot = matrix(-Inf, dim_im[1], dim_im[2])
+  }else{
+    post_stack_cold = NULL
+    post_stack_hot = NULL
   }
   
   for(seq_start in seq_process){
@@ -137,24 +145,35 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
     
     if(is.null(pre_stack_inVar_list)){
       message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
-      for(i in 1:length(pre_stack_image_list)){
+      for(i in 1:Nim){
         addID = which(!is.na(pre_stack_image_list[[i]]))
         post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
         post_stack_weight[addID] = post_stack_weight[addID] + 1L
       }
     }else{
-      for(i in 1:length(pre_stack_image_list)){
+      for(i in 1:Nim){
         addID = which(!is.na(pre_stack_image_list[[i]]) & is.finite(pre_stack_inVar_list[[i]]))
         post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
         post_stack_weight[addID] = post_stack_weight[addID] + 1L
         post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
       }
     }
+    
     if(!is.null(pre_stack_exp_list)){
       message('Stacking Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
-      for(i in 1:length(pre_stack_image_list)){
+      for(i in 1:Nim){
         addID = which(!is.na(pre_stack_exp_list[[i]]))
         post_stack_exp[addID] = post_stack_exp[addID] + pre_stack_exp_list[[i]][addID]
+      }
+    }
+    
+    if(keep_extreme_pix){
+      for(i in 1:Nim){
+        new_cold = which(pre_stack_image_list[[i]] < post_stack_cold)
+        new_hot = which(pre_stack_image_list[[i]] > post_stack_hot)
+        
+        post_stack_cold[new_cold] = pre_stack_image_list[[i]][new_cold]
+        post_stack_hot[new_hot] = pre_stack_image_list[[i]][new_hot]
       }
     }
   }
@@ -206,11 +225,31 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
     exp_out = NULL
   }
   
+  if(keep_extreme_pix){
+    post_stack_cold[!is.finite(post_stack_cold)] = NA
+    post_stack_hot[!is.finite(post_stack_hot)] = NA
+    
+    keyvalues_out$EXTNAME = 'cold'
+    cold_out = Rfits::Rfits_create_image(image=post_stack_cold,
+                                        keyvalues=keyvalues_out,
+                                        keypass=FALSE)
+    
+    keyvalues_out$EXTNAME = 'hot'
+    hot_out = Rfits::Rfits_create_image(image=post_stack_hot,
+                                         keyvalues=keyvalues_out,
+                                         keypass=FALSE)
+  }else{
+    cold_out = NULL
+    hot_out = NULL
+  }
+  
   if(return_all){
     output = list(image = image_out,
                   weight = weight_out,
                   inVar = inVar_out,
                   exp = exp_out,
+                  cold = cold_out,
+                  hot = hot_out,
                   image_pre_stack = pre_stack_image_list,
                   inVar_pre_stack = pre_stack_inVar_list,
                   exp_pre_stack = pre_stack_exp_list)
@@ -218,7 +257,9 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
     output = list(image = image_out,
                   weight = weight_out,
                   inVar = inVar_out,
-                  exp = exp_out)
+                  exp = exp_out,
+                  cold = cold_out,
+                  hot = hot_out)
   }
   class(output) = "ProMo"
   return(invisible(output))
