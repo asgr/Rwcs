@@ -10,7 +10,8 @@ Given a list of images with WCS, this function will re-project and stack all un-
 \usage{
 Rwcs_stack(image_list = NULL, inVar_list = NULL, exp_list = NULL, mask_list = NULL,
   magzero_in = 0, magzero_out = 23.9, keyvalues_out = NULL, dim_out = NULL, cores = 4,
-  keep_extreme_pix = FALSE, return_all = FALSE, ...)
+  Nbatch = cores, keep_extreme_pix = FALSE, doclip = FALSE, clip_tol = 100,
+  return_all = FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -41,8 +42,17 @@ Integer vector; this defines the desired dimensions of the output image. If this
   \item{cores}{
 Integer scalar; the number of cores to run on.
 }
-\item{keep_extreme_pix}{
+  \item{Nbatch}{
+Integer scalar; the size of processing batches to be used internally. This can be larger than \option{cores}, but usually it makes more sense to set \option{Nbatch} = \option{cores} since that will minimise memory and maximise CPU usage. If \option{return_all} = TRUE or \option{doclip} = TRUE then \option{Nbatch} will be set to the number of images (since all pre-stack projected images will either be returned or need to be processed for clipped stacking). The fastest possible speed (but maximal memory impact) will be \option{Nbatch} = \option{cores} = length(\option{image_list}).
+}
+  \item{keep_extreme_pix}{
 Logical; should a cold and hot pixel matrix be stored and returned? This can be useful for diagnosing and later masking bad cold and hot pixels from the stacked \option{image}. Potentially you can use these outputs to detect hot/cold biased pixels in the output \option{image} and replace them with the \option{cold}/\option{hot} pixel in the location, or alternatively just mask them entirely.
+}
+  \item{doclip}{
+Logical; should the stack be cold/hot pixel clipped and restacked? Note \option{inVar_list} is required in this case, since the image variances are used to determine the clipping.  
+}
+  \item{clip_tol}{
+Numeric scalar or vector; determines how should cold (\option{clip_tol}[1]) and hot (\option{clip_tol}[2]) pixels are clipped. The internal logic is (stack - cold).sqrt(inVar) > \option{clip_tol}[1] cold pixels and (hot - stack).sqrt(inVar) > \option{clip_tol}[2] hot pixels are clipped out for a subsequent re-stacking of the output \option{image}. If length is 1 then value is repeated for cold and hot pixels.
 }
   \item{return_all}{
 Logical; should the pre stack projected images and inverse variances be returns also? Note if this is TRUE then the stacking can no longer be computed in batch mode, so be sure that you have enough memory to hold all pre stack projected images and inverse variances in memory (where note these will each have the dimensions of the desired output stacked image, which can be very large).
