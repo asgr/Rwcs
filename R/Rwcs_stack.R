@@ -209,6 +209,10 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
     }
   }
   
+  if(return_all==FALSE){
+    pre_stack_exp_list = NULL
+  }
+  
   if(is.null(pre_stack_inVar_list)){
     post_stack_image[post_stack_weight > 0] = post_stack_image[post_stack_weight > 0]/post_stack_weight[post_stack_weight > 0]
   }else{
@@ -289,6 +293,11 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
     post_stack_image[post_stack_weight == 0L] = NA
   }
   
+  if(return_all==FALSE){
+    pre_stack_image_list = NULL
+    pre_stack_inVar_list = NULL
+  }
+  
   # post_stack = .internalStack(image_list=pre_stack_image,
   #                             skyRMS_list=pre_stack_skyRMS,
   #                             magzero_in=magzero_in,
@@ -310,7 +319,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
                                  keyvalues=keyvalues_out,
                                  keypass=FALSE)
   
-  if(!is.null(pre_stack_inVar_list)){
+  if(!is.null(post_stack_inVar)){
     keyvalues_out$EXTNAME = 'inVar'
     inVar_out = Rfits::Rfits_create_image(image=post_stack_inVar,
                                     keyvalues=keyvalues_out,
@@ -319,7 +328,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
     inVar_out = NULL
   }
   
-  if(!is.null(pre_stack_exp_list)){
+  if(!is.null(post_stack_exp)){
     keyvalues_out$EXTNAME = 'exp'
     exp_out = Rfits::Rfits_create_image(image=post_stack_exp,
                                           keyvalues=keyvalues_out,
