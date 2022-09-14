@@ -11,7 +11,7 @@ Given a list of images with WCS, this function will re-project and stack all un-
 Rwcs_stack(image_list = NULL, inVar_list = NULL, exp_list = NULL, mask_list = NULL,
   magzero_in = 0, magzero_out = 23.9, keyvalues_out = NULL, dim_out = NULL, cores = 4,
   Nbatch = cores, keep_extreme_pix = FALSE, doclip = FALSE, clip_tol = 100,
-  return_all = FALSE, ...)
+  clip_dilate = 0, return_all = FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -22,7 +22,7 @@ List; required. List of the input \code{Rfits_image} or \code{Rfits_pointer} obj
 Numeric vector or list of numeric matrices; optional. The inverse variances. Either one value per \option{image_list} entry, or one pixel matched matrix per \option{image_list} entry. This is used to achieve S/N weighted stacking. If not provided then images are stacked with equal weight.
 }
   \item{exp_list}{
-Numeric vector or list of numeric matrices; optional. The exposure time. Either one value per \option{image_list} entry, or one pixel matched matrix per \option{image_list} entry. This is used to track maximal pixel exposure (so nothing is masked).  
+Numeric vector or list of numeric matrices; optional. The exposure time (in whatever units you like, but they should be consistent between input images). Either one value per \option{image_list} entry, or one pixel matched matrix per \option{image_list} entry. This is used to track maximal pixel exposure (so nothing is masked).  
 }
   \item{mask_list}{
 List of numeric matrices; optional. Pixel matched mask matrix per \option{image_list} entry. Anything non-zero is considered masked. This can be used in conjuction with setting pixels in \option{image_list} to NA.
@@ -54,6 +54,9 @@ Logical; should the stack be cold/hot pixel clipped and restacked? Note \option{
   \item{clip_tol}{
 Numeric scalar or vector; determines how should cold (\option{clip_tol}[1]) and hot (\option{clip_tol}[2]) pixels are clipped. The internal logic is (stack - cold).sqrt(inVar) > \option{clip_tol}[1] cold pixels and (hot - stack).sqrt(inVar) > \option{clip_tol}[2] hot pixels are clipped out for a subsequent re-stacking of the output \option{image}. If length is 1 then value is repeated for cold and hot pixels.
 }
+  \item{clip_dilate}{
+Integer scalar; how much to dilate around cold/hot pixels you wish to mask out. This is only relevant when \option{doclip} is TRUE. The value related to the diameter of the circular kernal used, so it should be odd valued and >= 3 (which would be one pixel of dilation) to have any effect.  
+}
   \item{return_all}{
 Logical; should the pre stack projected images and inverse variances be returns also? Note if this is TRUE then the stacking can no longer be computed in batch mode, so be sure that you have enough memory to hold all pre stack projected images and inverse variances in memory (where note these will each have the dimensions of the desired output stacked image, which can be very large).
 }
@@ -70,15 +73,17 @@ The output is an object of class 'ProMo' containing:
 \item{image}{The stacked image, of class Rfits_image.}
 \item{weight}{The number of available un-masked pixels in every output pixel of \option{image}. Class Rfits_image.}
 \item{inVar}{If \option{inVar_list} is not NULL, the stacked inverse variance of the output \option{image}. Class Rfits_image when present.}
-\item{exp}{If \option{exp_list} is not NULL, the total exposure time of the output \option{image}. Class Rfits_image when present.}
+\item{exp}{If \option{exp_list} is not NULL, the total exposure time of the output \option{image}. Class Rfits_image when present. Note this will be unmasked, so values of 0 means no photon ever hit the output \option{image}, i.e. masked pixels can have postive exposures if they sit within the detector domain.}
 \item{cold}{If \option{keep_extreme_pix} = TRUE, the extreme hot pixel value for the input \option{image_list} that formed the final stacked \option{image}. If \option{keep_extreme_pix} = FALSE this will be NULL. Class Rfits_image when present.}
 \item{hot}{If \option{keep_extreme_pix} = TRUE, the extreme hot pixel value for the input \option{image_list} that formed the final stacked \option{image}. If \option{keep_extreme_pix} = FALSE this will be NULL. Class Rfits_image when present.}
-\item{exp}{The stacked exposure times of the output \option{image}. Class Rfits_image. Note this will be unmasked, so values of 0 means no photon ever hit the output \option{image}, i.e. masked pixels can have postive exposures if they sit within the detector domain.}
+\item{clip}{The number of frames clipped from the stacked \option{image}. This is only relevant when \option{doclip} is TRUE. Values larger than 1 can indicate that both cold and hot pixels have been clipped in this location, and also that the dilation process has masked a pixel multiple times.}
+
 
 And optionally (if \option{returnall} = TRUE) these outputs are appended to the list:
 
 \item{image_pre_stack}{The projected pre stack images.}
 \item{inVar_pre_stack}{The projected pre stack inverse variance.}
+\item{exp_pre_stack}{The projected pre stack exposure times.}
 }
 \author{
 Aaron Robotham

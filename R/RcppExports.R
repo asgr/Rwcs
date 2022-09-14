@@ -17,6 +17,10 @@ Cwcs_head_s2p <- function(RA, Dec, header, nkey, WCSref = 0L, ctrl = 2L) {
     .Call(`_Rwcs_Cwcs_head_s2p`, RA, Dec, header, nkey, WCSref, ctrl)
 }
 
+.dilate_cpp <- function(segim, kern, expand = 0L) {
+    .Call(`_Rwcs_dilate_cpp`, segim, kern, expand)
+}
+
 .mat_diff_sum <- function(mat1, mat2, scale = 1, delta_x = 0L, delta_y = 0L) {
     .Call(`_Rwcs_mat_diff_sum`, mat1, mat2, scale, delta_x, delta_y)
 }

@@ -106,6 +106,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// dilate_cpp
+IntegerMatrix dilate_cpp(IntegerMatrix segim, IntegerMatrix kern, IntegerVector expand);
+RcppExport SEXP _Rwcs_dilate_cpp(SEXP segimSEXP, SEXP kernSEXP, SEXP expandSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type segim(segimSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type kern(kernSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type expand(expandSEXP);
+    rcpp_result_gen = Rcpp::wrap(dilate_cpp(segim, kern, expand));
+    return rcpp_result_gen;
+END_RCPP
+}
 // mat_diff_sum
 double mat_diff_sum(Rcpp::NumericMatrix mat1, Rcpp::NumericMatrix mat2, double scale, int delta_x, int delta_y);
 RcppExport SEXP _Rwcs_mat_diff_sum(SEXP mat1SEXP, SEXP mat2SEXP, SEXP scaleSEXP, SEXP delta_xSEXP, SEXP delta_ySEXP) {
@@ -141,6 +154,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_Rwcs_Cwcs_p2s", (DL_FUNC) &_Rwcs_Cwcs_p2s, 22},
     {"_Rwcs_Cwcs_head_p2s", (DL_FUNC) &_Rwcs_Cwcs_head_p2s, 6},
     {"_Rwcs_Cwcs_head_s2p", (DL_FUNC) &_Rwcs_Cwcs_head_s2p, 6},
+    {"_Rwcs_dilate_cpp", (DL_FUNC) &_Rwcs_dilate_cpp, 3},
     {"_Rwcs_mat_diff_sum", (DL_FUNC) &_Rwcs_mat_diff_sum, 5},
     {"_Rwcs_pnpoly", (DL_FUNC) &_Rwcs_pnpoly, 4},
     {NULL, NULL, 0}
