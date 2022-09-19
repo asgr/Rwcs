@@ -4,8 +4,10 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
                       return_all=FALSE, ...){
   
   if(!requireNamespace("Rfits", quietly = TRUE)){
-    stop('The Rfits package is needed for smoothing to work. Please install from GitHub asgr/Rfits.', call. = FALSE)
+    stop('The Rfits package is needed for stacking to work. Please install from GitHub asgr/Rfits.', call. = FALSE)
   }
+  
+  timestart = proc.time()[3]
     
   registerDoParallel(cores=cores)
   
@@ -19,7 +21,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
     cores = Nbatch
   }
   
-  if(return_all | doclip){
+  if(return_all){
     Nbatch = Nim
   }
   
@@ -71,7 +73,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
   if(keep_extreme_pix | doclip){
     post_stack_cold = matrix(Inf, dim_im[1], dim_im[2])
     post_stack_hot = matrix(-Inf, dim_im[1], dim_im[2])
-    mask_clip = NULL
+    mask_clip = matrix(0L, dim_im[1], dim_im[2])
   }else{
     post_stack_cold = NULL
     post_stack_hot = NULL
@@ -84,9 +86,9 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
       clip_tol = rep(clip_tol, 2)
     }
     
-    if(Nim != Nbatch){
-      stop('Nbatch must equal number of images')
-    }
+    # if(Nim != Nbatch){
+    #   stop('Nbatch must equal number of images')
+    # }
     
     if(!is.null(inVar_list)){
       post_stack_cold_id = matrix(0L, dim_im[1], dim_im[2])
@@ -224,6 +226,11 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
     post_stack_inVar[post_stack_weight == 0L] = NA
   }
   
+  if(keep_extreme_pix | doclip){
+    post_stack_cold[post_stack_weight == 0L] = NA
+    post_stack_hot[post_stack_weight == 0L] = NA
+  }
+  
   post_stack_image[post_stack_weight == 0L] = NA
   
   #Changed my mind on this- I think I should count exposure as a photon hitting a legal part of a sensor (bad pixel or not). I.e. fully masked regions with NA in the final image might still have a positive exposure time.
@@ -231,7 +238,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
   #   post_stack_exp[post_stack_weight == 0L] = NA
   # }
   
-  if(doclip & !is.null(post_stack_inVar) & Nbatch == Nim){
+  if(doclip & !is.null(post_stack_inVar)){
     message('Clipping out extreme cold/hot pixels')
     
     bad_cold = (post_stack_image - post_stack_cold)*sqrt(post_stack_inVar) > clip_tol[1]
@@ -243,16 +250,16 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
     rm(bad_cold)
     rm(bad_hot)
     
-    post_mask_list = list()
+    # post_mask_list = list()
+    # 
+    # for(i in 1:Nim){
+    #   post_mask_list[[i]] = (post_stack_cold_id == i) | (post_stack_hot_id == i)
+    #   if(clip_dilate > 0){
+    #     post_mask_list[[i]] = .dilate_R(post_mask_list[[i]], size=clip_dilate)
+    #   }
+    # }
     
-    for(i in 1:Nim){
-      post_mask_list[[i]] = (post_stack_cold_id == i) | (post_stack_hot_id == i)
-      if(clip_dilate > 0){
-        post_mask_list[[i]] = .dilate_R(post_mask_list[[i]], size=clip_dilate)
-      }
-    }
-    
-    message('Restacking without clipped cold/hot pixels')
+    #reset post stack outputs
     
     post_stack_image = matrix(0, dim_im[1], dim_im[2])
     post_stack_weight = matrix(0L, dim_im[1], dim_im[2])
@@ -261,22 +268,6 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
       post_stack_inVar = matrix(0, dim_im[1], dim_im[2])
     }else{
       post_stack_inVar = NULL
-    }
-    
-    if(is.null(pre_stack_inVar_list)){
-      message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
-      for(i in 1:Nim){
-        addID = which(!is.na(pre_stack_image_list[[i]]) & post_mask_list[[i]]==FALSE)
-        post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
-        post_stack_weight[addID] = post_stack_weight[addID] + 1L
-      }
-    }else{
-      for(i in 1:Nim){
-        addID = which(!is.na(pre_stack_image_list[[i]]) & is.finite(pre_stack_inVar_list[[i]]) & post_mask_list[[i]]==FALSE)
-        post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
-        post_stack_weight[addID] = post_stack_weight[addID] + 1L
-        post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
-      }
     }
     
     if(keep_extreme_pix){
@@ -289,16 +280,204 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
       mask_clip = NULL
     }
     
-    if(keep_extreme_pix){
-      for(i in 1:Nim){
-        mask_clip = mask_clip + post_mask_list[[i]]
-        
-        new_cold = which(pre_stack_image_list[[i]] < post_stack_cold & post_mask_list[[i]]==FALSE)
-        new_hot = which(pre_stack_image_list[[i]] > post_stack_hot & post_mask_list[[i]]==FALSE)
-        
-        post_stack_cold[new_cold] = pre_stack_image_list[[i]][new_cold]
-        post_stack_hot[new_hot] = pre_stack_image_list[[i]][new_hot]
+    if(Nbatch == Nim){ #if we already have all projections in memory we can just re-stack
+      message('Restacking without clipped cold/hot pixels')
+      if(is.null(pre_stack_inVar_list)){
+        message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
+        for(i in 1:Nim){
+          temp_mask_clip = (post_stack_cold_id == i) | (post_stack_hot_id == i)
+          if(clip_dilate > 0){
+            temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
+          }
+          addID = which(!is.na(pre_stack_image_list[[i]]) & temp_mask_clip==FALSE)
+          post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
+          post_stack_weight[addID] = post_stack_weight[addID] + 1L
+        }
+      }else{
+        for(i in 1:Nim){
+          temp_mask_clip = (post_stack_cold_id == i) | (post_stack_hot_id == i)
+          if(clip_dilate > 0){
+            temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
+          }
+          addID = which(!is.na(pre_stack_image_list[[i]]) & is.finite(pre_stack_inVar_list[[i]]) & temp_mask_clip==FALSE)
+          post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
+          post_stack_weight[addID] = post_stack_weight[addID] + 1L
+          post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
+        }
       }
+      
+      if(keep_extreme_pix){
+        for(i in 1:Nim){
+          temp_mask_clip = (post_stack_cold_id == i) | (post_stack_hot_id == i)
+          if(clip_dilate > 0){
+            temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
+          }
+          
+          mask_clip = mask_clip + temp_mask_clip
+          
+          new_cold = which(pre_stack_image_list[[i]] < post_stack_cold & temp_mask_clip==FALSE)
+          new_hot = which(pre_stack_image_list[[i]] > post_stack_hot & temp_mask_clip==FALSE)
+          
+          post_stack_cold[new_cold] = pre_stack_image_list[[i]][new_cold]
+          post_stack_hot[new_hot] = pre_stack_image_list[[i]][new_hot]
+        }
+      }
+    }else{ # If we need to batch process the image_list then we need to re-project everything again
+      
+      if(!is.null(exp_list)){
+        
+        if(length(exp_list) == 1){
+          exp_list = rep(exp_list, Nim) 
+        }
+        
+        if(length(exp_list) != Nim){
+          stop("Length of exp_list not equal to length of image_list!")  
+        }
+        
+        post_stack_exp = matrix(0, dim_im[1], dim_im[2])
+      }else{
+        post_stack_exp = NULL
+      }
+      
+      message('Reprojecting and restacking without clipped cold/hot pixels')
+      for(seq_start in seq_process){
+        seq_end = min(seq_start + Nbatch - 1L, Nim)
+        message('Projecting Images ',seq_start,' to ',seq_end,' of ',Nim)
+        
+        Nbatch_sub = length(seq_start:seq_end)
+        
+        pre_stack_image_list = NULL
+        pre_stack_inVar_list = NULL
+        
+        pre_stack_image_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar'))%dopar%{
+          if(inherits(image_list[[i]], 'Rfits_pointer')){
+            temp_image = image_list[[i]][,]
+            temp_image$imDat = temp_image$imDat*zero_point_scale[i]
+          }else{
+            temp_image = image_list[[i]]
+            temp_image$imDat = temp_image$imDat*zero_point_scale[i]
+          }
+          if(any(!is.finite(temp_image$imDat))){
+            temp_image$imDat[!is.finite(temp_image$imDat)] = NA
+          }
+          if(!is.null(mask_list)){
+            temp_image[mask_list[[i]] != 0] = NA
+          }
+          return(Rwcs_warp(
+            image_in = temp_image,
+            keyvalues_out = keyvalues_out,
+            dim_out = dim_out,
+            ...
+          )$imDat)
+        }
+        
+        if(!is.null(inVar_list)){
+          message('Projecting Inverse Variance ',seq_start,' to ',seq_end,' of ',Nim)
+          
+          pre_stack_inVar_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list'))%dopar%{
+            if(inherits(image_list[[i]], 'Rfits_pointer')){
+              temp_inVar = image_list[[i]][,]
+              temp_inVar$imDat[] = inVar_list[[i]]/(zero_point_scale[i]^2)
+            }else{
+              temp_inVar = image_list[[i]]
+              temp_inVar$imDat[] = inVar_list[[i]]/(zero_point_scale[i]^2)
+            }
+            return(Rwcs_warp(
+              image_in = temp_inVar,
+              keyvalues_out = keyvalues_out,
+              dim_out = dim_out,
+              ...
+            )$imDat)
+          }
+        }
+        
+        if(!is.null(exp_list)){
+          message('Projecting Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
+          if(length(exp_list) == 1){
+            exp_list = rep(exp_list, Nim)
+          }
+          if(length(exp_list) != Nim){
+            stop("Length of Exposure Times not equal to length of image_list!")
+          }
+          pre_stack_exp_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list', 'pre_stack_inVar_list'))%dopar%{
+            if(inherits(image_list[[i]], 'Rfits_pointer')){
+              temp_exp = image_list[[i]][,]
+              temp_exp$imDat[] = exp_list[[i]]
+            }else{
+              temp_exp = image_list[[i]]
+              temp_exp$imDat[] = exp_list[[i]]
+            }
+            return(Rwcs_warp(
+              image_in = temp_exp,
+              keyvalues_out = keyvalues_out,
+              dim_out = dim_out,
+              doscale = FALSE,
+              ...
+            )$imDat)
+          }
+        }
+        
+        if(is.null(pre_stack_inVar_list)){
+          message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
+          for(i in 1:Nbatch_sub){
+            i_stack = seq_start + i - 1L
+            
+            temp_mask_clip = (post_stack_cold_id == i_stack) | (post_stack_hot_id == i_stack)
+            if(clip_dilate > 0){
+              temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
+            }
+            
+            addID = which(!is.na(pre_stack_image_list[[i]]) & temp_mask_clip==FALSE)
+            post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
+            post_stack_weight[addID] = post_stack_weight[addID] + 1L
+          }
+        }else{
+          for(i in 1:Nbatch_sub){
+            i_stack = seq_start + i - 1L
+            
+            temp_mask_clip = (post_stack_cold_id == i_stack) | (post_stack_hot_id == i_stack)
+            if(clip_dilate > 0){
+              temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
+            }
+            
+            addID = which(!is.na(pre_stack_image_list[[i]]) & is.finite(pre_stack_inVar_list[[i]]) & temp_mask_clip==FALSE)
+            post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
+            post_stack_weight[addID] = post_stack_weight[addID] + 1L
+            post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
+          }
+        }
+        
+        if(!is.null(pre_stack_exp_list)){
+          message('Stacking Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
+          for(i in 1:Nbatch_sub){
+            addID = which(!is.na(pre_stack_exp_list[[i]]))
+            post_stack_exp[addID] = post_stack_exp[addID] + pre_stack_exp_list[[i]][addID]
+          }
+        }
+        
+        if(keep_extreme_pix){
+          for(i in 1:Nbatch_sub){
+            i_stack = seq_start + i - 1L
+            
+            temp_mask_clip = (post_stack_cold_id == i_stack) | (post_stack_hot_id == i_stack)
+            if(clip_dilate > 0){
+              temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
+            }
+            
+            mask_clip = mask_clip + temp_mask_clip
+            
+            new_cold = which(pre_stack_image_list[[i]] < post_stack_cold & temp_mask_clip==FALSE)
+            new_hot = which(pre_stack_image_list[[i]] > post_stack_hot & temp_mask_clip==FALSE)
+            
+            post_stack_cold[new_cold] = pre_stack_image_list[[i]][new_cold]
+            post_stack_hot[new_hot] = pre_stack_image_list[[i]][new_hot]
+          }
+        }
+      }
+    }
+    
+    if(return_all==FALSE){
+      pre_stack_exp_list = NULL
     }
     
     if(is.null(pre_stack_inVar_list)){
@@ -307,6 +486,12 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
       post_stack_image[post_stack_weight > 0] = post_stack_image[post_stack_weight > 0]/post_stack_inVar[post_stack_weight > 0]
       post_stack_inVar[post_stack_weight == 0L] = NA
     }
+    
+    if(keep_extreme_pix){
+      post_stack_cold[post_stack_weight == 0L] = NA
+      post_stack_hot[post_stack_weight == 0L] = NA
+    }
+    
     post_stack_image[post_stack_weight == 0L] = NA
   }
   
@@ -384,6 +569,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
     hot_out = NULL
     mask_clip = NULL
   }
+  
+  message('Time taken: ',signif(proc.time()[3] - timestart,4),' seconds')
   
   if(return_all){
     output = list(image = image_out,
