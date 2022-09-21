@@ -1,6 +1,6 @@
 Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list=NULL, magzero_in=0,
                       magzero_out=23.9, keyvalues_out=NULL, dim_out=NULL, cores=4, Nbatch=cores,
-                      keep_extreme_pix=FALSE, doclip=FALSE, clip_tol=100, clip_dilate=0,
+                      keep_extreme_pix=FALSE, doclip=FALSE, clip_tol=100, clip_dilate=0, clip_sigma=5,
                       return_all=FALSE, ...){
   
   if(!requireNamespace("Rfits", quietly = TRUE)){
@@ -244,7 +244,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
     post_stack_inRMS = sqrt(post_stack_inVar)
     
     bad_cold = (post_stack_image - post_stack_cold)*post_stack_inRMS > clip_tol[1] & post_stack_weight > 2
-    bad_hot = post_stack_cold*post_stack_inRMS < 5 & (post_stack_hot - post_stack_image)*post_stack_inRMS > clip_tol[2] & post_stack_weight > 2
+    bad_hot = post_stack_cold*post_stack_inRMS < clip_sigma & (post_stack_hot - post_stack_image)*post_stack_inRMS > clip_tol[2] & post_stack_weight > 2
     
     post_stack_cold_id[!bad_cold] = 0L
     post_stack_hot_id[!bad_hot] = 0L
