@@ -241,14 +241,17 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
   if(doclip & !is.null(post_stack_inVar)){
     message('Clipping out extreme cold/hot pixels')
     
-    bad_cold = (post_stack_image - post_stack_cold)*sqrt(post_stack_inVar) > clip_tol[1]
-    bad_hot = (post_stack_hot - post_stack_image)*sqrt(post_stack_inVar) > clip_tol[2]
+    post_stack_inRMS = sqrt(post_stack_inVar)
+    
+    bad_cold = (post_stack_image - post_stack_cold)*post_stack_inRMS > clip_tol[1] & post_stack_weight > 2
+    bad_hot = post_stack_cold*post_stack_inRMS < 5 & (post_stack_hot - post_stack_image)*post_stack_inRMS > clip_tol[2] & post_stack_weight > 2
     
     post_stack_cold_id[!bad_cold] = 0L
     post_stack_hot_id[!bad_hot] = 0L
     
     rm(bad_cold)
     rm(bad_hot)
+    rm(post_stack_inRMS)
     
     # post_mask_list = list()
     # 
@@ -270,14 +273,16 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
       post_stack_inVar = NULL
     }
     
+    post_stack_cold = NULL
+    post_stack_hot = NULL
+    mask_clip = NULL
+    
     if(keep_extreme_pix){
       post_stack_cold = matrix(Inf, dim_im[1], dim_im[2])
       post_stack_hot = matrix(-Inf, dim_im[1], dim_im[2])
-      mask_clip = matrix(0L, dim_im[1], dim_im[2])
-    }else{
-      post_stack_cold = NULL
-      post_stack_hot = NULL
-      mask_clip = NULL
+      if(doclip){
+        mask_clip = matrix(0L, dim_im[1], dim_im[2])
+      }
     }
     
     if(Nbatch == Nim){ #if we already have all projections in memory we can just re-stack
@@ -292,6 +297,14 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
           addID = which(!is.na(pre_stack_image_list[[i]]) & temp_mask_clip==FALSE)
           post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
           post_stack_weight[addID] = post_stack_weight[addID] + 1L
+          
+          if(keep_extreme_pix){
+            mask_clip = mask_clip + temp_mask_clip
+            new_cold = which(pre_stack_image_list[[i]] < post_stack_cold & temp_mask_clip==FALSE)
+            new_hot = which(pre_stack_image_list[[i]] > post_stack_hot & temp_mask_clip==FALSE)
+            post_stack_cold[new_cold] = pre_stack_image_list[[i]][new_cold]
+            post_stack_hot[new_hot] = pre_stack_image_list[[i]][new_hot]
+          }
         }
       }else{
         for(i in 1:Nim){
@@ -303,25 +316,33 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
           post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
           post_stack_weight[addID] = post_stack_weight[addID] + 1L
           post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
+          
+          if(keep_extreme_pix){
+            mask_clip = mask_clip + temp_mask_clip
+            new_cold = which(pre_stack_image_list[[i]] < post_stack_cold & temp_mask_clip==FALSE)
+            new_hot = which(pre_stack_image_list[[i]] > post_stack_hot & temp_mask_clip==FALSE)
+            post_stack_cold[new_cold] = pre_stack_image_list[[i]][new_cold]
+            post_stack_hot[new_hot] = pre_stack_image_list[[i]][new_hot]
+          }
         }
       }
       
-      if(keep_extreme_pix){
-        for(i in 1:Nim){
-          temp_mask_clip = (post_stack_cold_id == i) | (post_stack_hot_id == i)
-          if(clip_dilate > 0){
-            temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
-          }
-          
-          mask_clip = mask_clip + temp_mask_clip
-          
-          new_cold = which(pre_stack_image_list[[i]] < post_stack_cold & temp_mask_clip==FALSE)
-          new_hot = which(pre_stack_image_list[[i]] > post_stack_hot & temp_mask_clip==FALSE)
-          
-          post_stack_cold[new_cold] = pre_stack_image_list[[i]][new_cold]
-          post_stack_hot[new_hot] = pre_stack_image_list[[i]][new_hot]
-        }
-      }
+      # if(keep_extreme_pix){
+      #   for(i in 1:Nim){
+      #     temp_mask_clip = (post_stack_cold_id == i) | (post_stack_hot_id == i)
+      #     if(clip_dilate > 0){
+      #       temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
+      #     }
+      #     
+      #     mask_clip = mask_clip + temp_mask_clip
+      #     
+      #     new_cold = which(pre_stack_image_list[[i]] < post_stack_cold & temp_mask_clip==FALSE)
+      #     new_hot = which(pre_stack_image_list[[i]] > post_stack_hot & temp_mask_clip==FALSE)
+      #     
+      #     post_stack_cold[new_cold] = pre_stack_image_list[[i]][new_cold]
+      #     post_stack_hot[new_hot] = pre_stack_image_list[[i]][new_hot]
+      #   }
+      # }
     }else{ # If we need to batch process the image_list then we need to re-project everything again
       
       if(!is.null(exp_list)){
