@@ -125,6 +125,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
         image_in = temp_image,
         keyvalues_out = keyvalues_out,
         dim_out = dim_out,
+        doscale = TRUE,
         ...
       )$imDat)
     }
@@ -140,12 +141,16 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
           temp_inVar = image_list[[i]]
           temp_inVar$imDat[] = inVar_list[[i]]/(zero_point_scale[i]^2)
         }
-        return(Rwcs_warp(
-          image_in = temp_inVar,
-          keyvalues_out = keyvalues_out,
-          dim_out = dim_out,
-          ...
-        )$imDat)
+        suppressMessages({
+          return(Rwcs_warp(
+            image_in = temp_inVar,
+            keyvalues_out = keyvalues_out,
+            dim_out = dim_out,
+            doscale = FALSE,
+            ...
+            )$imDat*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixelarea
+          )
+        })
       }
     }
     
@@ -388,6 +393,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
             image_in = temp_image,
             keyvalues_out = keyvalues_out,
             dim_out = dim_out,
+            doscale = TRUE,
             ...
           )$imDat)
         }
@@ -403,12 +409,16 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, mask_list
               temp_inVar = image_list[[i]]
               temp_inVar$imDat[] = inVar_list[[i]]/(zero_point_scale[i]^2)
             }
-            return(Rwcs_warp(
-              image_in = temp_inVar,
-              keyvalues_out = keyvalues_out,
-              dim_out = dim_out,
-              ...
-            )$imDat)
+            suppressMessages({
+              return(Rwcs_warp(
+                image_in = temp_inVar,
+                keyvalues_out = keyvalues_out,
+                dim_out = dim_out,
+                doscale = FALSE,
+                ...
+                )$imDat*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixelarea
+              )
+            })
           }
         }
         
