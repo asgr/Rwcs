@@ -25,7 +25,7 @@ Numeric vector or list of numeric matrices; optional. The inverse variances. Eit
 Numeric vector or list of numeric matrices; optional. The exposure time (in whatever units you like, but they should be consistent between input images). Either one value per \option{image_list} entry, or one pixel matched matrix per \option{image_list} entry. This is used to track maximal pixel exposure (so nothing is masked). This is mostly provided to persist knowledge from a previous stack that you are now adding to with more data.
 }
   \item{weight_list}{
-Integer vector or list of integer matrices; optional. The weight map showing how many images have contributed to a given pixel. Either one value per \option{image_list} entry, or one pixel matched matrix per \option{image_list} entry. This is mostly provided to persist knowledge from a previous stack that you are now adding to with more data (else the previous stack would be implictly given the weight of 1 everywhere).  Note when using this argument you must also provide a \option{inVar_list}.
+Integer vector or list of integer matrices; optional. The weight map showing how many images have contributed to a given pixel. Either one value per \option{image_list} entry, or one pixel matched matrix per \option{image_list} entry. This is mostly provided to persist knowledge from a previous stack that you are now adding to with more data (else the previous stack would be implictly given the weight of 1 everywhere).
 }
   \item{mask_list}{
 List of numeric matrices; optional. Pixel matched mask matrix per \option{image_list} entry. Anything non-zero is considered masked. This can be used in conjuction with setting pixels in \option{image_list} to NA.
@@ -109,23 +109,20 @@ image = Rfits_read_image(file_image)
 #Here we stack a cutout ontop of the original image. A silly use case, but shows how it
 #works in basic terms.
 
-stack = Rwcs_stack(image_list=list(image, image[50:300,50:300]), inVar_list=list(1,1),
-  magzero_out=0, direction='forward')
+stack = Rwcs_stack(image_list=list(image, image[50:300,50:300]), magzero_out=0,
+  direction='forward')
   
 plot(stack$image) #this should look the same
-plot(stack$inVar, magmap=FALSE)
 plot(stack$weight, magmap=FALSE) #but centre of weight shows where WCS overlaps
 
 #we can continue stacking the image, preserving the various objects correctly if
 #they are passed in. Here we also cutout the original stack when re-stacking:
 
 stack2 = Rwcs_stack(image_list=list(stack$image, stack$image[20:350, 20:350]),
-  inVar_list=list(stack$inVar$imDat,stack$inVar$imDat[20:350, 20:350]),
   weight_list=list(stack$weight$imDat,stack$weight$imDat[20:350, 20:350]),
   magzero_out=0, direction='forward')
   
 plot(stack2$image)
-plot(stack2$inVar, magmap=FALSE)
 plot(stack2$weight, magmap=FALSE)
 }
 

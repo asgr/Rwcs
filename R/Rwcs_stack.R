@@ -244,10 +244,11 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
       for(i in 1:Nbatch_sub){
         addID = which(!is.na(pre_stack_image_list[[i]]))
-        post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
         if(weight_image[i]){
+          post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_weight_list[[i]][addID]
           post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
         }else{
+          post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
           post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
         }
       }
@@ -368,10 +369,11 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
           }
           addID = which(!is.na(pre_stack_image_list[[i]]) & temp_mask_clip==FALSE)
-          post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
           if(weight_image[i]){
+            post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_weight_list[[i]][addID]
             post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
           }else{
+            post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
             post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
           }
           
@@ -572,10 +574,11 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             }
             
             addID = which(!is.na(pre_stack_image_list[[i]]) & temp_mask_clip==FALSE)
-            post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
             if(weight_image[i]){
+              post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_weight_list[[i]][addID]
               post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
             }else{
+              post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
               post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
             }
           }
