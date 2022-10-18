@@ -19,9 +19,7 @@ Rwcs_warp(image_in, keyvalues_out = NULL, keyvalues_in = NULL, dim_out = NULL,
   header_in = NULL, dotightcrop = TRUE, WCSref_out = NULL, WCSref_in = NULL,
   magzero_out = NULL, magzero_in = NULL, ...)
 
-Rwcs_warp_promo(promo_in, keyvalues_out=NULL, dim_out = NULL, pixscale_out = NULL,
-  direction = "auto", boundary = "dirichlet", interpolation = "cubic", dotightcrop = TRUE,
-  WCSref_out = NULL, WCSref_in = NULL, magzero_out = NULL, ...)
+Rwcs_warp_promo(promo_in, keyvalues_out = NULL, dim_out = NULL, magzero_out = NULL, ...)
 
 Rwcs_rebin(image, scale = 1, interpolation = 6)
 
@@ -106,7 +104,7 @@ Logical; should vacant pixels be padded with NA (TRUE) or left as 0 (FALSE).
 Logical; should the shift applied be purely integer (TRUE) or fractional pixel (FALSE). Integer shifts are much faster to compute, and are better at conserving flux and not introducing pixel covariance, so think carefully before setting to FALSE.
 }
   \item{\dots}{
-Dots are parsed to \code{\link{Rwcs_image}} (only relevant if \option{plot}=TRUE).
+For \code{Rwcs_warp} dots are passed to \code{\link{Rwcs_image}} (only relevant if \option{plot}=TRUE). For \code{Rwcs_warp_promo} dots are passed to \code{Rwcs_warp}.
 }  
 }
 \details{

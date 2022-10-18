@@ -276,10 +276,7 @@ Rwcs_rebin = function(image, scale = 1,interpolation = 6){
   }
 }
 
-Rwcs_warp_promo = function (promo_in, keyvalues_out=NULL, dim_out = NULL,
-                      pixscale_out = NULL, direction = "auto", boundary = "dirichlet", interpolation = "cubic", 
-                      dotightcrop = TRUE, WCSref_out = NULL, WCSref_in = NULL,
-                      magzero_out = NULL, ...){
+Rwcs_warp_promo = function (promo_in, keyvalues_out=NULL, dim_out = NULL, magzero_out = NULL, ...){
   
   if(!is.null(magzero_out)){
     zero_point_scale = 10^(-0.4*(promo_in$image$keyvalues$MAGZERO - magzero_out))
