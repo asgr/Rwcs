@@ -668,12 +668,14 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                                  history='Stacked with Rwcs_stack')
   
   keyvalues_out$EXTNAME = 'weight'
+  keyvalues_out$MAGZERO = NULL
   weight_out = Rfits::Rfits_create_image(image=post_stack_weight,
                                  keyvalues=keyvalues_out,
                                  keypass=FALSE)
   
   if(!is.null(post_stack_inVar)){
     keyvalues_out$EXTNAME = 'inVar'
+    keyvalues_out$MAGZERO = magzero_out
     inVar_out = Rfits::Rfits_create_image(image=post_stack_inVar,
                                     keyvalues=keyvalues_out,
                                     keypass=FALSE)
@@ -683,6 +685,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
   
   if(!is.null(post_stack_exp)){
     keyvalues_out$EXTNAME = 'exp'
+    keyvalues_out$MAGZERO = NULL
     exp_out = Rfits::Rfits_create_image(image=post_stack_exp,
                                           keyvalues=keyvalues_out,
                                           keypass=FALSE)
@@ -694,6 +697,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     post_stack_cold[weight_out$imDat == 0L] = NA
     
     keyvalues_out$EXTNAME = 'cold'
+    keyvalues_out$MAGZERO = magzero_out
     cold_out = Rfits::Rfits_create_image(image=post_stack_cold,
                                         keyvalues=keyvalues_out,
                                         keypass=FALSE)
@@ -709,6 +713,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       mask_clip[weight_out$imDat == 0L] = NA
       
       keyvalues_out$EXTNAME = 'clip'
+      keyvalues_out$MAGZERO = NULL
       mask_clip = Rfits::Rfits_create_image(image=mask_clip,
                                           keyvalues=keyvalues_out,
                                           keypass=FALSE)

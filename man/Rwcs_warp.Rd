@@ -2,6 +2,7 @@
 \alias{Rwcs_warp}
 \alias{Rwcs_rebin}
 \alias{Rwcs_tran}
+\alias{Rwcs_warp_promo}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Remap and Rebin Image WCS via Warping
@@ -9,7 +10,7 @@ Remap and Rebin Image WCS via Warping
 \description{
 Remaps an input projection system to a different target WCS.
 
-\code{Rwcs_warp} does precise remapping of one WCS to another, \code{Rwcs_rebin} does quick coarse down-sampling (via re-binning), which can be useful for faster visualisations (since fewer pixels to worry about). Both conserve flux correctly.
+\code{Rwcs_warp} does precise remapping of one WCS to another, \code{Rwcs_rebin} does quick coarse down-sampling (via re-binning), which can be useful for faster visualisations (since fewer pixels to worry about). Both conserve flux correctly. \code{Rwcs_tran} just applies a translational shift. \code{Rwcs_warp_promo} warps all elements of a ProMo class object (as returned by \code{\link{Rwcs_stack}}).
 }
 \usage{
 Rwcs_warp(image_in, keyvalues_out = NULL, keyvalues_in = NULL, dim_out = NULL,
@@ -17,6 +18,10 @@ Rwcs_warp(image_in, keyvalues_out = NULL, keyvalues_in = NULL, dim_out = NULL,
   interpolation = "cubic", doscale = TRUE, plot = FALSE, header_out = NULL,
   header_in = NULL, dotightcrop = TRUE, WCSref_out = NULL, WCSref_in = NULL,
   magzero_out = NULL, magzero_in = NULL, ...)
+
+Rwcs_warp_promo(promo_in, keyvalues_out=NULL, dim_out = NULL, pixscale_out = NULL,
+  direction = "auto", boundary = "dirichlet", interpolation = "cubic", dotightcrop = TRUE,
+  WCSref_out = NULL, WCSref_in = NULL, magzero_out = NULL, ...)
 
 Rwcs_rebin(image, scale = 1, interpolation = 6)
 
@@ -27,6 +32,9 @@ Rwcs_tran(image, delta_x = 0, delta_y = 0, direction = 'backward', padNA = TRUE,
 \arguments{
   \item{image_in}{
 Numeric matrix; required, the image we want to warp. If \option{image} is a list as created by \code{Rfits_read_image} then the image part of the list is parsed to \option{image} and the correct header part is parsed to \option{keyvalues}.
+}
+  \item{promo_in}{
+List; object of class 'ProMo', usually the output of \code{\link{Rwcs_stack}}. All present list elements will be warp as appropriate (so conserving flux, inverse-Variance, or value as required): image (flux), weight (value), inVar (rebinned inVar), exp (value), cold (flux), hot (flux), clip (value).
 }
   \item{image}{
 Numeric matrix; required, the image we want to rebin. If \option{image} is a list as created by \code{Rfits_read_image} then the image part of the list is parsed to \option{image} and the correct header part is parsed to \option{keyvalues}.
@@ -127,6 +135,21 @@ For both \code{Rwcs_warp} and \code{Rwcs_rebin} (if input is class Rfits), retur
   \item{keycomments}{Usual keycomments of target \option{header_out}.}
   
 For \code{Rwcs_rebin}, if the input is a matrix then the output is also a matrix. The user will need to pay attention to the change in the pixel scale etc because this is therefore not stored directly in the output since there is no attached WCS.
+
+\code{Rwcs_tran} simply returns the shifted numeric matrix.
+
+\code{Rwcs_warp_promo}
+
+The output is an object of class 'ProMo' (warped as appropriate) containing:
+
+\item{image}{The stacked image, of class Rfits_image.}
+\item{weight}{The number of available un-masked pixels in every output pixel of \option{image}. Class Rfits_image.}
+\item{inVar}{If \option{inVar_list} is not NULL, the stacked inverse variance of the output \option{image}. Class Rfits_image when present.}
+\item{exp}{If \option{exp_list} is not NULL, the total exposure time of the output \option{image}. Class Rfits_image when present. Note this will be unmasked, so values of 0 means no photon ever hit the output \option{image}, i.e. masked pixels can have postive exposures if they sit within the detector domain.}
+\item{cold}{If \option{keep_extreme_pix} = TRUE, the extreme hot pixel value for the input \option{image_list} that formed the final stacked \option{image}. If \option{keep_extreme_pix} = FALSE this will be NULL. Class Rfits_image when present.}
+\item{hot}{If \option{keep_extreme_pix} = TRUE, the extreme hot pixel value for the input \option{image_list} that formed the final stacked \option{image}. If \option{keep_extreme_pix} = FALSE this will be NULL. Class Rfits_image when present.}
+\item{clip}{The number of frames clipped from the stacked \option{image}. This is only relevant when \option{doclip} is TRUE. Values larger than 1 can indicate that both cold and hot pixels have been clipped in this location, and also that the dilation process has masked a pixel multiple times.}
+
 }
 \author{
 Aaron Robotham
