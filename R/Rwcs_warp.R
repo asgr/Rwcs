@@ -281,11 +281,13 @@ Rwcs_warp_promo = function (promo_in, keyvalues_out=NULL, dim_out = NULL, magzer
   if(!is.null(magzero_out)){
     zero_point_scale = 10^(-0.4*(promo_in$image$keyvalues$MAGZERO - magzero_out))
   }else{
+    magzero_out = promo_in$image$keyvalues$MAGZERO
     zero_point_scale = 1
   }
   
   if(!is.null(promo_in$image)){
     message('warping image')
+    
     image_warp = Rwcs_warp(
       image_in = promo_in$image*zero_point_scale,
       keyvalues_out = keyvalues_out,
@@ -293,13 +295,16 @@ Rwcs_warp_promo = function (promo_in, keyvalues_out=NULL, dim_out = NULL, magzer
       doscale = TRUE,
       ...
     )
-    promo_in$image$keyvalues$MAGZERO = magzero_out
+    
+    image_warp$keyvalues$EXTNAME = 'image'
+    image_warp$keyvalues$MAGZERO = magzero_out
   }else{
     image_warp = NULL
   }
   
   if(!is.null(promo_in$weight)){
     message('warping weight')
+    
     weight_warp = Rwcs_warp(
       image_in = promo_in$weight,
       keyvalues_out = keyvalues_out,
@@ -307,13 +312,15 @@ Rwcs_warp_promo = function (promo_in, keyvalues_out=NULL, dim_out = NULL, magzer
       doscale = FALSE,
       ...
     )
-    promo_in$weight$keyvalues$MAGZERO = NULL
+    
+    weight_warp$keyvalues$EXTNAME = 'weight'
   }else{
     weight_warp = NULL
   }
   
   if(!is.null(promo_in$inVar)){
     message('warping inVar')
+    
     inVar_warp = Rwcs_warp(
       image_in = promo_in$inVar/(zero_point_scale^2),
       keyvalues_out = keyvalues_out,
@@ -321,13 +328,16 @@ Rwcs_warp_promo = function (promo_in, keyvalues_out=NULL, dim_out = NULL, magzer
       doscale = FALSE,
       ...
     )*(Rwcs_pixscale(promo_in$inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4)
-    promo_in$inVar$keyvalues$MAGZERO = magzero_out
+    
+    inVar_warp$keyvalues$EXTNAME = 'inVar'
+    inVar_warp$keyvalues$MAGZERO = magzero_out
   }else{
     inVar_warp = NULL
   }
   
   if(!is.null(promo_in$exp)){
     message('warping exp')
+    
     exp_warp = Rwcs_warp(
       image_in = promo_in$exp,
       keyvalues_out = keyvalues_out,
@@ -335,13 +345,15 @@ Rwcs_warp_promo = function (promo_in, keyvalues_out=NULL, dim_out = NULL, magzer
       doscale = FALSE,
       ...
     )
-    promo_in$exp$keyvalues$MAGZERO = NULL
+    
+    exp_warp$keyvalues$EXTNAME = 'exp'
   }else{
     exp_warp = NULL
   }
   
   if(!is.null(promo_in$cold)){
     message('warping cold')
+    
     cold_warp = Rwcs_warp(
       image_in = promo_in$cold*zero_point_scale,
       keyvalues_out = keyvalues_out,
@@ -349,13 +361,16 @@ Rwcs_warp_promo = function (promo_in, keyvalues_out=NULL, dim_out = NULL, magzer
       doscale = TRUE,
       ...
     )
-    promo_in$cold$keyvalues$MAGZERO = magzero_out
+    
+    cold_warp$keyvalues$EXTNAME = 'cold'
+    cold_warp$keyvalues$MAGZERO = magzero_out
   }else{
     cold_warp = NULL
   }
   
   if(!is.null(promo_in$hot)){
     message('warping hot')
+    
     hot_warp = Rwcs_warp(
       image_in = promo_in$hot*zero_point_scale,
       keyvalues_out = keyvalues_out,
@@ -363,13 +378,16 @@ Rwcs_warp_promo = function (promo_in, keyvalues_out=NULL, dim_out = NULL, magzer
       doscale = TRUE,
       ...
     )
-    promo_in$hot$keyvalues$MAGZERO = magzero_out
+    
+    hot_warp$keyvalues$EXTNAME = 'hot'
+    hot_warp$keyvalues$MAGZERO = magzero_out
   }else{
     hot_warp = NULL
   }
   
   if(!is.null(promo_in$clip)){
     message('warping clip')
+    
     clip_warp = Rwcs_warp(
       image_in = promo_in$clip,
       keyvalues_out = keyvalues_out,
@@ -377,7 +395,8 @@ Rwcs_warp_promo = function (promo_in, keyvalues_out=NULL, dim_out = NULL, magzer
       doscale = FALSE,
       ...
     )
-    promo_in$clip$keyvalues$MAGZERO = NULL
+    
+    clip_warp$keyvalues$EXTNAME = 'clip'
   }else{
     clip_warp = NULL
   }
