@@ -95,11 +95,14 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     keyvalues_out$MAGZERO = magzero_out
   }
   
-  if (interpolation == "nearest") {
-    warpoffset = 0.5
-  }else{
-    warpoffset = 0
-  }
+  #seems I don't need this anymore- imager side bug presumably fixed (which is what it seemed to be)
+  #leave commented out for now, until 100% happy it doesn't appear elsewhere
+  
+  #if (interpolation == "nearest") {
+  #  warpoffset = 0.5
+  #}else{
+  #  warpoffset = 0
+  #}
   
   # if(is.null(header_out)){
   #   raw = NULL
@@ -155,12 +158,14 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   .warpfunc_in2out = function(x, y) {
     radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_in, header = header_in, WCSref = WCSref_in)
     xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_out, header = raw_out, WCSref = WCSref_out)
-    return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
+    #return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
+    return(list(x = xy_out[, 1], y = xy_out[,2]))
   }
   .warpfunc_out2in = function(x, y) {
     radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_out, header = raw_out, WCSref = WCSref_in)
     xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_in, header = header_in, , WCSref = WCSref_out)
-    return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
+    #return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
+    return(list(x = xy_out[, 1], y = xy_out[,2]))
   }
   
   image_out$imDat[1:dim(image_in)[1], 1:dim(image_in)[2]] = image_in
