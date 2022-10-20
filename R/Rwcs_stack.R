@@ -136,17 +136,29 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     pre_stack_image_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar'))%dopar%{
       if(inherits(image_list[[i]], 'Rfits_pointer')){
         temp_image = image_list[[i]][,]
-        temp_image$imDat = temp_image$imDat*zero_point_scale[i]
       }else{
         temp_image = image_list[[i]]
+      }
+      
+      if(zero_point_scale[i] != 1){
         temp_image$imDat = temp_image$imDat*zero_point_scale[i]
       }
+      
       if(any(!is.finite(temp_image$imDat))){
         temp_image$imDat[!is.finite(temp_image$imDat)] = NA
       }
+      
       if(!is.null(mask_list)){
-        temp_image[mask_list[[i]] != 0] = NA
+        if(inherits(mask_list[[i]], 'Rfits_pointer')){
+          mask_list[[i]]$header = FALSE
+          temp_image$imDat[mask_list[[i]][,] != 0] = NA
+        }else if(inherits(mask_list[[i]], 'Rfits_image')){
+          temp_image$imDat[mask_list[[i]]$imDat != 0] = NA
+        }else{
+          temp_image$imDat[mask_list != 0] = NA
+        }
       }
+      
       return(Rwcs_warp(
         image_in = temp_image,
         keyvalues_out = keyvalues_out,
@@ -162,11 +174,23 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       pre_stack_inVar_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list'))%dopar%{
         if(inherits(image_list[[i]], 'Rfits_pointer')){
           temp_inVar = image_list[[i]][,]
-          temp_inVar$imDat[] = inVar_list[[i]]/(zero_point_scale[i]^2)
         }else{
           temp_inVar = image_list[[i]]
-          temp_inVar$imDat[] = inVar_list[[i]]/(zero_point_scale[i]^2)
         }
+        
+        if(inherits(inVar_list[[i]], 'Rfits_pointer')){
+          inVar_list[[i]]$header = FALSE
+          temp_inVar$imDat[] = inVar_list[[i]][,]
+        }else if(inherits(inVar_list[[i]], 'Rfits_image')){
+          temp_inVar$imDat[] = inVar_list[[i]]$imDat
+        }else{
+          temp_inVar$imDat[] = inVar_list[[i]]
+        }
+        
+        if(zero_point_scale[i] != 1){
+          temp_inVar$imDat = temp_inVar$imDat/(zero_point_scale[i]^2)
+        }
+        
         suppressMessages({
           return(Rwcs_warp(
             image_in = temp_inVar,
@@ -174,7 +198,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             dim_out = dim_out,
             doscale = FALSE,
             ...
-            )$imDat*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixelarea
+            )$imDat*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixel area
           )
         })
       }
@@ -191,11 +215,20 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       pre_stack_exp_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list', 'pre_stack_inVar_list'))%dopar%{
         if(inherits(image_list[[i]], 'Rfits_pointer')){
           temp_exp = image_list[[i]][,]
-          temp_exp$imDat[] = exp_list[[i]]
         }else{
           temp_exp = image_list[[i]]
+        }
+        
+        #need [] because this will assign a single value to all elements of a matrix
+        if(inherits(exp_list[[i]], 'Rfits_pointer')){
+          exp_list[[i]]$header = FALSE
+          temp_exp$imDat[] = exp_list[[i]][,]
+        }else if(inherits(exp_list[[i]], 'Rfits_image')){
+          temp_exp$imDat[] = exp_list[[i]]$imDat
+        }else{
           temp_exp$imDat[] = exp_list[[i]]
         }
+        
         return(Rwcs_warp(
           image_in = temp_exp,
           keyvalues_out = keyvalues_out,
@@ -210,21 +243,24 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     
     if(any(weight_image)){
       message('Projecting Weights ',seq_start,' to ',seq_end,' of ',Nim)
-      if(length(weight_list) == 1){
-        weight_list = rep(weight_list, Nim)
-      }
-      if(length(weight_list) != Nim){
-        stop("Length of Weights not equal to length of image_list!")
-      }
       pre_stack_weight_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list', 'pre_stack_inVar_list', 'pre_stack_exp_list'))%dopar%{
         if(weight_image[i]){
           if(inherits(image_list[[i]], 'Rfits_pointer')){
             temp_weight = image_list[[i]][,]
-            temp_weight$imDat[] = weight_list[[i]]
           }else{
             temp_weight = image_list[[i]]
+          }
+          
+          #need [] because this will assign a single value to all elements of a matrix
+          if(inherits(weight_list[[i]], 'Rfits_pointer')){
+            weight_list[[i]]$header = FALSE
+            temp_weight$imDat[] = weight_list[[i]][,]
+          }else if(inherits(weight_list[[i]], 'Rfits_image')){
+            temp_weight$imDat[] = weight_list[[i]]$imDat
+          }else{
             temp_weight$imDat[] = weight_list[[i]]
           }
+          
           return(Rwcs_warp(
             image_in = temp_weight,
             keyvalues_out = keyvalues_out,
@@ -459,17 +495,29 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         pre_stack_image_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar'))%dopar%{
           if(inherits(image_list[[i]], 'Rfits_pointer')){
             temp_image = image_list[[i]][,]
-            temp_image$imDat = temp_image$imDat*zero_point_scale[i]
           }else{
             temp_image = image_list[[i]]
+          }
+          
+          if(zero_point_scale[i] != 1){
             temp_image$imDat = temp_image$imDat*zero_point_scale[i]
           }
+          
           if(any(!is.finite(temp_image$imDat))){
             temp_image$imDat[!is.finite(temp_image$imDat)] = NA
           }
+          
           if(!is.null(mask_list)){
-            temp_image[mask_list[[i]] != 0] = NA
+            if(inherits(mask_list[[i]], 'Rfits_pointer')){
+              mask_list[[i]]$header = FALSE
+              temp_image$imDat[mask_list[[i]][,] != 0] = NA
+            }else if(inherits(mask_list[[i]], 'Rfits_image')){
+              temp_image$imDat[mask_list[[i]]$imDat != 0] = NA
+            }else{
+              temp_image$imDat[mask_list != 0] = NA
+            }
           }
+          
           return(Rwcs_warp(
             image_in = temp_image,
             keyvalues_out = keyvalues_out,
@@ -485,11 +533,23 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           pre_stack_inVar_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list'))%dopar%{
             if(inherits(image_list[[i]], 'Rfits_pointer')){
               temp_inVar = image_list[[i]][,]
-              temp_inVar$imDat[] = inVar_list[[i]]/(zero_point_scale[i]^2)
             }else{
               temp_inVar = image_list[[i]]
-              temp_inVar$imDat[] = inVar_list[[i]]/(zero_point_scale[i]^2)
             }
+            
+            if(inherits(inVar_list[[i]], 'Rfits_pointer')){
+              inVar_list[[i]]$header = FALSE
+              temp_inVar$imDat[] = inVar_list[[i]][,]
+            }else if(inherits(inVar_list[[i]], 'Rfits_image')){
+              temp_inVar$imDat[] = inVar_list[[i]]$imDat
+            }else{
+              temp_inVar$imDat[] = inVar_list[[i]]
+            }
+            
+            if(zero_point_scale[i] != 1){
+              temp_inVar$imDat = temp_inVar$imDat/(zero_point_scale[i]^2)
+            }
+            
             suppressMessages({
               return(Rwcs_warp(
                 image_in = temp_inVar,
@@ -497,7 +557,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                 dim_out = dim_out,
                 doscale = FALSE,
                 ...
-                )$imDat*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixelarea
+                )$imDat*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixel area
               )
             })
           }
@@ -514,11 +574,20 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           pre_stack_exp_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list', 'pre_stack_inVar_list'))%dopar%{
             if(inherits(image_list[[i]], 'Rfits_pointer')){
               temp_exp = image_list[[i]][,]
-              temp_exp$imDat[] = exp_list[[i]]
             }else{
               temp_exp = image_list[[i]]
+            }
+            
+            #need [] because this will assign a single value to all elements of a matrix
+            if(inherits(exp_list[[i]], 'Rfits_pointer')){
+              exp_list[[i]]$header = FALSE
+              temp_exp$imDat[] = exp_list[[i]][,]
+            }else if(inherits(exp_list[[i]], 'Rfits_image')){
+              temp_exp$imDat[] = exp_list[[i]]$imDat
+            }else{
               temp_exp$imDat[] = exp_list[[i]]
             }
+            
             return(Rwcs_warp(
               image_in = temp_exp,
               keyvalues_out = keyvalues_out,
@@ -533,21 +602,24 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         
         if(any(weight_image)){
           message('Projecting Weights ',seq_start,' to ',seq_end,' of ',Nim)
-          if(length(weight_list) == 1){
-            weight_list = rep(weight_list, Nim)
-          }
-          if(length(weight_list) != Nim){
-            stop("Length of Weights not equal to length of image_list!")
-          }
           pre_stack_weight_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list', 'pre_stack_inVar_list', 'pre_stack_exp_list'))%dopar%{
             if(weight_image[i]){
               if(inherits(image_list[[i]], 'Rfits_pointer')){
                 temp_weight = image_list[[i]][,]
-                temp_weight$imDat[] = weight_list[[i]]
               }else{
                 temp_weight = image_list[[i]]
+              }
+              
+              #need [] because this will assign a single value to all elements of a matrix
+              if(inherits(weight_list[[i]], 'Rfits_pointer')){
+                weight_list[[i]]$header = FALSE
+                temp_weight$imDat[] = weight_list[[i]][,]
+              }else if(inherits(weight_list[[i]], 'Rfits_image')){
+                temp_weight$imDat[] = weight_list[[i]]$imDat
+              }else{
                 temp_weight$imDat[] = weight_list[[i]]
               }
+              
               return(Rwcs_warp(
                 image_in = temp_weight,
                 keyvalues_out = keyvalues_out,

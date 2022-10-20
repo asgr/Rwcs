@@ -16,19 +16,19 @@ Rwcs_stack(image_list = NULL, inVar_list = NULL, exp_list = NULL, weight_list = 
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{image_list}{
-List; required. List of the input \code{Rfits_image} or \code{Rfits_pointer} objects. Masked pixels can be flagged with NA in the imDat component.
+List; required. List of the input \code{Rfits_image} or \code{Rfits_pointer} objects. Masked pixels can be flagged with NA in the imDat component. See Details below.
 }
   \item{inVar_list}{
-Numeric vector or list of numeric matrices; optional. The inverse variances. Either one value per \option{image_list} entry, or one pixel matched matrix per \option{image_list} entry. This is used to achieve S/N weighted stacking. If not provided then images are stacked with equal weight.
+Numeric vector or list of numeric matrices / \code{Rfits_image} / \code{Rfits_pointer}; optional. The inverse variances. Either one value per \option{image_list} entry, or one pixel matched matrix per \option{image_list} entry. This is used to achieve S/N weighted stacking. If not provided then images are stacked with equal weight. See Details below.
 }
   \item{exp_list}{
-Numeric vector or list of numeric matrices; optional. The exposure time (in whatever units you like, but they should be consistent between input images). Either one value per \option{image_list} entry, or one pixel matched matrix per \option{image_list} entry. This is used to track maximal pixel exposure (so nothing is masked). This is mostly provided to persist knowledge from a previous stack that you are now adding to with more data.
+Numeric vector or list of numeric matrices / \code{Rfits_image} / \code{Rfits_pointer}; optional. The exposure time (in whatever units you like, but they should be consistent between input images). Either one value per \option{image_list} entry, or one pixel matched matrix per \option{image_list} entry. This is used to track maximal pixel exposure (so nothing is masked). This is mostly provided to persist knowledge from a previous stack that you are now adding to with more data. See Details below.
 }
   \item{weight_list}{
-Integer vector or list of integer matrices; optional. The weight map showing how many images have contributed to a given pixel. Either one value per \option{image_list} entry, or one pixel matched matrix per \option{image_list} entry. This is mostly provided to persist knowledge from a previous stack that you are now adding to with more data (else the previous stack would be implictly given the weight of 1 everywhere).
+Integer vector or list of integer matrices / \code{Rfits_image} / \code{Rfits_pointer}; optional. The weight map showing how many images have contributed to a given pixel. Either one value per \option{image_list} entry, or one pixel matched matrix per \option{image_list} entry. This is mostly provided to persist knowledge from a previous stack that you are now adding to with more data (else the previous stack would be implictly given the weight of 1 everywhere). See Details below.
 }
   \item{mask_list}{
-List of numeric matrices; optional. Pixel matched mask matrix per \option{image_list} entry. Anything non-zero is considered masked. This can be used in conjuction with setting pixels in \option{image_list} to NA.
+List of integer matrices / \code{Rfits_image} / \code{Rfits_pointer}; optional. Pixel matched mask matrix per \option{image_list} entry. Anything non-zero is considered masked. This can be used in conjuction with setting pixels in \option{image_list} to NA. See Details below.
 }
   \item{magzero_in}{
 Numeric vector; the input mag-zero points. If length 1 then it is assumed all input frames have the same mag-zero point.
@@ -71,7 +71,15 @@ Other arguments to pass into \code{\link{Rwcs_warp}}.
 }
 }
 \details{
-The warping code used here is effectively \code{\link{Rwcs_warp}}, and the stacking part is very similar to that used in \code{profoundMakeStack}.
+The warping code used here is effectively \code{\link{Rwcs_warp}}, and the stacking part is very similar to that used in \code{profoundMakeStack}. It uses inverse-variance weighted stacking when \option{inVar_list} is provided, and a simple average stack otherwise.
+
+\option{image_list} can be provided as a list of \code{Rfits_image} or \code{Rfits_pointer}. The advantage of the former is raw speed (no disk IO required) but the advantage of the latter is memory footprint (only the required pixels are loaded at any given stage of stacking).
+
+\option{inVar_list}, \option{exp_list}, \option{weight_list} can all be provided as a scalar (repeated for all images) a vector of single values (used for all pixels of each image), a numeric/integer matrix (used for each image), an \code{Rfits_image} (the imDat part alone is used for each image) or an \code{Rfits_pointer} (the imDat part alone is used for each image).
+
+\option{mask_list} can be provided as an integer matrix (used for each image), an \code{Rfits_image} (the imDat part alone is used for each image) or an \code{Rfits_pointer} (the imDat part alone is used for each image).
+
+Which route is better to use depends on the memory available- passing in in-memory matrices will be faster than using an \code{Rfits_pointer}, but using a pointer means only the required pixels are loaded at a given time (reducing the memory footprint).
 }
 \value{
 The output is an object of class 'ProMo' containing:
