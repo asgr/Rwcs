@@ -39,7 +39,7 @@ Logical; should the shift applied be purely integer (TRUE) or fractional pixel (
 Logical; should the tweaked image be returned as an output. You might only want the solution (for applying to another process), in which case set to FALSE for speed.
 }
   \item{direction}{
-Character scalar; "auto" (default), "forward" or "backward", see \code{imwarp}. Since it is usally better to go from the higher resolution image and map this onto the lower resolution grid, "auto" selects the better direction given the pixel scales recovered from the header information.
+Character scalar; "forward" or "backward", see \code{imwarp}.
 }
   \item{final_centre}{
 Logical; should a final round of costs be computed once the best tweak is found. This is only relevant if \option{shift_int} = TRUE, and can be useful if you want to explore the output \option{cost_mat}.

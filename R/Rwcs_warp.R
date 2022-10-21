@@ -95,11 +95,14 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     keyvalues_out$MAGZERO = magzero_out
   }
   
-  if (interpolation == "nearest") {
-    warpoffset = 0.5
-  }else{
-    warpoffset = 0
-  }
+  #seems I don't need this anymore- imager side bug presumably fixed (which is what it seemed to be)
+  #leave commented out for now, until 100% happy it doesn't appear elsewhere
+  
+  #if (interpolation == "nearest") {
+  #  warpoffset = 0.5
+  #}else{
+  #  warpoffset = 0
+  #}
   
   # if(is.null(header_out)){
   #   raw = NULL
@@ -155,12 +158,14 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   .warpfunc_in2out = function(x, y) {
     radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_in, header = header_in, WCSref = WCSref_in)
     xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_out, header = raw_out, WCSref = WCSref_out)
-    return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
+    #return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
+    return(list(x = xy_out[, 1], y = xy_out[,2]))
   }
   .warpfunc_out2in = function(x, y) {
     radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_out, header = raw_out, WCSref = WCSref_in)
     xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_in, header = header_in, , WCSref = WCSref_out)
-    return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
+    #return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
+    return(list(x = xy_out[, 1], y = xy_out[,2]))
   }
   
   image_out$imDat[1:dim(image_in)[1], 1:dim(image_in)[2]] = image_in
@@ -274,4 +279,143 @@ Rwcs_rebin = function(image, scale = 1,interpolation = 6){
     # }
     return(image_resize)
   }
+}
+
+Rwcs_warp_promo = function (promo_in, keyvalues_out=NULL, dim_out = NULL, magzero_out = NULL, ...){
+  
+  if(!is.null(magzero_out)){
+    zero_point_scale = 10^(-0.4*(promo_in$image$keyvalues$MAGZERO - magzero_out))
+  }else{
+    magzero_out = promo_in$image$keyvalues$MAGZERO
+    zero_point_scale = 1
+  }
+  
+  if(!is.null(promo_in$image)){
+    message('warping image')
+    
+    image_warp = Rwcs_warp(
+      image_in = promo_in$image*zero_point_scale,
+      keyvalues_out = keyvalues_out,
+      dim_out = dim_out,
+      doscale = TRUE,
+      ...
+    )
+    
+    image_warp$keyvalues$EXTNAME = 'image'
+    image_warp$keyvalues$MAGZERO = magzero_out
+  }else{
+    image_warp = NULL
+  }
+  
+  if(!is.null(promo_in$weight)){
+    message('warping weight')
+    
+    weight_warp = Rwcs_warp(
+      image_in = promo_in$weight,
+      keyvalues_out = keyvalues_out,
+      dim_out = dim_out,
+      doscale = FALSE,
+      ...
+    )
+    
+    weight_warp$keyvalues$EXTNAME = 'weight'
+  }else{
+    weight_warp = NULL
+  }
+  
+  if(!is.null(promo_in$inVar)){
+    message('warping inVar')
+    
+    inVar_warp = Rwcs_warp(
+      image_in = promo_in$inVar/(zero_point_scale^2),
+      keyvalues_out = keyvalues_out,
+      dim_out = dim_out,
+      doscale = FALSE,
+      ...
+    )*(Rwcs_pixscale(promo_in$inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4)
+    
+    inVar_warp$keyvalues$EXTNAME = 'inVar'
+    inVar_warp$keyvalues$MAGZERO = magzero_out
+  }else{
+    inVar_warp = NULL
+  }
+  
+  if(!is.null(promo_in$exp)){
+    message('warping exp')
+    
+    exp_warp = Rwcs_warp(
+      image_in = promo_in$exp,
+      keyvalues_out = keyvalues_out,
+      dim_out = dim_out,
+      doscale = FALSE,
+      ...
+    )
+    
+    exp_warp$keyvalues$EXTNAME = 'exp'
+  }else{
+    exp_warp = NULL
+  }
+  
+  if(!is.null(promo_in$cold)){
+    message('warping cold')
+    
+    cold_warp = Rwcs_warp(
+      image_in = promo_in$cold*zero_point_scale,
+      keyvalues_out = keyvalues_out,
+      dim_out = dim_out,
+      doscale = TRUE,
+      ...
+    )
+    
+    cold_warp$keyvalues$EXTNAME = 'cold'
+    cold_warp$keyvalues$MAGZERO = magzero_out
+  }else{
+    cold_warp = NULL
+  }
+  
+  if(!is.null(promo_in$hot)){
+    message('warping hot')
+    
+    hot_warp = Rwcs_warp(
+      image_in = promo_in$hot*zero_point_scale,
+      keyvalues_out = keyvalues_out,
+      dim_out = dim_out,
+      doscale = TRUE,
+      ...
+    )
+    
+    hot_warp$keyvalues$EXTNAME = 'hot'
+    hot_warp$keyvalues$MAGZERO = magzero_out
+  }else{
+    hot_warp = NULL
+  }
+  
+  if(!is.null(promo_in$clip)){
+    message('warping clip')
+    
+    clip_warp = Rwcs_warp(
+      image_in = promo_in$clip,
+      keyvalues_out = keyvalues_out,
+      dim_out = dim_out,
+      doscale = FALSE,
+      ...
+    )
+    
+    clip_warp$keyvalues$EXTNAME = 'clip'
+  }else{
+    clip_warp = NULL
+  }
+  
+  output = list(
+    image = image_warp,
+    weight = weight_warp,
+    inVar = inVar_warp,
+    exp = exp_warp,
+    cold = cold_warp,
+    hot = hot_warp,
+    clip=clip_warp
+  )
+  
+  class(output) = "ProMo"
+  return(invisible(output))
 }
