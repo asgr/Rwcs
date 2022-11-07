@@ -83,7 +83,7 @@ Scalar; optional output \option{WCSref}. Either NULL for base WCS (default), or 
 Scalar; optional input \option{WCSref}. Either NULL for base WCS (default), or a letter [a-z] for the relevant projection desired. Only used if using a raw \option{header}, and obviously this has to exist within the provided raw \option{header}.  
 }
   \item{magzero_out}{
-Numeric scalar; the output mag-zero point desired. Note \option{magzero_in} must also be provided for any scaling to be applied. A nice \option{magzero_out} is perhaps 23.9, because this means all measured fluxed are in micro-Jansky (rather than arbitrary ADUs). \option{magzero_out} = 8.9 gives Jansky; 16.4 gives milli-Jansky and 31.4 gives nano-Jansky.
+Numeric scalar; the output mag-zero point desired. Note \option{magzero_in} must also be provided for any scaling to be applied. A nice \option{magzero_out} is perhaps 23.9, because this means all measured fluxed are in micro-Jansky (rather than arbitrary ADUs). \option{magzero_out} = 8.9 gives Jansky; 16.4 gives milli-Jansky and 31.4 gives nano-Jansky. For \code{Rwcs_warp_promo}, leaving as NULL means it is inherited from the MAGZERO keyword attached to the \option{promo_in} header.
 }
   \item{magzero_in}{
 Numeric scalar; the input mag-zero point. Note \option{magzero_out} must also be provided for any scaling to be applied.
