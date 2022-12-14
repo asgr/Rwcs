@@ -16,8 +16,8 @@ Remaps an input projection system to a different target WCS.
 Rwcs_warp(image_in, keyvalues_out = NULL, keyvalues_in = NULL, dim_out = NULL,
   pixscale_out = NULL, pixscale_in = NULL, direction = "auto", boundary = "dirichlet",
   interpolation = "cubic", doscale = TRUE, plot = FALSE, header_out = NULL,
-  header_in = NULL, dotightcrop = TRUE, WCSref_out = NULL, WCSref_in = NULL,
-  magzero_out = NULL, magzero_in = NULL, ...)
+  header_in = NULL, dotightcrop = TRUE, keepcrop = FALSE, WCSref_out = NULL,
+  WCSref_in = NULL, magzero_out = NULL, magzero_in = NULL, ...)
 
 Rwcs_warp_promo(promo_in, keyvalues_out = NULL, dim_out = NULL, magzero_out = NULL, ...)
 
@@ -75,6 +75,9 @@ Optional input header. To aid backwards compatibility, you can also pass in a 1D
 }
   \item{dotightcrop}{
 Logical; should an internal tight crop be made. If the images are approximately the same angular size this should be left as FALSE (it will run faster), but when there is a big difference between the input and output WCS (the latter being much larger) then setting this to TRUE might speed the warping up a lot.  
+}
+  \item{keepcrop}{
+Logical; if \option{dotightcrop} is TRUE, then this flag specifies if just the minimally cut down projection should be returned (TRUE; using less memory, but perhaps harder to work with) or the output should be fully cast onto the target WCS (FALSE).
 }
   \item{WCSref_out}{
 Scalar; optional output \option{WCSref}. Either NULL for base WCS (default), or a letter [a-z] for the relevant projection desired. Only used if using a raw \option{header}, and obviously this has to exist within the provided raw \option{header}.  

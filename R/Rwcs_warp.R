@@ -2,7 +2,7 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
                       pixscale_out = NULL, pixscale_in = NULL,
           direction = "auto", boundary = "dirichlet", interpolation = "cubic", 
           doscale = TRUE, plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE,
-          WCSref_out = NULL, WCSref_in = NULL, magzero_out = NULL, magzero_in = NULL, ...) 
+          keepcrop=FALSE, WCSref_out = NULL, WCSref_in = NULL, magzero_out = NULL, magzero_in = NULL, ...) 
 {
   if (!requireNamespace("imager", quietly = TRUE)) {
     stop("The imager package is needed for this function to work. Please install it from CRAN.", 
@@ -214,7 +214,16 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   
   image_out$imDat[] = out
   
-  image_out = image_out[c(1L - (min_x - 1L), dim_out[1] - (min_x - 1L)),c(1L - (min_y - 1L), dim_out[2] - (min_y - 1L))]
+  if(dotightcrop==FALSE | keepcrop==FALSE){
+    image_out = image_out[c(1L - (min_x - 1L), dim_out[1] - (min_x - 1L)),c(1L - (min_y - 1L), dim_out[2] - (min_y - 1L))]
+  }else{
+    xlo = min(tightcrop[1,'x'], tightcrop[2,'x'])
+    xhi = max(tightcrop[3,'x'], tightcrop[4,'x'])
+    ylo = min(tightcrop[1,'y'], tightcrop[4,'y'])
+    yhi = max(tightcrop[2,'y'], tightcrop[3,'y'])
+    image_out = image_out[xlo:xhi, ylo:yhi]
+    image_out$crop = c(xlo=xlo, xhi=xhi, ylo=ylo, yhi=yhi) #we want to keep the subseet location for potential later writing
+  }
   
   if (plot) {
     Rwcs_image(image_out, ...)
