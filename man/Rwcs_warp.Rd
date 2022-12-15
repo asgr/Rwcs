@@ -137,7 +137,7 @@ For both \code{Rwcs_warp} and \code{Rwcs_rebin} (if input is class Rfits), retur
   
 For \code{Rwcs_rebin}, if the input is a matrix then the output is also a matrix. The user will need to pay attention to the change in the pixel scale etc because this is therefore not stored directly in the output since there is no attached WCS.
 
-For \code{Rwcs_warp} if \option{dotightcrop} and \caption{keepcrop} are both TRUE then the output will be tightly cropped and the limits of the image subset this represents in the target output image exist in an additional \option{crop} list output (a vector of [xlo,xhi,ylo,yhi]). This can be used to insert the projected image in the correct place in a larger target image (potentially on disk). Regardless, the WCS relative to the cropped pixels will still be correct.
+For \code{Rwcs_warp} if \option{dotightcrop} and \option{keepcrop} are both TRUE then the output will be tightly cropped and the limits of the image subset this represents in the target output image exist in an additional \option{crop} list output (a vector of [xlo,xhi,ylo,yhi]). This can be used to insert the projected image in the correct place in a larger target image (potentially on disk). Regardless, the WCS relative to the cropped pixels will still be correct.
 
 \code{Rwcs_tran} simply returns the shifted numeric matrix.
 
