@@ -202,8 +202,10 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         keyvalues_out = keyvalues_out,
         dim_out = dim_out,
         doscale = TRUE,
+        dotightcrop = TRUE,
+        keepcrop = TRUE,
         ...
-      )$imDat)
+      ))
     }
     
     if(!is.null(inVar_list)){
@@ -235,8 +237,10 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             keyvalues_out = keyvalues_out,
             dim_out = dim_out,
             doscale = FALSE,
+            dotightcrop = TRUE,
+            keepcrop = TRUE,
             ...
-            )$imDat*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixel area
+            )*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixel area. Using Rfits * method here
           )
         })
       }
@@ -272,8 +276,10 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           keyvalues_out = keyvalues_out,
           dim_out = dim_out,
           doscale = FALSE,
+          dotightcrop = TRUE,
+          keepcrop = TRUE,
           ...
-        )$imDat)
+        ))
       }
     }
     
@@ -304,8 +310,10 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             keyvalues_out = keyvalues_out,
             dim_out = dim_out,
             doscale = FALSE,
+            dotightcrop = TRUE,
+            keepcrop = TRUE,
             ...
-          )$imDat)
+          ))
         }else{
           return(weight_list[[i]])
         }
@@ -317,43 +325,55 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     if(is.null(pre_stack_inVar_list)){
       message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
       for(i in 1:Nbatch_sub){
-        if(anyNA(pre_stack_image_list[[i]])){
-          addID = which(!is.na(pre_stack_image_list[[i]]))
+        if(anyNA(pre_stack_image_list[[i]]$imDat)){
+          addID = which(!is.na(pre_stack_image_list[[i]]$imDat), arr.ind=TRUE)
+          addID_sub = addID
+          addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
+          addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
           if(weight_image[i]){
-            post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_weight_list[[i]][addID]
-            post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+            post_stack_image[addID_sub] = post_stack_image[addID_sub] + pre_stack_image_list[[i]]$imDat[addID]*pre_stack_weight_list[[i]]$imDat[addID]
+            post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + pre_stack_weight_list[[i]]$imDat[addID]
           }else{
-            post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
-            post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+            post_stack_image[addID_sub] = post_stack_image[addID_sub] + pre_stack_image_list[[i]]$imDat[addID]
+            post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + weight_list[[i]]
           }
         }else{
+          xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+          ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
           if(weight_image[i]){
-            post_stack_image = post_stack_image + pre_stack_image_list[[i]]*pre_stack_weight_list[[i]]
-            post_stack_weight = post_stack_weight + pre_stack_weight_list[[i]]
+            post_stack_image[xsub,ysub] = post_stack_image[xsub,ysub] + pre_stack_image_list[[i]]$imDat*pre_stack_weight_list[[i]]$imDat
+            post_stack_weight[xsub,ysub] = post_stack_weight[xsub,ysub] + pre_stack_weight_list[[i]]$imDat
           }else{
-            post_stack_image = post_stack_image + pre_stack_image_list[[i]]
-            post_stack_weight = post_stack_weight + weight_list[[i]]
+            post_stack_image[xsub,ysub] = post_stack_image[xsub,ysub] + pre_stack_image_list[[i]]$imDat
+            post_stack_weight[xsub,ysub] = post_stack_weight[xsub,ysub] + weight_list[[i]]$imDat
           }
         }
       }
     }else{
       for(i in 1:Nbatch_sub){
         if(anyNA(pre_stack_image_list[[i]]) | checkmate::anyInfinite(pre_stack_inVar_list[[i]])){
-          addID = which(!is.na(pre_stack_image_list[[i]]) & is.finite(pre_stack_inVar_list[[i]]))
-          post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
-          post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
+          addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & is.finite(pre_stack_inVar_list[[i]]$imDat), arr.ind=TRUE)
+          addID_sub = addID
+          addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
+          addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
+          
+          post_stack_image[addID_sub] = post_stack_image[addID_sub] + pre_stack_image_list[[i]]$imDat[addID]*pre_stack_inVar_list[[i]]$imDat[addID]
+          post_stack_inVar[addID_sub] = post_stack_inVar[addID_sub] + pre_stack_inVar_list[[i]]$imDat[addID]
           if(weight_image[i]){
-            post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+            post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + pre_stack_weight_list[[i]][addID]
           }else{
-            post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+            post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + weight_list[[i]]
           }
         }else{
-          post_stack_image = post_stack_image + pre_stack_image_list[[i]]*pre_stack_inVar_list[[i]]
-          post_stack_inVar = post_stack_inVar + pre_stack_inVar_list[[i]]
+          xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+          ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+          
+          post_stack_image[xsub,ysub] = post_stack_image[xsub,ysub] + pre_stack_image_list[[i]]$imDat*pre_stack_inVar_list[[i]]$imDat
+          post_stack_inVar[xsub,ysub] = post_stack_inVar[xsub,ysub] + pre_stack_inVar_list[[i]]$imDat
           if(weight_image[i]){
-            post_stack_weight = post_stack_weight + pre_stack_weight_list[[i]]
+            post_stack_weight[xsub,ysub] = post_stack_weight[xsub,ysub] + pre_stack_weight_list[[i]]$imDat
           }else{
-            post_stack_weight = post_stack_weight + weight_list[[i]]
+            post_stack_weight[xsub,ysub] = post_stack_weight[xsub,ysub] + weight_list[[i]]
           }
         }
       }
@@ -363,10 +383,17 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       message('Stacking Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
       for(i in 1:Nbatch_sub){
         if(anyNA(pre_stack_exp_list[[i]])){
-          addID = which(!is.na(pre_stack_exp_list[[i]]))
-          post_stack_exp[addID] = post_stack_exp[addID] + pre_stack_exp_list[[i]][addID]
+          addID = which(!is.na(pre_stack_exp_list[[i]]$imDat), arr.ind=TRUE)
+          addID_sub = addID
+          addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
+          addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
+          
+          post_stack_exp[addID_sub] = post_stack_exp[addID_sub] + pre_stack_exp_list[[i]]$imDat[addID]
         }else{
-          post_stack_exp = post_stack_exp + pre_stack_exp_list[[i]]
+          xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+          ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+          
+          post_stack_exp[xsub,ysub] = post_stack_exp[xsub,ysub] + pre_stack_exp_list[[i]]$imDat
         }
       }
     }
@@ -468,22 +495,29 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
           }
           
-          if(anyNA(pre_stack_image_list[[i]]) | any(temp_mask_clip)){
-            addID = which(!is.na(pre_stack_image_list[[i]]) & temp_mask_clip==FALSE)
+          if(anyNA(pre_stack_image_list[[i]]$imDat) | any(temp_mask_clip)){
+            addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & temp_mask_clip==FALSE, arr.ind=TRUE)
+            addID_sub = addID
+            addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
+            addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
+            
             if(weight_image[i]){
-              post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_weight_list[[i]][addID]
-              post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+              post_stack_image[addID_sub] = post_stack_image[addID_sub] + pre_stack_image_list[[i]]$imDat[addID]*pre_stack_weight_list[[i]]$imDat[addID]
+              post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + pre_stack_weight_list[[i]]$imDat[addID]
             }else{
-              post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
-              post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+              post_stack_image[addID_sub] = post_stack_image[addID_sub] + pre_stack_image_list[[i]]$imDat[addID]
+              post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + weight_list[[i]]
             }
           }else{
+            xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+            ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+            
             if(weight_image[i]){
-              post_stack_image = post_stack_image + pre_stack_image_list[[i]]*pre_stack_weight_list[[i]]
-              post_stack_weight = post_stack_weight + pre_stack_weight_list[[i]]
+              post_stack_image[xsub,ysub] = post_stack_image[xsub,ysub] + pre_stack_image_list[[i]]$imDat*pre_stack_weight_list[[i]]$imDat
+              post_stack_weight[xsub,ysub] = post_stack_weight[xsub,ysub] + pre_stack_weight_list[[i]]$imDat
             }else{
-              post_stack_image = post_stack_image + pre_stack_image_list[[i]]
-              post_stack_weight = post_stack_weight + weight_list[[i]]
+              post_stack_image[xsub,ysub] = post_stack_image[xsub,ysub] + pre_stack_image_list[[i]]$imDat
+              post_stack_weight[xsub,ysub] = post_stack_weight[xsub,ysub] + weight_list[[i]]
             }
           }
           
@@ -501,22 +535,29 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           if(clip_dilate > 0){
             temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
           }
-          if(anyNA(pre_stack_image_list[[i]]) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]) | any(temp_mask_clip)){
-            addID = which(!is.na(pre_stack_image_list[[i]]) & is.finite(pre_stack_inVar_list[[i]]) & temp_mask_clip==FALSE)
-            post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
-            post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
+          if(anyNA(pre_stack_image_list[[i]]$imDat) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]$imDat) | any(temp_mask_clip)){
+            addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & is.finite(pre_stack_inVar_list[[i]]$imDat) & temp_mask_clip==FALSE, arr.ind=TRUE)
+            addID_sub = addID
+            addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
+            addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
+            
+            post_stack_image[addID_sub] = post_stack_image[addID_sub] + pre_stack_image_list[[i]]$imDat[addID]*pre_stack_inVar_list[[i]]$imDat[addID]
+            post_stack_inVar[addID_sub] = post_stack_inVar[addID_sub] + pre_stack_inVar_list[[i]]$imDat[addID]
             if(weight_image[i]){
-              post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+              post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + pre_stack_weight_list[[i]]$imDat[addID]
             }else{
-              post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+              post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + weight_list[[i]]
             }
           }else{
-            post_stack_image = post_stack_image + pre_stack_image_list[[i]]*pre_stack_inVar_list[[i]]
-            post_stack_inVar = post_stack_inVar + pre_stack_inVar_list[[i]]
+            xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+            ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+            
+            post_stack_image[xsub,ysub] = post_stack_image[xsub,ysub] + pre_stack_image_list[[i]]$imDat*pre_stack_inVar_list[[i]]$imDat
+            post_stack_inVar[xsub,ysub] = post_stack_inVar[xsub,ysub] + pre_stack_inVar_list[[i]]$imDat
             if(weight_image[i]){
-              post_stack_weight = post_stack_weight + pre_stack_weight_list[[i]]
+              post_stack_weight[xsub,ysub] = post_stack_weight[xsub,ysub] + pre_stack_weight_list[[i]]$imDat
             }else{
-              post_stack_weight = post_stack_weight + weight_list[[i]]
+              post_stack_weight[xsub,ysub] = post_stack_weight[xsub,ysub] + weight_list[[i]]
             }
           }
           
@@ -607,8 +648,10 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             keyvalues_out = keyvalues_out,
             dim_out = dim_out,
             doscale = TRUE,
+            dotightcrop = TRUE,
+            keepcrop = TRUE,
             ...
-          )$imDat)
+          ))
         }
         
         if(!is.null(inVar_list)){
@@ -641,7 +684,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                 dim_out = dim_out,
                 doscale = FALSE,
                 ...
-                )$imDat*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixel area
+                )*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixel area
               )
             })
           }
@@ -677,8 +720,10 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
               keyvalues_out = keyvalues_out,
               dim_out = dim_out,
               doscale = FALSE,
+              dotightcrop = TRUE,
+              keepcrop = TRUE,
               ...
-            )$imDat)
+            ))
           }
         }else{
           pre_stack_exp_list = NULL
@@ -709,8 +754,10 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                 keyvalues_out = keyvalues_out,
                 dim_out = dim_out,
                 doscale = FALSE,
+                dotightcrop = TRUE,
+                keepcrop = TRUE,
                 ...
-              )$imDat)
+              ))
             }else{
               return(weight_list[[i]])
             }
@@ -730,21 +777,28 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             }
             
             if(anyNA(pre_stack_image_list[[i]]) | any(temp_mask_clip)){
-              addID = which(!is.na(pre_stack_image_list[[i]]) & temp_mask_clip==FALSE)
+              addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & temp_mask_clip==FALSE, arr.ind=TRUE)
+              addID_sub = addID
+              addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
+              addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
+              
               if(weight_image[i]){
-                post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_weight_list[[i]][addID]
-                post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+                post_stack_image[addID_sub] = post_stack_image[addID_sub] + pre_stack_image_list[[i]]$imDat[addID]*pre_stack_weight_list[[i]]$imDat[addID]
+                post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + pre_stack_weight_list[[i]]$imDat[addID]
               }else{
-                post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
-                post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+                post_stack_image[addID_sub] = post_stack_image[addID_sub] + pre_stack_image_list[[i]]$imDat[addID]
+                post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + weight_list[[i]]
               }
             }else{
+              xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+              ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+              
               if(weight_image[i]){
-                post_stack_image = post_stack_image + pre_stack_image_list[[i]]*pre_stack_weight_list[[i]]
-                post_stack_weight = post_stack_weight + pre_stack_weight_list[[i]]
+                post_stack_image[xsub:ysub] = post_stack_image[xsub:ysub] + pre_stack_image_list[[i]]$imDat*pre_stack_weight_list[[i]]$imDat
+                post_stack_weight[xsub:ysub] = post_stack_weight[xsub:ysub] + pre_stack_weight_list[[i]]$imDat
               }else{
-                post_stack_image = post_stack_image + pre_stack_image_list[[i]]
-                post_stack_weight = post_stack_weight + weight_list[[i]]
+                post_stack_image[xsub:ysub] = post_stack_image[xsub:ysub] + pre_stack_image_list[[i]]$imDat
+                post_stack_weight[xsub:ysub] = post_stack_weight[xsub:ysub] + weight_list[[i]]
               }
             }
           }
@@ -757,22 +811,29 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
               temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
             }
             
-            if(anyNA(pre_stack_image_list[[i]]) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]) | any(temp_mask_clip)){
-              addID = which(!is.na(pre_stack_image_list[[i]]) & is.finite(pre_stack_inVar_list[[i]]) & temp_mask_clip==FALSE)
-              post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
-              post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
+            if(anyNA(pre_stack_image_list[[i]]$imDat) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]$imDat) | any(temp_mask_clip)){
+              addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & is.finite(pre_stack_inVar_list[[i]]$imDat) & temp_mask_clip==FALSE, arr.ind=TRUE)
+              addID_sub = addID
+              addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
+              addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
+              
+              post_stack_image[addID_sub] = post_stack_image[addID_sub] + pre_stack_image_list[[i]]$imDat[addID]*pre_stack_inVar_list[[i]]$imDat[addID]
+              post_stack_inVar[addID_sub] = post_stack_inVar[addID_sub] + pre_stack_inVar_list[[i]]$imDat[addID]
               if(weight_image[i]){
-                post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+                post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + pre_stack_weight_list[[i]]$imDat[addID]
               }else{
-                post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+                post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + weight_list[[i]]
               }
             }else{
-              post_stack_image = post_stack_image + pre_stack_image_list[[i]]*pre_stack_inVar_list[[i]]
-              post_stack_inVar = post_stack_inVar + pre_stack_inVar_list[[i]]
+              xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+              ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+              
+              post_stack_image[xsub:ysub] = post_stack_image[xsub:ysub] + pre_stack_image_list[[i]]$imDat*pre_stack_inVar_list[[i]]$imDat
+              post_stack_inVar[xsub:ysub] = post_stack_inVar[xsub:ysub] + pre_stack_inVar_list[[i]]$imDat
               if(weight_image[i]){
-                post_stack_weight = post_stack_weight + pre_stack_weight_list[[i]]
+                post_stack_weight[xsub:ysub] = post_stack_weight[xsub:ysub] + pre_stack_weight_list[[i]]$imDat
               }else{
-                post_stack_weight = post_stack_weight + weight_list[[i]]
+                post_stack_weight[xsub:ysub] = post_stack_weight[xsub:ysub] + weight_list[[i]]
               }
             }
           }
@@ -782,7 +843,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           message('Stacking Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
           for(i in 1:Nbatch_sub){
             if(anyNA(pre_stack_exp_list[[i]])){
-              addID = which(!is.na(pre_stack_exp_list[[i]]))
+              addID = which(!is.na(pre_stack_exp_list[[i]]), arr.ind=TRUE)
               post_stack_exp[addID] = post_stack_exp[addID] + pre_stack_exp_list[[i]][addID]
             }else{
               post_stack_exp = post_stack_exp + pre_stack_exp_list[[i]]
