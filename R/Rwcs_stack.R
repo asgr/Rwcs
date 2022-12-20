@@ -27,8 +27,6 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
   
   message('Stacking ', Nim,' images; Nbatch: ', Nbatch,'; cores: ',cores)
   
-  seq_process = seq(1,Nim,by=Nbatch)
-  
   if(length(magzero_in) == 1){
     magzero_in = rep(magzero_in, Nim) 
   }
@@ -135,7 +133,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
   }
   
   if(Nim > Ncheck){
-    message('Only ', Ncheck, ' of ', Nim, 'input frames overlap with target WCS!')
+    message('Only ', Ncheck, ' of ', Nim, ' input frames overlap with target WCS!')
     
     Nim = Ncheck
     
@@ -159,6 +157,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       mask_list = mask_list[which_overlap]
     }
   }
+  
+  seq_process = seq(1,Nim,by=Nbatch)
   
   for(seq_start in seq_process){
     seq_end = min(seq_start + Nbatch - 1L, Nim)
@@ -351,7 +351,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       }
     }else{
       for(i in 1:Nbatch_sub){
-        if(anyNA(pre_stack_image_list[[i]]) | checkmate::anyInfinite(pre_stack_inVar_list[[i]])){
+        if(anyNA(pre_stack_image_list[[i]]$imDat) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]$imDat)){
           addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & is.finite(pre_stack_inVar_list[[i]]$imDat), arr.ind=TRUE)
           addID_sub = addID
           addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
@@ -360,7 +360,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           post_stack_image[addID_sub] = post_stack_image[addID_sub] + pre_stack_image_list[[i]]$imDat[addID]*pre_stack_inVar_list[[i]]$imDat[addID]
           post_stack_inVar[addID_sub] = post_stack_inVar[addID_sub] + pre_stack_inVar_list[[i]]$imDat[addID]
           if(weight_image[i]){
-            post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + pre_stack_weight_list[[i]][addID]
+            post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + pre_stack_weight_list[[i]]$imDat[addID]
           }else{
             post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + weight_list[[i]]
           }
@@ -382,7 +382,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     if(!is.null(pre_stack_exp_list)){
       message('Stacking Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
       for(i in 1:Nbatch_sub){
-        if(anyNA(pre_stack_exp_list[[i]])){
+        if(anyNA(pre_stack_exp_list[[i]]$imDat)){
           addID = which(!is.na(pre_stack_exp_list[[i]]$imDat), arr.ind=TRUE)
           addID_sub = addID
           addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
@@ -400,15 +400,18 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     
     if(keep_extreme_pix | doclip){
       for(i in 1:Nbatch_sub){
-        new_cold = which(pre_stack_image_list[[i]] < post_stack_cold)
-        new_hot = which(pre_stack_image_list[[i]] > post_stack_hot)
+        xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+        ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
         
-        post_stack_cold[new_cold] = pre_stack_image_list[[i]][new_cold]
-        post_stack_hot[new_hot] = pre_stack_image_list[[i]][new_hot]
+        new_cold = which(pre_stack_image_list[[i]]$imDat < post_stack_cold[xsub,ysub])
+        new_hot = which(pre_stack_image_list[[i]]$imDat > post_stack_hot[xsub,ysub])
+        
+        post_stack_cold[xsub,ysub][new_cold] = pre_stack_image_list[[i]]$imDat[new_cold]
+        post_stack_hot[xsub,ysub][new_hot] = pre_stack_image_list[[i]]$imDat[new_hot]
         
         if(doclip){
-          post_stack_cold_id[new_cold] = seq_start + i - 1L
-          post_stack_hot_id[new_hot] = seq_start + i - 1L
+          post_stack_cold_id[xsub,ysub][new_cold] = seq_start + i - 1L
+          post_stack_hot_id[xsub,ysub][new_hot] = seq_start + i - 1L
         }
       }
     }
@@ -495,8 +498,11 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
           }
           
-          if(anyNA(pre_stack_image_list[[i]]$imDat) | any(temp_mask_clip)){
-            addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & temp_mask_clip==FALSE, arr.ind=TRUE)
+          xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+          ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+          
+          if(anyNA(pre_stack_image_list[[i]]$imDat) | any(temp_mask_clip[xsub,ysub])){
+            addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & temp_mask_clip[xsub,ysub]==FALSE, arr.ind=TRUE)
             addID_sub = addID
             addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
             addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
@@ -509,9 +515,6 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
               post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + weight_list[[i]]
             }
           }else{
-            xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
-            ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
-            
             if(weight_image[i]){
               post_stack_image[xsub,ysub] = post_stack_image[xsub,ysub] + pre_stack_image_list[[i]]$imDat*pre_stack_weight_list[[i]]$imDat
               post_stack_weight[xsub,ysub] = post_stack_weight[xsub,ysub] + pre_stack_weight_list[[i]]$imDat
@@ -523,10 +526,12 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           
           if(keep_extreme_pix){
             mask_clip = mask_clip + temp_mask_clip
-            new_cold = which(pre_stack_image_list[[i]] < post_stack_cold & temp_mask_clip==FALSE)
-            new_hot = which(pre_stack_image_list[[i]] > post_stack_hot & temp_mask_clip==FALSE)
-            post_stack_cold[new_cold] = pre_stack_image_list[[i]][new_cold]
-            post_stack_hot[new_hot] = pre_stack_image_list[[i]][new_hot]
+            
+            new_cold = which(pre_stack_image_list[[i]]$imDat < post_stack_cold[xsub,ysub] & temp_mask_clip[xsub,ysub]==FALSE)
+            new_hot = which(pre_stack_image_list[[i]]$imDat > post_stack_hot[xsub,ysub] & temp_mask_clip[xsub,ysub]==FALSE)
+            
+            post_stack_cold[xsub,ysub][new_cold] = pre_stack_image_list[[i]]$imDat[new_cold]
+            post_stack_hot[xsub,ysub][new_hot] = pre_stack_image_list[[i]]$imDat[new_hot]
           }
         }
       }else{
@@ -535,8 +540,12 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           if(clip_dilate > 0){
             temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
           }
-          if(anyNA(pre_stack_image_list[[i]]$imDat) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]$imDat) | any(temp_mask_clip)){
-            addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & is.finite(pre_stack_inVar_list[[i]]$imDat) & temp_mask_clip==FALSE, arr.ind=TRUE)
+          
+          xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+          ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+          
+          if(anyNA(pre_stack_image_list[[i]]$imDat) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]$imDat) | any(temp_mask_clip[xsub,ysub])){
+            addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & is.finite(pre_stack_inVar_list[[i]]$imDat) & temp_mask_clip[xsub,ysub]==FALSE, arr.ind=TRUE)
             addID_sub = addID
             addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
             addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
@@ -563,30 +572,18 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           
           if(keep_extreme_pix){
             mask_clip = mask_clip + temp_mask_clip
-            new_cold = which(pre_stack_image_list[[i]] < post_stack_cold & temp_mask_clip==FALSE)
-            new_hot = which(pre_stack_image_list[[i]] > post_stack_hot & temp_mask_clip==FALSE)
-            post_stack_cold[new_cold] = pre_stack_image_list[[i]][new_cold]
-            post_stack_hot[new_hot] = pre_stack_image_list[[i]][new_hot]
+            
+            xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+            ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+            
+            new_cold = which(pre_stack_image_list[[i]]$imDat < post_stack_cold[xsub,ysub] & temp_mask_clip[xsub,ysub]==FALSE)
+            new_hot = which(pre_stack_image_list[[i]]$imDat > post_stack_hot[xsub,ysub] & temp_mask_clip[xsub,ysub]==FALSE)
+            
+            post_stack_cold[xsub,ysub][new_cold] = pre_stack_image_list[[i]]$imDat[new_cold]
+            post_stack_hot[xsub,ysub][new_hot] = pre_stack_image_list[[i]]$imDat[new_hot]
           }
         }
       }
-      
-      # if(keep_extreme_pix){
-      #   for(i in 1:Nim){
-      #     temp_mask_clip = (post_stack_cold_id == i) | (post_stack_hot_id == i)
-      #     if(clip_dilate > 0){
-      #       temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
-      #     }
-      #     
-      #     mask_clip = mask_clip + temp_mask_clip
-      #     
-      #     new_cold = which(pre_stack_image_list[[i]] < post_stack_cold & temp_mask_clip==FALSE)
-      #     new_hot = which(pre_stack_image_list[[i]] > post_stack_hot & temp_mask_clip==FALSE)
-      #     
-      #     post_stack_cold[new_cold] = pre_stack_image_list[[i]][new_cold]
-      #     post_stack_hot[new_hot] = pre_stack_image_list[[i]][new_hot]
-      #   }
-      # }
     }else{ # If we need to batch process the image_list then we need to re-project everything again
       #would maybe be neater to break this out a distinct function, but that is a job for another day...
       
@@ -776,8 +773,11 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
               temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
             }
             
-            if(anyNA(pre_stack_image_list[[i]]) | any(temp_mask_clip)){
-              addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & temp_mask_clip==FALSE, arr.ind=TRUE)
+            xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+            ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+            
+            if(anyNA(pre_stack_image_list[[i]]$imDat) | any(temp_mask_clip[xsub:ysub])){
+              addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & temp_mask_clip[xsub:ysub]==FALSE, arr.ind=TRUE)
               addID_sub = addID
               addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
               addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
@@ -811,8 +811,11 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
               temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
             }
             
-            if(anyNA(pre_stack_image_list[[i]]$imDat) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]$imDat) | any(temp_mask_clip)){
-              addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & is.finite(pre_stack_inVar_list[[i]]$imDat) & temp_mask_clip==FALSE, arr.ind=TRUE)
+            xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+            ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+            
+            if(anyNA(pre_stack_image_list[[i]]$imDat) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]$imDat) | any(temp_mask_clip[xsub:ysub])){
+              addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & is.finite(pre_stack_inVar_list[[i]]$imDat) & temp_mask_clip[xsub:ysub]==FALSE, arr.ind=TRUE)
               addID_sub = addID
               addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
               addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
@@ -842,11 +845,14 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         if(!is.null(pre_stack_exp_list)){
           message('Stacking Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
           for(i in 1:Nbatch_sub){
-            if(anyNA(pre_stack_exp_list[[i]])){
-              addID = which(!is.na(pre_stack_exp_list[[i]]), arr.ind=TRUE)
-              post_stack_exp[addID] = post_stack_exp[addID] + pre_stack_exp_list[[i]][addID]
+            if(anyNA(pre_stack_exp_list[[i]]$imDat)){
+              addID = which(!is.na(pre_stack_exp_list[[i]]$imDat), arr.ind=TRUE)
+              post_stack_exp[addID] = post_stack_exp[addID] + pre_stack_exp_list[[i]]$imDat[addID]
             }else{
-              post_stack_exp = post_stack_exp + pre_stack_exp_list[[i]]
+              xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+              ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+              
+              post_stack_exp[xsub:ysub] = post_stack_exp[xsub:ysub] + pre_stack_exp_list[[i]]$imDat
             }
           }
         }
@@ -859,14 +865,17 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             if(clip_dilate > 0){
               temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
             }
-            
+
             mask_clip = mask_clip + temp_mask_clip
             
-            new_cold = which(pre_stack_image_list[[i]] < post_stack_cold & temp_mask_clip==FALSE)
-            new_hot = which(pre_stack_image_list[[i]] > post_stack_hot & temp_mask_clip==FALSE)
+            xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
+            ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
             
-            post_stack_cold[new_cold] = pre_stack_image_list[[i]][new_cold]
-            post_stack_hot[new_hot] = pre_stack_image_list[[i]][new_hot]
+            new_cold = which(pre_stack_image_list[[i]]$imDat < post_stack_cold[xsub,ysub] & temp_mask_clip[xsub,ysub]==FALSE)
+            new_hot = which(pre_stack_image_list[[i]]$imDat > post_stack_hot[xsub,ysub] & temp_mask_clip[xsub,ysub]==FALSE)
+            
+            post_stack_cold[xsub,ysub][new_cold] = pre_stack_image_list[[i]]$imDat[new_cold]
+            post_stack_hot[xsub,ysub][new_hot] = pre_stack_image_list[[i]]$imDat[new_hot]
           }
         }
       }

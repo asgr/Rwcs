@@ -218,11 +218,6 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   if(dotightcrop==FALSE | keepcrop==FALSE){
     image_out = image_out[c(1L - (min_x - 1L), dim_out[1] - (min_x - 1L)),c(1L - (min_y - 1L), dim_out[2] - (min_y - 1L))]
   }else{
-    xlo = min(tightcrop[1,'x'], tightcrop[2,'x'])
-    xhi = max(tightcrop[3,'x'], tightcrop[4,'x'])
-    ylo = min(tightcrop[1,'y'], tightcrop[4,'y'])
-    yhi = max(tightcrop[2,'y'], tightcrop[3,'y'])
-    #image_out = image_out[xlo:xhi, ylo:yhi] #pretty sure we don't need this. Checking...
     image_out$crop = c(xlo=min_x, xhi=max_x, ylo=min_y, yhi=max_y) #we want to keep the subseet location for potential later writing
   }
   
