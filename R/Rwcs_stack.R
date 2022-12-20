@@ -122,6 +122,44 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     }
   }
   
+  # Check all supplied frames are in WCS:
+  
+  which_overlap = which(foreach(i = 1:length(image_list), .combine='c')%dopar%{
+    Rwcs_overlap(image_list[[i]]$keyvalues, keyvalues_ref = keyvalues_out)
+  })
+  
+  Ncheck = length(which_overlap)
+  
+  if(Ncheck == 0){
+    stop('No frames exist within target WCS!')
+  }
+  
+  if(Nim > Ncheck){
+    message('Only ', Ncheck, ' of ', Nim, 'input frames overlap with target WCS!')
+    
+    Nim = Ncheck
+    
+    # Trim down all the inputs to just those overlapping with the target WCS:
+    
+    image_list = image_list[which_overlap]
+    
+    weight_list = weight_list[which_overlap]
+    
+    magzero_in = magzero_in[which_overlap]
+    
+    if(!is.null(exp_list)){
+      exp_list = exp_list[which_overlap]
+    }
+    
+    if(!is.null(inVar_list)){
+      inVar_list = inVar_list[which_overlap]
+    }
+    
+    if(!is.null(mask_list)){
+      mask_list = mask_list[which_overlap]
+    }
+  }
+  
   for(seq_start in seq_process){
     seq_end = min(seq_start + Nbatch - 1L, Nim)
     message('Projecting Images ',seq_start,' to ',seq_end,' of ',Nim)
@@ -279,24 +317,44 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     if(is.null(pre_stack_inVar_list)){
       message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
       for(i in 1:Nbatch_sub){
-        addID = which(!is.na(pre_stack_image_list[[i]]))
-        if(weight_image[i]){
-          post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_weight_list[[i]][addID]
-          post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+        if(anyNA(pre_stack_image_list[[i]])){
+          addID = which(!is.na(pre_stack_image_list[[i]]))
+          if(weight_image[i]){
+            post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_weight_list[[i]][addID]
+            post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+          }else{
+            post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
+            post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+          }
         }else{
-          post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
-          post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+          if(weight_image[i]){
+            post_stack_image = post_stack_image + pre_stack_image_list[[i]]*pre_stack_weight_list[[i]]
+            post_stack_weight = post_stack_weight + pre_stack_weight_list[[i]]
+          }else{
+            post_stack_image = post_stack_image + pre_stack_image_list[[i]]
+            post_stack_weight = post_stack_weight + weight_list[[i]]
+          }
         }
       }
     }else{
       for(i in 1:Nbatch_sub){
-        addID = which(!is.na(pre_stack_image_list[[i]]) & is.finite(pre_stack_inVar_list[[i]]))
-        post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
-        post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
-        if(weight_image[i]){
-          post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+        if(anyNA(pre_stack_image_list[[i]]) | checkmate::anyInfinite(pre_stack_inVar_list[[i]])){
+          addID = which(!is.na(pre_stack_image_list[[i]]) & is.finite(pre_stack_inVar_list[[i]]))
+          post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
+          post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
+          if(weight_image[i]){
+            post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+          }else{
+            post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+          }
         }else{
-          post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+          post_stack_image = post_stack_image + pre_stack_image_list[[i]]*pre_stack_inVar_list[[i]]
+          post_stack_inVar = post_stack_inVar + pre_stack_inVar_list[[i]]
+          if(weight_image[i]){
+            post_stack_weight = post_stack_weight + pre_stack_weight_list[[i]]
+          }else{
+            post_stack_weight = post_stack_weight + weight_list[[i]]
+          }
         }
       }
     }
@@ -304,8 +362,12 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     if(!is.null(pre_stack_exp_list)){
       message('Stacking Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
       for(i in 1:Nbatch_sub){
-        addID = which(!is.na(pre_stack_exp_list[[i]]))
-        post_stack_exp[addID] = post_stack_exp[addID] + pre_stack_exp_list[[i]][addID]
+        if(anyNA(pre_stack_exp_list[[i]])){
+          addID = which(!is.na(pre_stack_exp_list[[i]]))
+          post_stack_exp[addID] = post_stack_exp[addID] + pre_stack_exp_list[[i]][addID]
+        }else{
+          post_stack_exp = post_stack_exp + pre_stack_exp_list[[i]]
+        }
       }
     }
     
@@ -401,16 +463,28 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
         for(i in 1:Nim){
           temp_mask_clip = (post_stack_cold_id == i) | (post_stack_hot_id == i)
+          
           if(clip_dilate > 0){
             temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
           }
-          addID = which(!is.na(pre_stack_image_list[[i]]) & temp_mask_clip==FALSE)
-          if(weight_image[i]){
-            post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_weight_list[[i]][addID]
-            post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+          
+          if(anyNA(pre_stack_image_list[[i]]) | any(temp_mask_clip)){
+            addID = which(!is.na(pre_stack_image_list[[i]]) & temp_mask_clip==FALSE)
+            if(weight_image[i]){
+              post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_weight_list[[i]][addID]
+              post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+            }else{
+              post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
+              post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+            }
           }else{
-            post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
-            post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+            if(weight_image[i]){
+              post_stack_image = post_stack_image + pre_stack_image_list[[i]]*pre_stack_weight_list[[i]]
+              post_stack_weight = post_stack_weight + pre_stack_weight_list[[i]]
+            }else{
+              post_stack_image = post_stack_image + pre_stack_image_list[[i]]
+              post_stack_weight = post_stack_weight + weight_list[[i]]
+            }
           }
           
           if(keep_extreme_pix){
@@ -427,13 +501,23 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           if(clip_dilate > 0){
             temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
           }
-          addID = which(!is.na(pre_stack_image_list[[i]]) & is.finite(pre_stack_inVar_list[[i]]) & temp_mask_clip==FALSE)
-          post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
-          post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
-          if(weight_image[i]){
-            post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+          if(anyNA(pre_stack_image_list[[i]]) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]) | any(temp_mask_clip)){
+            addID = which(!is.na(pre_stack_image_list[[i]]) & is.finite(pre_stack_inVar_list[[i]]) & temp_mask_clip==FALSE)
+            post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
+            post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
+            if(weight_image[i]){
+              post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+            }else{
+              post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+            }
           }else{
-            post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+            post_stack_image = post_stack_image + pre_stack_image_list[[i]]*pre_stack_inVar_list[[i]]
+            post_stack_inVar = post_stack_inVar + pre_stack_inVar_list[[i]]
+            if(weight_image[i]){
+              post_stack_weight = post_stack_weight + pre_stack_weight_list[[i]]
+            }else{
+              post_stack_weight = post_stack_weight + weight_list[[i]]
+            }
           }
           
           if(keep_extreme_pix){
@@ -645,13 +729,23 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
               temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
             }
             
-            addID = which(!is.na(pre_stack_image_list[[i]]) & temp_mask_clip==FALSE)
-            if(weight_image[i]){
-              post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_weight_list[[i]][addID]
-              post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+            if(anyNA(pre_stack_image_list[[i]]) | any(temp_mask_clip)){
+              addID = which(!is.na(pre_stack_image_list[[i]]) & temp_mask_clip==FALSE)
+              if(weight_image[i]){
+                post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_weight_list[[i]][addID]
+                post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+              }else{
+                post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
+                post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+              }
             }else{
-              post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]
-              post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+              if(weight_image[i]){
+                post_stack_image = post_stack_image + pre_stack_image_list[[i]]*pre_stack_weight_list[[i]]
+                post_stack_weight = post_stack_weight + pre_stack_weight_list[[i]]
+              }else{
+                post_stack_image = post_stack_image + pre_stack_image_list[[i]]
+                post_stack_weight = post_stack_weight + weight_list[[i]]
+              }
             }
           }
         }else{
@@ -663,13 +757,23 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
               temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
             }
             
-            addID = which(!is.na(pre_stack_image_list[[i]]) & is.finite(pre_stack_inVar_list[[i]]) & temp_mask_clip==FALSE)
-            post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
-            post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
-            if(weight_image[i]){
-              post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+            if(anyNA(pre_stack_image_list[[i]]) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]) | any(temp_mask_clip)){
+              addID = which(!is.na(pre_stack_image_list[[i]]) & is.finite(pre_stack_inVar_list[[i]]) & temp_mask_clip==FALSE)
+              post_stack_image[addID] = post_stack_image[addID] + pre_stack_image_list[[i]][addID]*pre_stack_inVar_list[[i]][addID]
+              post_stack_inVar[addID] = post_stack_inVar[addID] + pre_stack_inVar_list[[i]][addID]
+              if(weight_image[i]){
+                post_stack_weight[addID] = post_stack_weight[addID] + pre_stack_weight_list[[i]][addID]
+              }else{
+                post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+              }
             }else{
-              post_stack_weight[addID] = post_stack_weight[addID] + weight_list[[i]]
+              post_stack_image = post_stack_image + pre_stack_image_list[[i]]*pre_stack_inVar_list[[i]]
+              post_stack_inVar = post_stack_inVar + pre_stack_inVar_list[[i]]
+              if(weight_image[i]){
+                post_stack_weight = post_stack_weight + pre_stack_weight_list[[i]]
+              }else{
+                post_stack_weight = post_stack_weight + weight_list[[i]]
+              }
             }
           }
         }
@@ -677,8 +781,12 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         if(!is.null(pre_stack_exp_list)){
           message('Stacking Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
           for(i in 1:Nbatch_sub){
-            addID = which(!is.na(pre_stack_exp_list[[i]]))
-            post_stack_exp[addID] = post_stack_exp[addID] + pre_stack_exp_list[[i]][addID]
+            if(anyNA(pre_stack_exp_list[[i]])){
+              addID = which(!is.na(pre_stack_exp_list[[i]]))
+              post_stack_exp[addID] = post_stack_exp[addID] + pre_stack_exp_list[[i]][addID]
+            }else{
+              post_stack_exp = post_stack_exp + pre_stack_exp_list[[i]]
+            }
           }
         }
         

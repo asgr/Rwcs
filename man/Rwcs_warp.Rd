@@ -17,7 +17,7 @@ Rwcs_warp(image_in, keyvalues_out = NULL, keyvalues_in = NULL, dim_out = NULL,
   pixscale_out = NULL, pixscale_in = NULL, direction = "auto", boundary = "dirichlet",
   interpolation = "cubic", doscale = TRUE, plot = FALSE, header_out = NULL,
   header_in = NULL, dotightcrop = TRUE, keepcrop = FALSE, WCSref_out = NULL,
-  WCSref_in = NULL, magzero_out = NULL, magzero_in = NULL, ...)
+  WCSref_in = NULL, magzero_out = NULL, magzero_in = NULL, blank = NA, ...)
 
 Rwcs_warp_promo(promo_in, keyvalues_out = NULL, dim_out = NULL, magzero_out = NULL, ...)
 
@@ -105,6 +105,9 @@ Logical; should vacant pixels be padded with NA (TRUE) or left as 0 (FALSE).
 }
   \item{shift_int}{
 Logical; should the shift applied be purely integer (TRUE) or fractional pixel (FALSE). Integer shifts are much faster to compute, and are better at conserving flux and not introducing pixel covariance, so think carefully before setting to FALSE.
+}
+  \item{blank}{
+Scalar; the value to initially fill the output blank matrix with. In effect, this means that regions that receive to warped data (empty/blank regions) will all inherit this value. Sensibly you might want this to be NA (the default, implying missing), or for stacking purposes 0.
 }
   \item{\dots}{
 For \code{Rwcs_warp} dots are passed to \code{\link{Rwcs_image}} (only relevant if \option{plot}=TRUE). For \code{Rwcs_warp_promo} dots are passed to \code{Rwcs_warp}.

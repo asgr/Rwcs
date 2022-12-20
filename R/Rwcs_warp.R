@@ -2,7 +2,8 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
                       pixscale_out = NULL, pixscale_in = NULL,
           direction = "auto", boundary = "dirichlet", interpolation = "cubic", 
           doscale = TRUE, plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE,
-          keepcrop=FALSE, WCSref_out = NULL, WCSref_in = NULL, magzero_out = NULL, magzero_in = NULL, ...) 
+          keepcrop=FALSE, WCSref_out = NULL, WCSref_in = NULL, magzero_out = NULL, magzero_in = NULL,
+          blank=NA, ...) 
 {
   if (!requireNamespace("imager", quietly = TRUE)) {
     stop("The imager package is needed for this function to work. Please install it from CRAN.", 
@@ -119,7 +120,7 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   }
   
   image_out = list(
-    imDat = matrix(NA, max(dim(image_in)[1], dim_out[1]), max(dim(image_in)[2], dim_out[2])),
+    imDat = matrix(c(blank,image_in[0]), max(dim(image_in)[1], dim_out[1]), max(dim(image_in)[2], dim_out[2])),
     keyvalues = keyvalues_out,
     hdr = Rfits::Rfits_keyvalues_to_hdr(keyvalues_out),
     header = header_out,
