@@ -119,18 +119,6 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     header_out = Rfits::Rfits_raw_to_header(raw_out)
   }
   
-  image_out = list(
-    imDat = matrix(c(blank,image_in[0]), max(dim(image_in)[1], dim_out[1]), max(dim(image_in)[2], dim_out[2])),
-    keyvalues = keyvalues_out,
-    hdr = Rfits::Rfits_keyvalues_to_hdr(keyvalues_out),
-    header = header_out,
-    raw = raw_out,
-    keynames = names(keyvalues_out),
-    keycomments = as.list(rep('', length(keyvalues_out)))
-  )
-  names(image_out$keycomments) = image_out$keynames
-  class(image_out) = c('Rfits_image', class(image_out))
-  
   if(dotightcrop){
     suppressMessages({
       BL = Rwcs_p2s(0, 0, keyvalues = keyvalues_in, header=header_in, pixcen='R', WCSref=WCSref_in)
@@ -144,12 +132,49 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     max_x = max(min_x + dim(image_in)[1] - 1L, range(tightcrop[,1])[2])
     min_y = max(1L, min(tightcrop[,2]))
     max_y = max(min_y + dim(image_in)[2] - 1L, range(tightcrop[,2])[2])
-    image_out = image_out[c(min_x, max_x), c(min_y, max_y)]
+    #image_out = image_out[c(min_x, max_x), c(min_y, max_y)]
+    # new code should be more efficient!
+    
+    if(!isTRUE(keyvalues_out$ZIMAGE)){
+      keyvalues_out$NAXIS1 = max_x - min_x + 1L
+      keyvalues_out$NAXIS2 = max_y - min_y + 1L
+    }else{
+      keyvalues_out$ZNAXIS1 = max_x - min_x + 1L
+      keyvalues_out$ZNAXIS2 = max_y - min_y + 1L
+    }
+    
+    keyvalues_out$CRPIX1 = keyvalues_out$CRPIX1 - min_x + 1L
+    keyvalues_out$CRPIX2 = keyvalues_out$CRPIX2 - min_y + 1L
+      
+    image_out = list(
+      imDat = matrix(c(blank,image_in[0]), max_x - min_x + 1L, max_y - min_y + 1L),
+      keyvalues = keyvalues_out,
+      hdr = Rfits::Rfits_keyvalues_to_hdr(keyvalues_out),
+      header = header_out,
+      raw = raw_out,
+      keynames = names(keyvalues_out),
+      keycomments = as.list(rep('', length(keyvalues_out)))
+    )
+    names(image_out$keycomments) = image_out$keynames
+    class(image_out) = c('Rfits_image', class(image_out))
+    
     keyvalues_out = image_out$keyvalues
     if(!is.null(raw_out)){
       raw_out = image_out$raw
     }
   }else{
+    image_out = list(
+      imDat = matrix(c(blank,image_in[0]), max(dim(image_in)[1], dim_out[1]), max(dim(image_in)[2], dim_out[2])),
+      keyvalues = keyvalues_out,
+      hdr = Rfits::Rfits_keyvalues_to_hdr(keyvalues_out),
+      header = header_out,
+      raw = raw_out,
+      keynames = names(keyvalues_out),
+      keycomments = as.list(rep('', length(keyvalues_out)))
+    )
+    names(image_out$keycomments) = image_out$keynames
+    class(image_out) = c('Rfits_image', class(image_out))
+    
     min_x = 1L
     max_x = dim_out[1]
     min_y = 1L
@@ -169,7 +194,10 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     return(list(x = xy_out[, 1], y = xy_out[,2]))
   }
   
-  image_out$imDat[1:dim(image_in)[1], 1:dim(image_in)[2]] = image_in
+  dim_min_x = min(dim(image_in)[1], dim(image_out$imDat)[1])
+  dim_min_y = min(dim(image_in)[2], dim(image_out$imDat)[2])
+  
+  image_out$imDat[1:dim_min_x, 1:dim_min_y] = image_in[1:dim_min_x, 1:dim_min_y]
 
   suppressMessages({
     if(is.null(pixscale_in)){
@@ -193,7 +221,7 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
                          map = .warpfunc_in2out, direction = direction, coordinates = "absolute", 
                          boundary = boundary, interpolation = interpolation)
     if(doscale){
-      norm = matrix(1, max(dim(image_in)[1], dim(image_out)[1]),max(dim(image_in)[2], dim(image_out)[2]))
+      norm = matrix(1, dim(image_out$imDat)[1], dim(image_out$imDat)[2])
       renorm = imager::imwarp(im = imager::as.cimg(norm), 
                            map = .warpfunc_in2out, direction = direction, coordinates = "absolute", 
                            boundary = boundary, interpolation = interpolation)
@@ -205,7 +233,7 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
                          map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
                          boundary = boundary, interpolation = interpolation)
     if(doscale){
-      norm = matrix(1, max(dim(image_in)[1], dim(image_out)[1]),max(dim(image_in)[2], dim(image_out)[2]))
+      norm = matrix(1, dim(image_out$imDat)[1], dim(image_out$imDat)[2])
       renorm = imager::imwarp(im = imager::as.cimg(norm), 
                            map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
                            boundary = boundary, interpolation = interpolation)
@@ -218,7 +246,20 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   if(dotightcrop==FALSE | keepcrop==FALSE){
     image_out = image_out[c(1L - (min_x - 1L), dim_out[1] - (min_x - 1L)),c(1L - (min_y - 1L), dim_out[2] - (min_y - 1L))]
   }else{
-    image_out$crop = c(xlo=min_x, xhi=max_x, ylo=min_y, yhi=max_y) #we want to keep the subseet location for potential later writing
+    
+    if(max_x > dim_out[1]){
+      trim_x = max_x - dim_out[1]
+      image_out = image_out[1:(dim(image_out)[1] - trim_x),]
+      max_x = dim_out[1]
+    }
+    
+    if(max_y > dim_out[2]){
+      trim_y = max_y - dim_out[2]
+      image_out = image_out[,1:(dim(image_out)[2] - trim_y)]
+      max_y = dim_out[2]
+    }
+    
+    image_out$crop = c(xlo=min_x, xhi=max_x, ylo=min_y, yhi=max_y) #we want to keep the subset location for potential later writing
   }
   
   if (plot) {
