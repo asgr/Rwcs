@@ -108,10 +108,6 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       clip_tol = rep(clip_tol, 2)
     }
     
-    # if(Nim != Nbatch){
-    #   stop('Nbatch must equal number of images')
-    # }
-    
     if(!is.null(inVar_list)){
       post_stack_cold_id = matrix(0L, dim_im[1], dim_im[2])
       post_stack_hot_id = matrix(0L, dim_im[1], dim_im[2])
