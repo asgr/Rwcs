@@ -11,7 +11,8 @@ Given a list of images with WCS, this function will re-project and stack all un-
 Rwcs_stack(image_list = NULL, inVar_list = NULL, exp_list = NULL, weight_list = NULL,
   mask_list = NULL, magzero_in = 0, magzero_out = 23.9, keyvalues_out = NULL,
   dim_out = NULL, cores = 4, Nbatch = cores, keep_extreme_pix = FALSE, doclip = FALSE,
-  clip_tol = 100, clip_dilate = 0, clip_sigma = 5, return_all = FALSE, ...)
+  clip_tol = 100, clip_dilate = 0, clip_sigma = 5, return_all = FALSE,
+  dump_frames = FALSE, dump_dir = tempdir(), ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -65,6 +66,12 @@ Numeric scalar; cipping significance threshold for hot pixels. Only pixels where
 }
   \item{return_all}{
 Logical; should the pre stack projected images and inverse variances be returns also? Note if this is TRUE then the stacking can no longer be computed in batch mode, so be sure that you have enough memory to hold all pre stack projected images and inverse variances in memory (where note these will each have the dimensions of the desired output stacked image, which can be very large).
+}
+  \item{dump_frames}{
+Logical; if TRUE then warped frames will be dumped out to the specified \option{dump_dir} as the stacking continues. This can be useful to inspect the pre-stack inputs (if too large for the \option{return_all} = TRUE option), or if the stack is failing unexpectedly. Frames will inherit the names image_i, inVar_i, weight_i and exp_i as appropriate (i.e. only if warping is occurring for these data).
+}
+\item{dump_dir}{
+Character scalar; target directory to write out the dumped frames.
 }
   \item{\dots}{
 Other arguments to pass into \code{\link{Rwcs_warp}}.

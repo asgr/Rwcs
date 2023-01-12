@@ -1,14 +1,18 @@
 Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_list=NULL, mask_list=NULL, magzero_in=0,
                       magzero_out=23.9, keyvalues_out=NULL, dim_out=NULL, cores=4, Nbatch=cores,
                       keep_extreme_pix=FALSE, doclip=FALSE, clip_tol=100, clip_dilate=0, clip_sigma=5,
-                      return_all=FALSE, ...){
+                      return_all=FALSE, dump_frames=FALSE, dump_dir=tempdir(), ...){
   
   if(!requireNamespace("Rfits", quietly = TRUE)){
     stop('The Rfits package is needed for stacking to work. Please install from GitHub asgr/Rfits.', call. = FALSE)
   }
   
   timestart = proc.time()[3]
-    
+  
+  if(dump_frames){
+    message('Frames being dumped to ', dump_dir)
+  }
+  
   registerDoParallel(cores=cores)
   
   Nim = length(image_list)
@@ -42,7 +46,6 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
   }
   
   dim_im = c(keyvalues_out$NAXIS1, keyvalues_out$NAXIS2)
-  post_stack_image = matrix(0, dim_im[1], dim_im[2])
   mask_clip = NULL
   
   if(!is.null(inVar_list)){
@@ -193,15 +196,22 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         }
       }
       
-      return(Rwcs_warp(
-        image_in = temp_image,
-        keyvalues_out = keyvalues_out,
-        dim_out = dim_out,
-        doscale = TRUE,
-        dotightcrop = TRUE,
-        keepcrop = TRUE,
-        ...
-      ))
+      suppressMessages({
+        temp_warp = Rwcs_warp(
+          image_in = temp_image,
+          keyvalues_out = keyvalues_out,
+          dim_out = dim_out,
+          doscale = TRUE,
+          dotightcrop = TRUE,
+          keepcrop = TRUE,
+          ...
+        )
+        
+        if(dump_frames){
+          Rfits::Rfits_write_image(temp_warp, paste0(dump_dir,'/image_warp_',i,'.fits'))
+        }
+      })
+      return(temp_warp)
     }
     
     if(!is.null(inVar_list)){
@@ -228,7 +238,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         }
         
         suppressMessages({
-          return(Rwcs_warp(
+          temp_warp = Rwcs_warp(
             image_in = temp_inVar,
             keyvalues_out = keyvalues_out,
             dim_out = dim_out,
@@ -237,8 +247,12 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             keepcrop = TRUE,
             ...
             )*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixel area. Using Rfits * method here
-          )
+
+          if(dump_frames){
+            Rfits::Rfits_write_image(temp_warp, paste0(dump_dir,'/inVar_warp_',i,'.fits'))
+          }
         })
+        return(temp_warp)
       }
     }
     
@@ -267,15 +281,22 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           temp_exp$imDat[] = exp_list[[i]]
         }
         
-        return(Rwcs_warp(
-          image_in = temp_exp,
-          keyvalues_out = keyvalues_out,
-          dim_out = dim_out,
-          doscale = FALSE,
-          dotightcrop = TRUE,
-          keepcrop = TRUE,
-          ...
-        ))
+        suppressMessages({
+          temp_warp = Rwcs_warp(
+            image_in = temp_exp,
+            keyvalues_out = keyvalues_out,
+            dim_out = dim_out,
+            doscale = FALSE,
+            dotightcrop = TRUE,
+            keepcrop = TRUE,
+            ...
+          )
+          
+          if(dump_frames){
+            Rfits::Rfits_write_image(temp_warp, paste0(dump_dir,'/exp_warp_',i,'.fits'))
+          }
+        })
+        return(temp_warp)
       }
     }
     
@@ -301,15 +322,22 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             temp_weight$imDat[] = weight_list[[i]]
           }
           
-          return(Rwcs_warp(
-            image_in = temp_weight,
-            keyvalues_out = keyvalues_out,
-            dim_out = dim_out,
-            doscale = FALSE,
-            dotightcrop = TRUE,
-            keepcrop = TRUE,
-            ...
-          ))
+          suppressMessages({
+            temp_warp = Rwcs_warp(
+              image_in = temp_weight,
+              keyvalues_out = keyvalues_out,
+              dim_out = dim_out,
+              doscale = FALSE,
+              dotightcrop = TRUE,
+              keepcrop = TRUE,
+              ...
+            )
+            
+            if(dump_frames){
+              Rfits::Rfits_write_image(temp_warp, paste0(dump_dir,'/weight_warp_',i,'.fits'))
+            }
+          })
+          return(temp_warp)
         }else{
           return(weight_list[[i]])
         }
@@ -317,6 +345,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     }else{
       pre_stack_weight_list = weight_list
     }
+    
+    post_stack_image = matrix(0, dim_im[1], dim_im[2])
     
     if(is.null(pre_stack_inVar_list)){
       message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
