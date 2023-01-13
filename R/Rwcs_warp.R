@@ -1,7 +1,7 @@
 Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out = NULL,
                       pixscale_out = NULL, pixscale_in = NULL,
           direction = "auto", boundary = "dirichlet", interpolation = "cubic", 
-          doscale = TRUE, plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE,
+          doscale = TRUE, dofinenorm = TRUE, plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE,
           keepcrop=FALSE, WCSref_out = NULL, WCSref_in = NULL, magzero_out = NULL, magzero_in = NULL,
           blank=NA, ...) 
 {
@@ -220,31 +220,41 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     out = imager::imwarp(im = imager::as.cimg(image_out$imDat), 
                          map = .warpfunc_in2out, direction = direction, coordinates = "absolute", 
                          boundary = boundary, interpolation = interpolation)
+    
     if(doscale){
-      norm = matrix(1, dim(image_out$imDat)[1], dim(image_out$imDat)[2])
-      renorm = imager::imwarp(im = imager::as.cimg(norm), 
-                           map = .warpfunc_in2out, direction = direction, coordinates = "absolute", 
-                           boundary = boundary, interpolation = interpolation)
-      out = (out / renorm) * (pixscale_out / pixscale_in)^2
+      out = out*(pixscale_out/pixscale_in)^2
+      
+      if(dofinenorm){
+        norm = matrix(1, dim(image_out$imDat)[1], dim(image_out$imDat)[2])
+        norm = imager::imwarp(im = imager::as.cimg(norm), 
+                              map = .warpfunc_in2out, direction = direction, coordinates = "absolute", 
+                              boundary = boundary, interpolation = interpolation)
+        out = out/norm
+      }
     }
   }
   if (direction == "backward") {
     out = imager::imwarp(im = imager::as.cimg(image_out$imDat), 
                          map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
                          boundary = boundary, interpolation = interpolation)
+    
     if(doscale){
-      norm = matrix(1, dim(image_out$imDat)[1], dim(image_out$imDat)[2])
-      renorm = imager::imwarp(im = imager::as.cimg(norm), 
-                           map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
-                           boundary = boundary, interpolation = interpolation)
-      out = (out / renorm) * (pixscale_out / pixscale_in)^2
+      out = out*(pixscale_out/pixscale_in)^2
+      
+      if(dofinenorm){
+        norm = matrix(1, dim(image_out$imDat)[1], dim(image_out$imDat)[2])
+        norm = imager::imwarp(im = imager::as.cimg(norm), 
+                              map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
+                              boundary = boundary, interpolation = interpolation)
+        out = out/norm
+      }
     }
   }
   
   image_out$imDat[] = out
   
   if(dotightcrop==FALSE | keepcrop==FALSE){
-    image_out = image_out[c(1L - (min_x - 1L), dim_out[1] - (min_x - 1L)),c(1L - (min_y - 1L), dim_out[2] - (min_y - 1L))]
+    image_out = image_out[c(1L - (min_x - 1L), dim_out[1] - (min_x - 1L)),c(1L - (min_y - 1L), dim_out[2] - (min_y - 1L)), box=1] #box=1 just in case we have a single pixel left
     image_out$keyvalues$XCUTLO = NULL
     image_out$keyvalues$XCUTHI = NULL
     image_out$keyvalues$YCUTLO = NULL
@@ -253,7 +263,7 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     
     if(max_x > dim_out[1]){
       trim_x = max_x - dim_out[1]
-      image_out = image_out[1:(dim(image_out)[1] - trim_x),]
+      image_out = image_out[1:(dim(image_out)[1] - trim_x), , box=1] #box=1 just in case we have a single pixel left
       max_x = dim_out[1]
       image_out$keyvalues$XCUTLO = min_x
       image_out$keyvalues$XCUTHI = max_x
@@ -261,7 +271,7 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     
     if(max_y > dim_out[2]){
       trim_y = max_y - dim_out[2]
-      image_out = image_out[,1:(dim(image_out)[2] - trim_y)]
+      image_out = image_out[, 1:(dim(image_out)[2] - trim_y), box=1] #box=1 just in case we have a single pixel left
       max_y = dim_out[2]
       image_out$keyvalues$YCUTLO = min_y
       image_out$keyvalues$YCUTHI = max_y

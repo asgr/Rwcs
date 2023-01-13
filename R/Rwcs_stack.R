@@ -48,6 +48,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
   dim_im = c(keyvalues_out$NAXIS1, keyvalues_out$NAXIS2)
   mask_clip = NULL
   
+  post_stack_image = matrix(0, dim_im[1], dim_im[2])
+  
   if(!is.null(inVar_list)){
     
     if(length(inVar_list) == 1){
@@ -346,10 +348,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       pre_stack_weight_list = weight_list
     }
     
-    post_stack_image = matrix(0, dim_im[1], dim_im[2])
-    
     if(is.null(pre_stack_inVar_list)){
-      message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
+      message('Stacking Images ',seq_start,' to ',seq_end,' of ',Nim)
       for(i in 1:Nbatch_sub){
         if(anyNA(pre_stack_image_list[[i]]$imDat)){
           addID = which(!is.na(pre_stack_image_list[[i]]$imDat), arr.ind=TRUE)
@@ -376,6 +376,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         }
       }
     }else{
+      message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
       for(i in 1:Nbatch_sub){
         if(anyNA(pre_stack_image_list[[i]]$imDat) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]$imDat | any(pre_stack_inVar_list[[i]]$imDat < 0, na.rm=TRUE))){
           addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & is.finite(pre_stack_inVar_list[[i]]$imDat) & pre_stack_inVar_list[[i]]$imDat > 0, arr.ind=TRUE)
@@ -425,6 +426,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     }
     
     if(keep_extreme_pix | doclip){
+      message('Calculating Extreme Pixels ',seq_start,' to ',seq_end,' of ',Nim)
       for(i in 1:Nbatch_sub){
         xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
         ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
@@ -447,23 +449,24 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     pre_stack_exp_list = NULL
   }
   
+  weight_sel = (post_stack_weight != 0L)
   if(is.null(pre_stack_inVar_list)){
-    post_stack_image[post_stack_weight > 0] = post_stack_image[post_stack_weight > 0]/post_stack_weight[post_stack_weight > 0]
+    post_stack_image[weight_sel] = post_stack_image[weight_sel]/post_stack_weight[weight_sel]
   }else{
-    post_stack_image[post_stack_weight > 0] = post_stack_image[post_stack_weight > 0]/post_stack_inVar[post_stack_weight > 0]
-    post_stack_inVar[post_stack_weight == 0L] = NA
+    post_stack_image[weight_sel] = post_stack_image[weight_sel]/post_stack_inVar[weight_sel]
+    post_stack_inVar[!weight_sel] = NA
   }
   
   if(keep_extreme_pix | doclip){
-    post_stack_cold[post_stack_weight == 0L] = NA
-    post_stack_hot[post_stack_weight == 0L] = NA
+    post_stack_cold[!weight_sel] = NA
+    post_stack_hot[!weight_sel] = NA
   }
   
-  post_stack_image[post_stack_weight == 0L] = NA
+  post_stack_image[!weight_sel] = NA
   
   #Changed my mind on this- I think I should count exposure as a photon hitting a legal part of a sensor (bad pixel or not). I.e. fully masked regions with NA in the final image might still have a positive exposure time.
   # if(!is.null(post_stack_exp)){
-  #   post_stack_exp[post_stack_weight == 0L] = NA
+  #   post_stack_exp[!weight_sel] = NA
   # }
   
   if(doclip & !is.null(post_stack_inVar)){
@@ -516,7 +519,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     if(Nbatch == Nim){ #if we already have all projections in memory we can just re-stack
       message('Restacking without clipped cold/hot pixels')
       if(is.null(pre_stack_inVar_list)){
-        message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
+        message('Stacking Images ',seq_start,' to ',seq_end,' of ',Nim)
         for(i in 1:Nim){
           temp_mask_clip = (post_stack_cold_id == i) | (post_stack_hot_id == i)
           
@@ -561,6 +564,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           }
         }
       }else{
+        message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
         for(i in 1:Nim){
           temp_mask_clip = (post_stack_cold_id == i) | (post_stack_hot_id == i)
           if(clip_dilate > 0){
@@ -792,7 +796,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         }
         
         if(is.null(pre_stack_inVar_list)){
-          message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
+          message('Stacking Images ',seq_start,' to ',seq_end,' of ',Nim)
           for(i in 1:Nbatch_sub){
             i_stack = seq_start + i - 1L
             
@@ -831,6 +835,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             }
           }
         }else{
+          message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
           for(i in 1:Nbatch_sub){
             i_stack = seq_start + i - 1L
             
@@ -886,6 +891,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         }
         
         if(keep_extreme_pix){
+          message('Calculating Extreme Pixels ',seq_start,' to ',seq_end,' of ',Nim)
           for(i in 1:Nbatch_sub){
             i_stack = seq_start + i - 1L
             
@@ -913,19 +919,21 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       pre_stack_exp_list = NULL
     }
     
+    weight_sel = (post_stack_weight != 0L)
+    
     if(is.null(pre_stack_inVar_list)){
-      post_stack_image[post_stack_weight > 0] = post_stack_image[post_stack_weight > 0]/post_stack_weight[post_stack_weight > 0]
+      post_stack_image[weight_sel] = post_stack_image[weight_sel]/post_stack_weight[weight_sel]
     }else{
-      post_stack_image[post_stack_weight > 0] = post_stack_image[post_stack_weight > 0]/post_stack_inVar[post_stack_weight > 0]
-      post_stack_inVar[post_stack_weight == 0L] = NA
+      post_stack_image[weight_sel] = post_stack_image[weight_sel]/post_stack_inVar[weight_sel]
+      post_stack_inVar[!weight_sel] = NA
     }
     
     if(keep_extreme_pix){
-      post_stack_cold[post_stack_weight == 0L] = NA
-      post_stack_hot[post_stack_weight == 0L] = NA
+      post_stack_cold[!weight_sel] = NA
+      post_stack_hot[!weight_sel] = NA
     }
     
-    post_stack_image[post_stack_weight == 0L] = NA
+    post_stack_image[!weight_sel] = NA
   }
   
   if(return_all==FALSE){
