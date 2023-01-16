@@ -21,6 +21,22 @@ Cwcs_head_s2p <- function(RA, Dec, header, nkey, WCSref = 0L, ctrl = 2L) {
     .Call(`_Rwcs_dilate_cpp`, segim, kern, expand)
 }
 
+.num_mat_add_cpp <- function(base, add, ind, offset) {
+    .Call(`_Rwcs_num_mat_add`, base, add, ind, offset)
+}
+
+.num_mat_add_mult_cpp <- function(base, add, mult, ind, offset) {
+    .Call(`_Rwcs_num_mat_add_mult`, base, add, mult, ind, offset)
+}
+
+.int_mat_add_cpp <- function(base, add, ind, offset) {
+    .Call(`_Rwcs_int_mat_add`, base, add, ind, offset)
+}
+
+.int_mat_add_sin_cpp <- function(base, add, ind, offset) {
+    .Call(`_Rwcs_int_mat_add_sin`, base, add, ind, offset)
+}
+
 .mat_diff_sum <- function(mat1, mat2, scale = 1, delta_x = 0L, delta_y = 0L) {
     .Call(`_Rwcs_mat_diff_sum`, mat1, mat2, scale, delta_x, delta_y)
 }

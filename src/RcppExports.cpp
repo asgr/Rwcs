@@ -119,6 +119,63 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// num_mat_add
+NumericMatrix num_mat_add(NumericMatrix base, NumericMatrix add, IntegerMatrix ind, IntegerVector offset);
+RcppExport SEXP _Rwcs_num_mat_add(SEXP baseSEXP, SEXP addSEXP, SEXP indSEXP, SEXP offsetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type base(baseSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type add(addSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type ind(indSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type offset(offsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(num_mat_add(base, add, ind, offset));
+    return rcpp_result_gen;
+END_RCPP
+}
+// num_mat_add_mult
+NumericMatrix num_mat_add_mult(NumericMatrix base, NumericMatrix add, NumericMatrix mult, IntegerMatrix ind, IntegerVector offset);
+RcppExport SEXP _Rwcs_num_mat_add_mult(SEXP baseSEXP, SEXP addSEXP, SEXP multSEXP, SEXP indSEXP, SEXP offsetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type base(baseSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type add(addSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type mult(multSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type ind(indSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type offset(offsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(num_mat_add_mult(base, add, mult, ind, offset));
+    return rcpp_result_gen;
+END_RCPP
+}
+// int_mat_add
+IntegerMatrix int_mat_add(IntegerMatrix base, IntegerMatrix add, IntegerMatrix ind, IntegerVector offset);
+RcppExport SEXP _Rwcs_int_mat_add(SEXP baseSEXP, SEXP addSEXP, SEXP indSEXP, SEXP offsetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type base(baseSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type add(addSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type ind(indSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type offset(offsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(int_mat_add(base, add, ind, offset));
+    return rcpp_result_gen;
+END_RCPP
+}
+// int_mat_add_sin
+IntegerMatrix int_mat_add_sin(IntegerMatrix base, int add, IntegerMatrix ind, IntegerVector offset);
+RcppExport SEXP _Rwcs_int_mat_add_sin(SEXP baseSEXP, SEXP addSEXP, SEXP indSEXP, SEXP offsetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type base(baseSEXP);
+    Rcpp::traits::input_parameter< int >::type add(addSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type ind(indSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type offset(offsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(int_mat_add_sin(base, add, ind, offset));
+    return rcpp_result_gen;
+END_RCPP
+}
 // mat_diff_sum
 double mat_diff_sum(Rcpp::NumericMatrix mat1, Rcpp::NumericMatrix mat2, double scale, int delta_x, int delta_y);
 RcppExport SEXP _Rwcs_mat_diff_sum(SEXP mat1SEXP, SEXP mat2SEXP, SEXP scaleSEXP, SEXP delta_xSEXP, SEXP delta_ySEXP) {
@@ -155,6 +212,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_Rwcs_Cwcs_head_p2s", (DL_FUNC) &_Rwcs_Cwcs_head_p2s, 6},
     {"_Rwcs_Cwcs_head_s2p", (DL_FUNC) &_Rwcs_Cwcs_head_s2p, 6},
     {"_Rwcs_dilate_cpp", (DL_FUNC) &_Rwcs_dilate_cpp, 3},
+    {"_Rwcs_num_mat_add", (DL_FUNC) &_Rwcs_num_mat_add, 4},
+    {"_Rwcs_num_mat_add_mult", (DL_FUNC) &_Rwcs_num_mat_add_mult, 5},
+    {"_Rwcs_int_mat_add", (DL_FUNC) &_Rwcs_int_mat_add, 4},
+    {"_Rwcs_int_mat_add_sin", (DL_FUNC) &_Rwcs_int_mat_add_sin, 4},
     {"_Rwcs_mat_diff_sum", (DL_FUNC) &_Rwcs_mat_diff_sum, 5},
     {"_Rwcs_pnpoly", (DL_FUNC) &_Rwcs_pnpoly, 4},
     {NULL, NULL, 0}

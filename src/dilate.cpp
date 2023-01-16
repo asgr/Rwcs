@@ -62,3 +62,69 @@ IntegerMatrix dilate_cpp(IntegerMatrix segim, IntegerMatrix kern, IntegerVector 
   }
   return segim_new;
 }
+
+// [[Rcpp::export(".num_mat_add_cpp")]]
+NumericMatrix num_mat_add(NumericMatrix base, NumericMatrix add, IntegerMatrix ind, IntegerVector offset){
+  
+  int row, col;
+  //Rcout << ind.nrow() << std::endl;
+  for(int i = 0; i < ind.nrow(); i++){
+    //Rcout << i << std::endl;
+    row = ind(i,0) - 1; // To convert from R to C index
+    col = ind(i,1) - 1; // To convert from R to C index
+    
+    base(row + offset[0] - 1, col + offset[1] - 1) += add(row, col);
+  }
+  
+  return base;
+}
+
+// [[Rcpp::export(".num_mat_add_mult_cpp")]]
+NumericMatrix num_mat_add_mult(NumericMatrix base, NumericMatrix add, NumericMatrix mult, IntegerMatrix ind, IntegerVector offset){
+  
+  int row, col;
+  //Rcout << ind.nrow() << std::endl;
+  for(int i = 0; i < ind.nrow(); i++){
+    //Rcout << i << std::endl;
+    row = ind(i,0) - 1; // To convert from R to C index
+    col = ind(i,1) - 1; // To convert from R to C index
+    
+    //Rcout << row << ' ' << col << ' ' << row + offset[0] - 1 << ' ' << col + offset[1] - 1 << std::endl;
+    
+    base(row + offset[0] - 1, col + offset[1] - 1) += add(row, col) * mult(row, col);
+  }
+  
+  return base;
+}
+
+// [[Rcpp::export(".int_mat_add_cpp")]]
+IntegerMatrix int_mat_add(IntegerMatrix base, IntegerMatrix add, IntegerMatrix ind, IntegerVector offset){
+  
+  int row, col;
+  //Rcout << ind.nrow() << std::endl;
+  for(int i = 0; i < ind.nrow(); i++){
+    //Rcout << i << std::endl;
+    row = ind(i,0) - 1; // To convert from R to C index
+    col = ind(i,1) - 1; // To convert from R to C index
+    
+    base(row + offset[0] - 1, col + offset[1] - 1) += add(row, col);
+  }
+  
+  return base;
+}
+
+// [[Rcpp::export(".int_mat_add_sin_cpp")]]
+IntegerMatrix int_mat_add_sin(IntegerMatrix base, int add, IntegerMatrix ind, IntegerVector offset){
+  
+  int row, col;
+  //Rcout << ind.nrow() << std::endl;
+  for(int i = 0; i < ind.nrow(); i++){
+    //Rcout << i << std::endl;
+    row = ind(i,0) - 1; // To convert from R to C index
+    col = ind(i,1) - 1; // To convert from R to C index
+    
+    base(row + offset[0] - 1, col + offset[1] - 1) += add;
+  }
+  
+  return base;
+}
