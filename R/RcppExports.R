@@ -37,6 +37,14 @@ Cwcs_head_s2p <- function(RA, Dec, header, nkey, WCSref = 0L, ctrl = 2L) {
     .Call(`_Rwcs_int_mat_add_sin`, base, add, ind, offset)
 }
 
+.image_inVar_weight_mat_cpp <- function(post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset) {
+    .Call(`_Rwcs_image_inVar_weight_mat`, post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset)
+}
+
+.image_inVar_weight_int_cpp <- function(post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset) {
+    .Call(`_Rwcs_image_inVar_weight_int`, post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset)
+}
+
 .mat_diff_sum <- function(mat1, mat2, scale = 1, delta_x = 0L, delta_y = 0L) {
     .Call(`_Rwcs_mat_diff_sum`, mat1, mat2, scale, delta_x, delta_y)
 }

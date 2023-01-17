@@ -128,3 +128,47 @@ IntegerMatrix int_mat_add_sin(IntegerMatrix base, int add, IntegerMatrix ind, In
   
   return base;
 }
+
+// [[Rcpp::export(".image_inVar_weight_mat_cpp")]]
+SEXP image_inVar_weight_mat(NumericMatrix post_image, NumericMatrix post_inVar, NumericMatrix post_weight,
+              NumericMatrix pre_image, NumericMatrix pre_inVar, NumericMatrix pre_weight, IntegerVector offset){
+  for (int i = 0; i < pre_image.nrow(); i++) {
+    for (int j = 0; j < pre_image.ncol(); j++) {
+      if(R_finite(pre_image(i,j))){
+        //Rcout << "image finite" << std::endl;
+        //if(R_finite(pre_inVar(i,j))){
+          //Rcout << "inVar finite" << std::endl;
+          //if(pre_inVar(i,j) > 0){
+            //Rcout << "inVar > 0" << std::endl;
+            post_image(i + offset[0] - 1, j + offset[1] - 1) += pre_image(i,j) * pre_inVar(i,j);
+            post_inVar(i + offset[0] - 1, j + offset[1] - 1) += pre_inVar(i,j);
+            post_weight(i + offset[0] - 1, j + offset[1] - 1) += pre_weight(i,j);
+          }
+        //}
+      //}
+    }
+  }
+  return R_NilValue;
+}
+
+// [[Rcpp::export(".image_inVar_weight_int_cpp")]]
+SEXP image_inVar_weight_int(NumericMatrix post_image, NumericMatrix post_inVar, NumericMatrix post_weight,
+                            NumericMatrix pre_image, NumericMatrix pre_inVar, int pre_weight, IntegerVector offset){
+  for (int i = 0; i < pre_image.nrow(); i++) {
+    for (int j = 0; j < pre_image.ncol(); j++) {
+      if(R_finite(pre_image(i,j))){
+        //Rcout << "image finite" << std::endl;
+        //if(R_finite(pre_inVar(i,j))){
+          //Rcout << "inVar finite" << std::endl;
+          //if(pre_inVar(i,j) > 0){
+            //Rcout << "inVar > 0" << std::endl;
+            post_image(i + offset[0] - 1, j + offset[1] - 1) += pre_image(i,j) * pre_inVar(i,j);
+            post_inVar(i + offset[0] - 1, j + offset[1] - 1) += pre_inVar(i,j);
+            post_weight(i + offset[0] - 1, j + offset[1] - 1) += pre_weight;
+          }
+        //}
+      //}
+    }
+  }
+  return R_NilValue;
+}

@@ -384,18 +384,38 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     }else{
       message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
       for(i in 1:Nbatch_sub){
+        # The below is actually slower, even though it is pure Rcpp. Seems checking for stacking per pixel is too slow
+        # if(weight_image[i]){
+        #   .image_inVar_weight_mat_cpp(post_image = post_stack_image,
+        #                               post_inVar = post_stack_inVar,
+        #                               post_weight = post_stack_weight,
+        #                               pre_image = pre_stack_image_list[[i]]$imDat,
+        #                               pre_inVar = pre_stack_inVar_list[[i]]$imDat,
+        #                               pre_weight = pre_stack_weight_list[[i]]$imDat,
+        #                               offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')]
+        #                               )
+        # }else{
+        #   .image_inVar_weight_int_cpp(post_image = post_stack_image,
+        #                               post_inVar = post_stack_inVar,
+        #                               post_weight = post_stack_weight,
+        #                               pre_image = pre_stack_image_list[[i]]$imDat,
+        #                               pre_inVar = pre_stack_inVar_list[[i]]$imDat,
+        #                               pre_weight = weight_list[[i]],
+        #                               offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')]
+        #   )
+        # }
         if(anyNA(pre_stack_image_list[[i]]$imDat) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]$imDat | any(pre_stack_inVar_list[[i]]$imDat < 0, na.rm=TRUE))){
           addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & is.finite(pre_stack_inVar_list[[i]]$imDat) & pre_stack_inVar_list[[i]]$imDat > 0, arr.ind=TRUE)
           #addID_sub = addID
           #addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
           #addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
-          
+
           #post_stack_image[addID_sub] = post_stack_image[addID_sub] + pre_stack_image_list[[i]]$imDat[addID]*pre_stack_inVar_list[[i]]$imDat[addID]
           #post_stack_inVar[addID_sub] = post_stack_inVar[addID_sub] + pre_stack_inVar_list[[i]]$imDat[addID]
-          
+
           .num_mat_add_mult_cpp(post_stack_image, pre_stack_image_list[[i]]$imDat, pre_stack_inVar_list[[i]]$imDat, addID, pre_stack_image_list[[i]]$crop[c('xlo','ylo')])
           .num_mat_add_cpp(post_stack_inVar, pre_stack_inVar_list[[i]]$imDat, addID, pre_stack_image_list[[i]]$crop[c('xlo','ylo')])
-          
+
           if(weight_image[i]){
             #post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + pre_stack_weight_list[[i]]$imDat[addID]
             .int_mat_add_cpp(post_stack_weight, pre_stack_weight_list[[i]]$imDat, addID, pre_stack_image_list[[i]]$crop[c('xlo','ylo')])
@@ -406,7 +426,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         }else{
           xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
           ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
-          
+
           post_stack_image[xsub,ysub] = post_stack_image[xsub,ysub] + pre_stack_image_list[[i]]$imDat*pre_stack_inVar_list[[i]]$imDat
           post_stack_inVar[xsub,ysub] = post_stack_inVar[xsub,ysub] + pre_stack_inVar_list[[i]]$imDat
           if(weight_image[i]){
