@@ -37,40 +37,16 @@ Cwcs_head_s2p <- function(RA, Dec, header, nkey, WCSref = 0L, ctrl = 2L) {
     .Call(`_Rwcs_int_mat_add_sin`, base, add, ind, offset)
 }
 
-.stack_image_inVar_weight_mat_cpp <- function(post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset) {
-    .Call(`_Rwcs_stack_image_inVar_weight_mat`, post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset)
+.stack_image_inVar_cpp <- function(post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight_sexp, offset, post_mask = NULL) {
+    .Call(`_Rwcs_stack_image_inVar`, post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight_sexp, offset, post_mask)
 }
 
-.stack_image_inVar_weight_int_cpp <- function(post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset) {
-    .Call(`_Rwcs_stack_image_inVar_weight_int`, post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset)
-}
-
-.stack_image_weight_mat_cpp <- function(post_image, post_weight, pre_image, pre_weight, offset) {
-    .Call(`_Rwcs_stack_image_weight_mat`, post_image, post_weight, pre_image, pre_weight, offset)
-}
-
-.stack_image_weight_int_cpp <- function(post_image, post_weight, pre_image, pre_weight, offset) {
-    .Call(`_Rwcs_stack_image_weight_int`, post_image, post_weight, pre_image, pre_weight, offset)
+.stack_image_cpp <- function(post_image, post_weight, pre_image, pre_weight_sexp, offset, post_mask = NULL) {
+    .Call(`_Rwcs_stack_image`, post_image, post_weight, pre_image, pre_weight_sexp, offset, post_mask)
 }
 
 .stack_exp_cpp <- function(post_exp, pre_exp, offset) {
     .Call(`_Rwcs_stack_exp`, post_exp, pre_exp, offset)
-}
-
-.stack_image_inVar_weight_mat_mask_cpp <- function(post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset, post_mask) {
-    .Call(`_Rwcs_stack_image_inVar_weight_mat_mask`, post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset, post_mask)
-}
-
-.stack_image_inVar_weight_int_mask_cpp <- function(post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset, post_mask) {
-    .Call(`_Rwcs_stack_image_inVar_weight_int_mask`, post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset, post_mask)
-}
-
-.stack_image_weight_mat_mask_cpp <- function(post_image, post_weight, pre_image, pre_weight, offset, post_mask) {
-    .Call(`_Rwcs_stack_image_weight_mat_mask`, post_image, post_weight, pre_image, pre_weight, offset, post_mask)
-}
-
-.stack_image_weight_int_mask_cpp <- function(post_image, post_weight, pre_image, pre_weight, offset, post_mask) {
-    .Call(`_Rwcs_stack_image_weight_int_mask`, post_image, post_weight, pre_image, pre_weight, offset, post_mask)
 }
 
 .stack_exp_mask_cpp <- function(post_exp, pre_exp, offset, post_mask) {

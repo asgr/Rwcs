@@ -129,74 +129,82 @@ IntegerMatrix int_mat_add_sin(IntegerMatrix base, int add, IntegerMatrix ind, In
   return base;
 }
 
-// [[Rcpp::export(".stack_image_inVar_weight_mat_cpp")]]
-SEXP stack_image_inVar_weight_mat(NumericMatrix post_image, NumericMatrix post_inVar, IntegerMatrix post_weight,
-              NumericMatrix pre_image, NumericMatrix pre_inVar, NumericMatrix pre_weight, IntegerVector offset){
-  int do_stack;
-  
-  for (int j = 0; j < pre_image.ncol(); j++) {
-    for (int i = 0; i < pre_image.nrow(); i++) {
-      do_stack = R_finite(pre_image(i,j) + pre_inVar(i,j)) && (pre_inVar(i,j) > 0);
-      if(do_stack){
-        post_image(i + offset[0] - 1, j + offset[1] - 1) += pre_image(i,j) * pre_inVar(i,j);
-        post_inVar(i + offset[0] - 1, j + offset[1] - 1) += pre_inVar(i,j);
-        post_weight(i + offset[0] - 1, j + offset[1] - 1) += pre_weight(i,j);
+static bool is_mask_set(Nullable<LogicalMatrix> mask, int i, int j)
+{
+  if (mask.isNull())
+    return false;
+  return LogicalMatrix(mask)(i, j);
+}
+
+template<typename WeightGetter>
+static SEXP _stack_image_inVar(NumericMatrix post_image, NumericMatrix post_inVar, IntegerMatrix post_weight,
+                               NumericMatrix pre_image, NumericMatrix pre_inVar, WeightGetter weight, IntegerVector offset,
+                               Nullable<LogicalMatrix> post_mask)
+{
+  int post_j = offset[1] - 1;
+  for (int j = 0; j < pre_image.ncol(); j++, post_j++) {
+    int post_i = offset[0] - 1;
+    for (int i = 0; i < pre_image.nrow(); i++, post_i++) {
+      auto pre_image_pix = pre_image(i,j);
+      auto pre_inVar_pix = pre_inVar(i,j);
+      auto do_stack = R_finite(pre_image_pix + pre_inVar_pix) && (pre_inVar_pix > 0) && !is_mask_set(post_mask, post_i, post_j);
+      if (do_stack) {
+        post_image(post_i, post_j) += pre_image_pix * pre_inVar_pix;
+        post_inVar(post_i, post_j) += pre_inVar_pix;
+        post_weight(post_i, post_j) += weight(i,j);
       }
     }
   }
   return R_NilValue;
 }
 
-// [[Rcpp::export(".stack_image_inVar_weight_int_cpp")]]
-SEXP stack_image_inVar_weight_int(NumericMatrix post_image, NumericMatrix post_inVar, IntegerMatrix post_weight,
-                            NumericMatrix pre_image, NumericMatrix pre_inVar, int pre_weight, IntegerVector offset){
-  int do_stack;
-  
-  for (int j = 0; j < pre_image.ncol(); j++) {
-    for (int i = 0; i < pre_image.nrow(); i++) {
-      do_stack = R_finite(pre_image(i,j) + pre_inVar(i,j)) && (pre_inVar(i,j) > 0);
-      if(do_stack){
-        post_image(i + offset[0] - 1, j + offset[1] - 1) += pre_image(i,j) * pre_inVar(i,j);
-        post_inVar(i + offset[0] - 1, j + offset[1] - 1) += pre_inVar(i,j);
-        post_weight(i + offset[0] - 1, j + offset[1] - 1) += pre_weight;
+
+
+template<typename WeightGetter>
+static SEXP _stack_image(NumericMatrix post_image, IntegerMatrix post_weight,
+                         NumericMatrix pre_image, WeightGetter weight, IntegerVector offset,
+                         Nullable<LogicalMatrix> post_mask)
+{
+  int post_j = offset[1] - 1;
+  for (int j = 0; j < pre_image.ncol(); j++, post_j++) {
+    int post_i = offset[0] - 1;
+    for (int i = 0; i < pre_image.nrow(); i++, post_i++) {
+      auto pre_image_pix = pre_image(i,j);
+      auto do_stack = R_finite(pre_image_pix) && !is_mask_set(post_mask, post_i, post_j);
+      if (do_stack) {
+        auto weight_pix = weight(i,j);
+        post_image(post_i, post_j) += pre_image_pix * weight_pix;
+        post_weight(post_i, post_j) += weight_pix;
       }
     }
   }
   return R_NilValue;
 }
 
-// [[Rcpp::export(".stack_image_weight_mat_cpp")]]
-SEXP stack_image_weight_mat(NumericMatrix post_image, IntegerMatrix post_weight,
-                            NumericMatrix pre_image, NumericMatrix pre_weight, IntegerVector offset){
-  int do_stack;
-  
-  for (int j = 0; j < pre_image.ncol(); j++) {
-    for (int i = 0; i < pre_image.nrow(); i++) {
-      do_stack = R_finite(pre_image(i,j));
-      if(do_stack){
-        post_image(i + offset[0] - 1, j + offset[1] - 1) += pre_image(i,j) * pre_weight(i,j);
-        post_weight(i + offset[0] - 1, j + offset[1] - 1) += pre_weight(i,j);
-      }
-    }
+// [[Rcpp::export(".stack_image_inVar_cpp")]]
+SEXP stack_image_inVar(NumericMatrix post_image, NumericMatrix post_inVar, IntegerMatrix post_weight,
+                       NumericMatrix pre_image, NumericMatrix pre_inVar, SEXP pre_weight_sexp, IntegerVector offset,
+                       Nullable<LogicalMatrix> post_mask = R_NilValue)
+{
+  if (Rf_isMatrix(pre_weight_sexp)) {
+    NumericMatrix pre_weight(pre_weight_sexp);
+    return _stack_image_inVar(post_image, post_inVar, post_weight, pre_image, pre_inVar, [&](int i, int j) { return pre_weight(i, j); }, offset, post_mask);
   }
-  return R_NilValue;
+  int pre_weight = Rf_asInteger(pre_weight_sexp);
+  return _stack_image_inVar(post_image, post_inVar, post_weight, pre_image, pre_inVar, [&](int, int) { return pre_weight; }, offset, post_mask);
 }
 
-// [[Rcpp::export(".stack_image_weight_int_cpp")]]
-SEXP stack_image_weight_int(NumericMatrix post_image, IntegerMatrix post_weight,
-                            NumericMatrix pre_image, int pre_weight, IntegerVector offset){
-  int do_stack;
-  
-  for (int j = 0; j < pre_image.ncol(); j++) {
-    for (int i = 0; i < pre_image.nrow(); i++) {
-      do_stack = R_finite(pre_image(i,j));
-      if(do_stack){
-        post_image(i + offset[0] - 1, j + offset[1] - 1) += pre_image(i,j) * pre_weight;
-        post_weight(i + offset[0] - 1, j + offset[1] - 1) += pre_weight;
-      }
-    }
+// [[Rcpp::export(".stack_image_cpp")]]
+SEXP stack_image(NumericMatrix post_image, IntegerMatrix post_weight,
+                 NumericMatrix pre_image, SEXP pre_weight_sexp, IntegerVector offset,
+                 Nullable<LogicalMatrix> post_mask = R_NilValue)
+{
+  if (Rf_isMatrix(pre_weight_sexp)) {
+    NumericMatrix pre_weight(pre_weight_sexp);
+    return _stack_image(post_image, post_weight, pre_image, [&](int i, int j) { return pre_weight(i, j); }, offset, post_mask);
   }
-  return R_NilValue;
+  int pre_weight = Rf_asInteger(pre_weight_sexp);
+  return _stack_image(post_image, post_weight, pre_image, [&](int, int) { return pre_weight; }, offset, post_mask);
 }
 
 // [[Rcpp::export(".stack_exp_cpp")]]
@@ -208,82 +216,6 @@ SEXP stack_exp(NumericMatrix post_exp, NumericMatrix pre_exp, IntegerVector offs
       do_stack = R_finite(pre_exp(i,j));
       if(do_stack){
         post_exp(i + offset[0] - 1, j + offset[1] - 1) += pre_exp(i,j);
-      }
-    }
-  }
-  return R_NilValue;
-}
-
-//masking versions
-
-// [[Rcpp::export(".stack_image_inVar_weight_mat_mask_cpp")]]
-SEXP stack_image_inVar_weight_mat_mask(NumericMatrix post_image, NumericMatrix post_inVar, IntegerMatrix post_weight,
-                            NumericMatrix pre_image, NumericMatrix pre_inVar, NumericMatrix pre_weight, IntegerVector offset,
-                            LogicalMatrix post_mask){
-  int do_stack;
-  
-  for (int j = 0; j < pre_image.ncol(); j++) {
-    for (int i = 0; i < pre_image.nrow(); i++) {
-      do_stack = R_finite(pre_image(i,j) + pre_inVar(i,j)) && (pre_inVar(i,j) > 0) && (post_mask(i + offset[0] - 1, j + offset[1] - 1) == false);
-      if(do_stack){
-        post_image(i + offset[0] - 1, j + offset[1] - 1) += pre_image(i,j) * pre_inVar(i,j);
-        post_inVar(i + offset[0] - 1, j + offset[1] - 1) += pre_inVar(i,j);
-        post_weight(i + offset[0] - 1, j + offset[1] - 1) += pre_weight(i,j);
-      }
-    }
-  }
-  return R_NilValue;
-}
-
-// [[Rcpp::export(".stack_image_inVar_weight_int_mask_cpp")]]
-SEXP stack_image_inVar_weight_int_mask(NumericMatrix post_image, NumericMatrix post_inVar, IntegerMatrix post_weight,
-                                  NumericMatrix pre_image, NumericMatrix pre_inVar, int pre_weight, IntegerVector offset,
-                                  LogicalMatrix post_mask){
-  int do_stack;
-  
-  for (int j = 0; j < pre_image.ncol(); j++) {
-    for (int i = 0; i < pre_image.nrow(); i++) {
-      do_stack = R_finite(pre_image(i,j) + pre_inVar(i,j)) && (pre_inVar(i,j) > 0) && (post_mask(i + offset[0] - 1, j + offset[1] - 1) == false);
-      if(do_stack){
-        post_image(i + offset[0] - 1, j + offset[1] - 1) += pre_image(i,j) * pre_inVar(i,j);
-        post_inVar(i + offset[0] - 1, j + offset[1] - 1) += pre_inVar(i,j);
-        post_weight(i + offset[0] - 1, j + offset[1] - 1) += pre_weight;
-      }
-    }
-  }
-  return R_NilValue;
-}
-
-// [[Rcpp::export(".stack_image_weight_mat_mask_cpp")]]
-SEXP stack_image_weight_mat_mask(NumericMatrix post_image, IntegerMatrix post_weight,
-                            NumericMatrix pre_image, NumericMatrix pre_weight, IntegerVector offset,
-                            LogicalMatrix post_mask){
-  int do_stack;
-  
-  for (int j = 0; j < pre_image.ncol(); j++) {
-    for (int i = 0; i < pre_image.nrow(); i++) {
-      do_stack = R_finite(pre_image(i,j)) && (post_mask(i + offset[0] - 1, j + offset[1] - 1) == false);
-      if(do_stack){
-        post_image(i + offset[0] - 1, j + offset[1] - 1) += pre_image(i,j) * pre_weight(i,j);
-        post_weight(i + offset[0] - 1, j + offset[1] - 1) += pre_weight(i,j);
-      }
-    }
-  }
-  return R_NilValue;
-}
-
-// [[Rcpp::export(".stack_image_weight_int_mask_cpp")]]
-SEXP stack_image_weight_int_mask(NumericMatrix post_image, IntegerMatrix post_weight,
-                            NumericMatrix pre_image, int pre_weight, IntegerVector offset,
-                            LogicalMatrix post_mask){
-  int do_stack;
-  
-  for (int j = 0; j < pre_image.ncol(); j++) {
-    for (int i = 0; i < pre_image.nrow(); i++) {
-      do_stack = R_finite(pre_image(i,j)) && (post_mask(i + offset[0] - 1, j + offset[1] - 1) == false);
-      if(do_stack){
-        post_image(i + offset[0] - 1, j + offset[1] - 1) += pre_image(i,j) * pre_weight;
-        post_weight(i + offset[0] - 1, j + offset[1] - 1) += pre_weight;
       }
     }
   }

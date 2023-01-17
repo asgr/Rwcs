@@ -352,20 +352,16 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       message('Stacking Images ',seq_start,' to ',seq_end,' of ',Nim)
       for(i in 1:Nbatch_sub){
         if(weight_image[i]){
-          .stack_image_weight_mat_cpp(post_image = post_stack_image,
-                                      post_weight = post_stack_weight,
-                                      pre_image = pre_stack_image_list[[i]]$imDat,
-                                      pre_weight = pre_stack_weight_list[[i]]$imDat,
-                                      offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')]
-          )
+          pre_weight = pre_stack_weight_list[[i]]$imDat
         }else{
-          .stack_image_weight_int_cpp(post_image = post_stack_image,
-                                      post_weight = post_stack_weight,
-                                      pre_image = pre_stack_image_list[[i]]$imDat,
-                                      pre_weight = weight_list[[i]],
-                                      offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')]
-          )
+          pre_weight = weight_list[[i]]
         }
+        .stack_image_cpp(post_image = post_stack_image,
+                         post_weight = post_stack_weight,
+                         pre_image = pre_stack_image_list[[i]]$imDat,
+                         pre_weight = pre_weight,
+                         offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')]
+        )
         # if(anyNA(pre_stack_image_list[[i]]$imDat)){
         #   addID = which(!is.na(pre_stack_image_list[[i]]$imDat), arr.ind=TRUE)
         #   #addID_sub = addID
@@ -400,24 +396,18 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
       for(i in 1:Nbatch_sub){
         if(weight_image[i]){
-          .stack_image_inVar_weight_mat_cpp(post_image = post_stack_image,
-                                      post_inVar = post_stack_inVar,
-                                      post_weight = post_stack_weight,
-                                      pre_image = pre_stack_image_list[[i]]$imDat,
-                                      pre_inVar = pre_stack_inVar_list[[i]]$imDat,
-                                      pre_weight = pre_stack_weight_list[[i]]$imDat,
-                                      offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')]
-                                      )
+          pre_weight = pre_stack_weight_list[[i]]$imDat
         }else{
-          .stack_image_inVar_weight_int_cpp(post_image = post_stack_image,
-                                      post_inVar = post_stack_inVar,
-                                      post_weight = post_stack_weight,
-                                      pre_image = pre_stack_image_list[[i]]$imDat,
-                                      pre_inVar = pre_stack_inVar_list[[i]]$imDat,
-                                      pre_weight = weight_list[[i]],
-                                      offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')]
-          )
+          pre_weight = weight_list[[i]]
         }
+        .stack_image_inVar_cpp(post_image = post_stack_image,
+                               post_inVar = post_stack_inVar,
+                               post_weight = post_stack_weight,
+                               pre_image = pre_stack_image_list[[i]]$imDat,
+                               pre_inVar = pre_stack_inVar_list[[i]]$imDat,
+                               pre_weight = pre_weight,
+                               offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')]
+        )
         # if(anyNA(pre_stack_image_list[[i]]$imDat) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]$imDat) | any(pre_stack_inVar_list[[i]]$imDat < 0, na.rm=TRUE)){
         #   #addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & is.finite(pre_stack_inVar_list[[i]]$imDat) & pre_stack_inVar_list[[i]]$imDat > 0, arr.ind=TRUE)
         #   addID = which(is.finite(pre_stack_image_list[[i]]$imDat + pre_stack_inVar_list[[i]]$imDat) & pre_stack_inVar_list[[i]]$imDat > 0, arr.ind=TRUE)
@@ -583,22 +573,17 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           }
           
           if(weight_image[i]){
-            .stack_image_weight_mat_mask_cpp(post_image = post_stack_image,
-                                        post_weight = post_stack_weight,
-                                        pre_image = pre_stack_image_list[[i]]$imDat,
-                                        pre_weight = pre_stack_weight_list[[i]]$imDat,
-                                        offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
-                                        post_mask = temp_mask_clip
-            )
+            pre_weight = pre_stack_weight_list[[i]]$imDat
           }else{
-            .stack_image_weight_int_mask_cpp(post_image = post_stack_image,
-                                        post_weight = post_stack_weight,
-                                        pre_image = pre_stack_image_list[[i]]$imDat,
-                                        pre_weight = weight_list[[i]],
-                                        offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
-                                        post_mask = temp_mask_clip
-            )
+            pre_weight = weight_list[[i]]
           }
+          .stack_image_cpp(post_image = post_stack_image,
+                           post_weight = post_stack_weight,
+                           pre_image = pre_stack_image_list[[i]]$imDat,
+                           pre_weight = pre_weight,
+                           offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
+                           post_mask = temp_mask_clip
+          )
           
           # xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
           # ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
@@ -654,26 +639,19 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           }
           
           if(weight_image[i]){
-            .stack_image_inVar_weight_mat_mask_cpp(post_image = post_stack_image,
-                                              post_inVar = post_stack_inVar,
-                                              post_weight = post_stack_weight,
-                                              pre_image = pre_stack_image_list[[i]]$imDat,
-                                              pre_inVar = pre_stack_inVar_list[[i]]$imDat,
-                                              pre_weight = pre_stack_weight_list[[i]]$imDat,
-                                              offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
-                                              post_mask = temp_mask_clip
-            )
+            pre_weight = pre_stack_weight_list[[i]]$imDat
           }else{
-            .stack_image_inVar_weight_int_mask_cpp(post_image = post_stack_image,
-                                              post_inVar = post_stack_inVar,
-                                              post_weight = post_stack_weight,
-                                              pre_image = pre_stack_image_list[[i]]$imDat,
-                                              pre_inVar = pre_stack_inVar_list[[i]]$imDat,
-                                              pre_weight = weight_list[[i]],
-                                              offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
-                                              post_mask = temp_mask_clip
-            )
+            pre_weight = weight_list[[i]]
           }
+          .stack_image_inVar_cpp(post_image = post_stack_image,
+                                 post_inVar = post_stack_inVar,
+                                 post_weight = post_stack_weight,
+                                 pre_image = pre_stack_image_list[[i]]$imDat,
+                                 pre_inVar = pre_stack_inVar_list[[i]]$imDat,
+                                 pre_weight = pre_weight,
+                                 offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
+                                 post_mask = temp_mask_clip
+          )
           
           # xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
           # ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
@@ -919,22 +897,17 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             }
             
             if(weight_image[i]){
-              .stack_image_weight_mat_mask_cpp(post_image = post_stack_image,
-                                               post_weight = post_stack_weight,
-                                               pre_image = pre_stack_image_list[[i]]$imDat,
-                                               pre_weight = pre_stack_weight_list[[i]]$imDat,
-                                               offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
-                                               post_mask = temp_mask_clip
-              )
+              pre_weight = pre_stack_weight_list[[i]]$imDat
             }else{
-              .stack_image_weight_int_mask_cpp(post_image = post_stack_image,
-                                               post_weight = post_stack_weight,
-                                               pre_image = pre_stack_image_list[[i]]$imDat,
-                                               pre_weight = weight_list[[i]],
-                                               offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
-                                               post_mask = temp_mask_clip
-              )
+              pre_weight = weight_list[[i]]
             }
+            .stack_image_cpp(post_image = post_stack_image,
+                             post_weight = post_stack_weight,
+                             pre_image = pre_stack_image_list[[i]]$imDat,
+                             pre_weight = pre_weight,
+                             offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
+                             post_mask = temp_mask_clip
+            )
             
             # xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
             # ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
@@ -982,26 +955,19 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             }
             
             if(weight_image[i]){
-              .stack_image_inVar_weight_mat_mask_cpp(post_image = post_stack_image,
-                                                     post_inVar = post_stack_inVar,
-                                                     post_weight = post_stack_weight,
-                                                     pre_image = pre_stack_image_list[[i]]$imDat,
-                                                     pre_inVar = pre_stack_inVar_list[[i]]$imDat,
-                                                     pre_weight = pre_stack_weight_list[[i]]$imDat,
-                                                     offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
-                                                     post_mask = temp_mask_clip
-              )
+              pre_weight = pre_stack_weight_list[[i]]$imDat
             }else{
-              .stack_image_inVar_weight_int_mask_cpp(post_image = post_stack_image,
-                                                     post_inVar = post_stack_inVar,
-                                                     post_weight = post_stack_weight,
-                                                     pre_image = pre_stack_image_list[[i]]$imDat,
-                                                     pre_inVar = pre_stack_inVar_list[[i]]$imDat,
-                                                     pre_weight = weight_list[[i]],
-                                                     offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
-                                                     post_mask = temp_mask_clip
-              )
+              pre_weight = weight_list[[i]]
             }
+            .stack_image_inVar_cpp(post_image = post_stack_image,
+                                   post_inVar = post_stack_inVar,
+                                   post_weight = post_stack_weight,
+                                   pre_image = pre_stack_image_list[[i]]$imDat,
+                                   pre_inVar = pre_stack_inVar_list[[i]]$imDat,
+                                   pre_weight = pre_weight,
+                                   offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
+                                   post_mask = temp_mask_clip
+            )
             
             # xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
             # ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
