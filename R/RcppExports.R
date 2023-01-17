@@ -57,8 +57,8 @@ Cwcs_head_s2p <- function(RA, Dec, header, nkey, WCSref = 0L, ctrl = 2L) {
     .Call(`_Rwcs_stack_exp`, post_exp, pre_exp, offset)
 }
 
-.image_inVar_weight_mat_mask_cpp <- function(post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset, post_mask) {
-    .Call(`_Rwcs_image_inVar_weight_mat_mask`, post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset, post_mask)
+.stack_image_inVar_weight_mat_mask_cpp <- function(post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset, post_mask) {
+    .Call(`_Rwcs_stack_image_inVar_weight_mat_mask`, post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset, post_mask)
 }
 
 .stack_image_inVar_weight_int_mask_cpp <- function(post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset, post_mask) {

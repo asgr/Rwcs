@@ -216,8 +216,8 @@ SEXP stack_exp(NumericMatrix post_exp, NumericMatrix pre_exp, IntegerVector offs
 
 //masking versions
 
-// [[Rcpp::export(".image_inVar_weight_mat_mask_cpp")]]
-SEXP image_inVar_weight_mat_mask(NumericMatrix post_image, NumericMatrix post_inVar, IntegerMatrix post_weight,
+// [[Rcpp::export(".stack_image_inVar_weight_mat_mask_cpp")]]
+SEXP stack_image_inVar_weight_mat_mask(NumericMatrix post_image, NumericMatrix post_inVar, IntegerMatrix post_weight,
                             NumericMatrix pre_image, NumericMatrix pre_inVar, NumericMatrix pre_weight, IntegerVector offset,
                             LogicalMatrix post_mask){
   int do_stack;

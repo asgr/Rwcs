@@ -253,9 +253,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// image_inVar_weight_mat_mask
-SEXP image_inVar_weight_mat_mask(NumericMatrix post_image, NumericMatrix post_inVar, IntegerMatrix post_weight, NumericMatrix pre_image, NumericMatrix pre_inVar, NumericMatrix pre_weight, IntegerVector offset, LogicalMatrix post_mask);
-RcppExport SEXP _Rwcs_image_inVar_weight_mat_mask(SEXP post_imageSEXP, SEXP post_inVarSEXP, SEXP post_weightSEXP, SEXP pre_imageSEXP, SEXP pre_inVarSEXP, SEXP pre_weightSEXP, SEXP offsetSEXP, SEXP post_maskSEXP) {
+// stack_image_inVar_weight_mat_mask
+SEXP stack_image_inVar_weight_mat_mask(NumericMatrix post_image, NumericMatrix post_inVar, IntegerMatrix post_weight, NumericMatrix pre_image, NumericMatrix pre_inVar, NumericMatrix pre_weight, IntegerVector offset, LogicalMatrix post_mask);
+RcppExport SEXP _Rwcs_stack_image_inVar_weight_mat_mask(SEXP post_imageSEXP, SEXP post_inVarSEXP, SEXP post_weightSEXP, SEXP pre_imageSEXP, SEXP pre_inVarSEXP, SEXP pre_weightSEXP, SEXP offsetSEXP, SEXP post_maskSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -267,7 +267,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericMatrix >::type pre_weight(pre_weightSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type offset(offsetSEXP);
     Rcpp::traits::input_parameter< LogicalMatrix >::type post_mask(post_maskSEXP);
-    rcpp_result_gen = Rcpp::wrap(image_inVar_weight_mat_mask(post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset, post_mask));
+    rcpp_result_gen = Rcpp::wrap(stack_image_inVar_weight_mat_mask(post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight, offset, post_mask));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -380,7 +380,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_Rwcs_stack_image_weight_mat", (DL_FUNC) &_Rwcs_stack_image_weight_mat, 5},
     {"_Rwcs_stack_image_weight_int", (DL_FUNC) &_Rwcs_stack_image_weight_int, 5},
     {"_Rwcs_stack_exp", (DL_FUNC) &_Rwcs_stack_exp, 3},
-    {"_Rwcs_image_inVar_weight_mat_mask", (DL_FUNC) &_Rwcs_image_inVar_weight_mat_mask, 8},
+    {"_Rwcs_stack_image_inVar_weight_mat_mask", (DL_FUNC) &_Rwcs_stack_image_inVar_weight_mat_mask, 8},
     {"_Rwcs_stack_image_inVar_weight_int_mask", (DL_FUNC) &_Rwcs_stack_image_inVar_weight_int_mask, 8},
     {"_Rwcs_stack_image_weight_mat_mask", (DL_FUNC) &_Rwcs_stack_image_weight_mat_mask, 6},
     {"_Rwcs_stack_image_weight_int_mask", (DL_FUNC) &_Rwcs_stack_image_weight_int_mask, 6},
