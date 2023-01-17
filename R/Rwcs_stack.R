@@ -172,7 +172,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     pre_stack_exp_list = NULL
     pre_stack_weight_list = NULL
     
-    pre_stack_image_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar'))%dopar%{
+    pre_stack_image_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp'))%dopar%{
       if(inherits(image_list[[i]], 'Rfits_pointer')){
         temp_image = image_list[[i]][,]
       }else{
@@ -219,7 +219,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     if(!is.null(inVar_list)){
       message('Projecting Inverse Variance ',seq_start,' to ',seq_end,' of ',Nim)
       
-      pre_stack_inVar_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list'))%dopar%{
+      pre_stack_inVar_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list'))%dopar%{
         if(inherits(image_list[[i]], 'Rfits_pointer')){
           temp_inVar = image_list[[i]][,]
         }else{
@@ -266,7 +266,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       if(length(exp_list) != Nim){
         stop("Length of Exposure Times not equal to length of image_list!")
       }
-      pre_stack_exp_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list', 'pre_stack_inVar_list'))%dopar%{
+      pre_stack_exp_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list', 'pre_stack_inVar_list'))%dopar%{
         if(inherits(image_list[[i]], 'Rfits_pointer')){
           temp_exp = image_list[[i]][,]
         }else{
@@ -306,7 +306,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     
     if(any(weight_image)){
       message('Projecting Weights ',seq_start,' to ',seq_end,' of ',Nim)
-      pre_stack_weight_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list', 'pre_stack_inVar_list', 'pre_stack_exp_list'))%dopar%{
+      pre_stack_weight_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list', 'pre_stack_inVar_list', 'pre_stack_exp_list'))%dopar%{
         if(weight_image[i]){
           if(inherits(image_list[[i]], 'Rfits_pointer')){
             temp_weight = image_list[[i]][,]
@@ -756,7 +756,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         pre_stack_exp_list = NULL
         pre_stack_weight_list = NULL
         
-        pre_stack_image_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar'))%dopar%{
+        pre_stack_image_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp'))%dopar%{
           if(inherits(image_list[[i]], 'Rfits_pointer')){
             temp_image = image_list[[i]][,]
           }else{
@@ -796,7 +796,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         if(!is.null(inVar_list)){
           message('Projecting Inverse Variance ',seq_start,' to ',seq_end,' of ',Nim)
           
-          pre_stack_inVar_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list'))%dopar%{
+          pre_stack_inVar_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list'))%dopar%{
             if(inherits(image_list[[i]], 'Rfits_pointer')){
               temp_inVar = image_list[[i]][,]
             }else{
@@ -840,7 +840,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         #   if(length(exp_list) != Nim){
         #     stop("Length of Exposure Times not equal to length of image_list!")
         #   }
-        #   pre_stack_exp_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list', 'pre_stack_inVar_list'))%dopar%{
+        #   pre_stack_exp_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list', 'pre_stack_inVar_list'))%dopar%{
         #     if(inherits(image_list[[i]], 'Rfits_pointer')){
         #       temp_exp = image_list[[i]][,]
         #     }else{
@@ -873,7 +873,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         
         if(any(weight_image)){
           message('Projecting Weights ',seq_start,' to ',seq_end,' of ',Nim)
-          pre_stack_weight_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list', 'pre_stack_inVar_list', 'pre_stack_exp_list'))%dopar%{
+          pre_stack_weight_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list', 'pre_stack_inVar_list', 'pre_stack_exp_list'))%dopar%{
             if(weight_image[i]){
               if(inherits(image_list[[i]], 'Rfits_pointer')){
                 temp_weight = image_list[[i]][,]
