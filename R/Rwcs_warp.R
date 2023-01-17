@@ -247,10 +247,11 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
                               map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
                               boundary = boundary, interpolation = interpolation)
         
-        goodnorm = norm > 0
+        #goodnorm = norm > 0
         
-        out = out*goodnorm
-        out[goodnorm] = out[norm > 0]/norm[norm > 0]
+        #out = out*goodnorm
+        #out[goodnorm] = out[norm > 0]/norm[norm > 0]
+        out = out / norm
       }
     }
   }
