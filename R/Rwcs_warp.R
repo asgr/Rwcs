@@ -246,7 +246,11 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
         norm = imager::imwarp(im = imager::as.cimg(norm), 
                               map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
                               boundary = boundary, interpolation = interpolation)
-        out = out/norm
+        
+        goodnorm = norm > 0
+        
+        out = out*goodnorm
+        out[goodnorm] = out[norm > 0]/norm[norm > 0]
       }
     }
   }
