@@ -831,44 +831,45 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           }
         }
         
-        if(!is.null(exp_list)){
-          message('Projecting Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
-          if(length(exp_list) == 1){
-            exp_list = rep(exp_list, Nim)
-          }
-          if(length(exp_list) != Nim){
-            stop("Length of Exposure Times not equal to length of image_list!")
-          }
-          pre_stack_exp_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list', 'pre_stack_inVar_list'))%dopar%{
-            if(inherits(image_list[[i]], 'Rfits_pointer')){
-              temp_exp = image_list[[i]][,]
-            }else{
-              temp_exp = image_list[[i]]
-            }
-            
-            #need [] because this will assign a single value to all elements of a matrix
-            if(inherits(exp_list[[i]], 'Rfits_pointer')){
-              exp_list[[i]]$header = FALSE
-              temp_exp$imDat[] = exp_list[[i]][,]
-            }else if(inherits(exp_list[[i]], 'Rfits_image')){
-              temp_exp$imDat[] = exp_list[[i]]$imDat
-            }else{
-              temp_exp$imDat[] = exp_list[[i]]
-            }
-            
-            return(Rwcs_warp(
-              image_in = temp_exp,
-              keyvalues_out = keyvalues_out,
-              dim_out = dim_out,
-              doscale = FALSE,
-              dotightcrop = TRUE,
-              keepcrop = TRUE,
-              ...
-            ))
-          }
-        }else{
-          pre_stack_exp_list = NULL
-        }
+        # Shouldn't need to reproject exposure times!
+        # if(!is.null(exp_list)){
+        #   message('Projecting Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
+        #   if(length(exp_list) == 1){
+        #     exp_list = rep(exp_list, Nim)
+        #   }
+        #   if(length(exp_list) != Nim){
+        #     stop("Length of Exposure Times not equal to length of image_list!")
+        #   }
+        #   pre_stack_exp_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'pre_stack_image_list', 'pre_stack_inVar_list'))%dopar%{
+        #     if(inherits(image_list[[i]], 'Rfits_pointer')){
+        #       temp_exp = image_list[[i]][,]
+        #     }else{
+        #       temp_exp = image_list[[i]]
+        #     }
+        #     
+        #     #need [] because this will assign a single value to all elements of a matrix
+        #     if(inherits(exp_list[[i]], 'Rfits_pointer')){
+        #       exp_list[[i]]$header = FALSE
+        #       temp_exp$imDat[] = exp_list[[i]][,]
+        #     }else if(inherits(exp_list[[i]], 'Rfits_image')){
+        #       temp_exp$imDat[] = exp_list[[i]]$imDat
+        #     }else{
+        #       temp_exp$imDat[] = exp_list[[i]]
+        #     }
+        #     
+        #     return(Rwcs_warp(
+        #       image_in = temp_exp,
+        #       keyvalues_out = keyvalues_out,
+        #       dim_out = dim_out,
+        #       doscale = FALSE,
+        #       dotightcrop = TRUE,
+        #       keepcrop = TRUE,
+        #       ...
+        #     ))
+        #   }
+        # }else{
+        #   pre_stack_exp_list = NULL
+        # }
         
         if(any(weight_image)){
           message('Projecting Weights ',seq_start,' to ',seq_end,' of ',Nim)
