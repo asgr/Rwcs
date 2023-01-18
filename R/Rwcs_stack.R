@@ -163,7 +163,6 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
   
   for(seq_start in seq_process){
     seq_end = min(seq_start + Nbatch - 1L, Nim)
-    message('Projecting Images ',seq_start,' to ',seq_end,' of ',Nim)
     
     Nbatch_sub = length(seq_start:seq_end)
     
@@ -171,6 +170,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     pre_stack_inVar_list = NULL
     pre_stack_exp_list = NULL
     pre_stack_weight_list = NULL
+    
+    message('Projecting Images ',seq_start,' to ',seq_end,' of ',Nim)
     
     pre_stack_image_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp'))%dopar%{
       if(inherits(image_list[[i]], 'Rfits_pointer')){
@@ -360,7 +361,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                          post_weight = post_stack_weight,
                          pre_image = pre_stack_image_list[[i]]$imDat,
                          pre_weight = pre_weight,
-                         offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')]
+                         offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')])
         )
       }
     }else{
@@ -377,7 +378,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                                pre_image = pre_stack_image_list[[i]]$imDat,
                                pre_inVar = pre_stack_inVar_list[[i]]$imDat,
                                pre_weight = pre_weight,
-                               offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')]
+                               offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')])
         )
       }
     }
@@ -387,7 +388,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       for(i in 1:Nbatch_sub){
         .stack_exp_cpp(post_exp = post_stack_exp,
                        pre_exp = pre_stack_exp_list[[i]]$imDat,
-                       offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')]
+                       offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')])
         )
         # if(anyNA(pre_stack_exp_list[[i]]$imDat)){
         #   addID = which(!is.na(pre_stack_exp_list[[i]]$imDat), arr.ind=TRUE)
@@ -410,8 +411,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     if(keep_extreme_pix | doclip){
       message('Calculating Extreme Pixels ',seq_start,' to ',seq_end,' of ',Nim)
       for(i in 1:Nbatch_sub){
-        xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
-        ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+        xsub = pre_stack_image_list[[i]]$keyvalues$XCUTLO:pre_stack_image_list[[i]]$keyvalues$XCUTHI
+        ysub = pre_stack_image_list[[i]]$keyvalues$YCUTLO:pre_stack_image_list[[i]]$keyvalues$YCUTHI
         
         new_cold = which(pre_stack_image_list[[i]]$imDat < post_stack_cold[xsub,ysub])
         new_hot = which(pre_stack_image_list[[i]]$imDat > post_stack_hot[xsub,ysub])
@@ -506,10 +507,10 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         message('Stacking Images ',seq_start,' to ',seq_end,' of ',Nim)
         for(i in 1:Nim){
           temp_mask_clip = (post_stack_cold_id == i) | (post_stack_hot_id == i)
-          
           if(clip_dilate > 0){
             temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
           }
+          mode(temp_mask_clip) = 'logical'
           
           if(weight_image[i]){
             pre_weight = pre_stack_weight_list[[i]]$imDat
@@ -520,15 +521,15 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                            post_weight = post_stack_weight,
                            pre_image = pre_stack_image_list[[i]]$imDat,
                            pre_weight = pre_weight,
-                           offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
+                           offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')]),
                            post_mask = temp_mask_clip
           )
           
           if(keep_extreme_pix){
             mask_clip = mask_clip + temp_mask_clip
             
-            xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
-            ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+            xsub = pre_stack_image_list[[i]]$keyvalues$XCUTLO:pre_stack_image_list[[i]]$keyvalues$XCUTHI
+            ysub = pre_stack_image_list[[i]]$keyvalues$YCUTLO:pre_stack_image_list[[i]]$keyvalues$YCUTHI
             
             new_cold = which(pre_stack_image_list[[i]]$imDat < post_stack_cold[xsub,ysub] & temp_mask_clip[xsub,ysub]==FALSE)
             new_hot = which(pre_stack_image_list[[i]]$imDat > post_stack_hot[xsub,ysub] & temp_mask_clip[xsub,ysub]==FALSE)
@@ -544,6 +545,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           if(clip_dilate > 0){
             temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
           }
+          mode(temp_mask_clip) = 'logical'
           
           if(weight_image[i]){
             pre_weight = pre_stack_weight_list[[i]]$imDat
@@ -556,15 +558,15 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                                  pre_image = pre_stack_image_list[[i]]$imDat,
                                  pre_inVar = pre_stack_inVar_list[[i]]$imDat,
                                  pre_weight = pre_weight,
-                                 offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
+                                 offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')]),
                                  post_mask = temp_mask_clip
           )
           
           if(keep_extreme_pix){
             mask_clip = mask_clip + temp_mask_clip
             
-            xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
-            ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+            xsub = pre_stack_image_list[[i]]$keyvalues$XCUTLO:pre_stack_image_list[[i]]$keyvalues$XCUTHI
+            ysub = pre_stack_image_list[[i]]$keyvalues$YCUTLO:pre_stack_image_list[[i]]$keyvalues$YCUTHI
             
             new_cold = which(pre_stack_image_list[[i]]$imDat < post_stack_cold[xsub,ysub] & temp_mask_clip[xsub,ysub]==FALSE)
             new_hot = which(pre_stack_image_list[[i]]$imDat > post_stack_hot[xsub,ysub] & temp_mask_clip[xsub,ysub]==FALSE)
@@ -574,7 +576,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           }
         }
       }
-    }else{ # If we need to batch process the image_list then we need to re-project everything again
+    }else{
+      # If we need to batch process the image_list then we need to re-project everything again
       #would maybe be neater to break this out a distinct function, but that is a job for another day...
       
       #I don't think we need to re-zero this actually?
@@ -596,7 +599,6 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       message('Reprojecting and restacking without clipped cold/hot pixels')
       for(seq_start in seq_process){
         seq_end = min(seq_start + Nbatch - 1L, Nim)
-        message('Projecting Images ',seq_start,' to ',seq_end,' of ',Nim)
         
         Nbatch_sub = length(seq_start:seq_end)
         
@@ -605,78 +607,96 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         pre_stack_exp_list = NULL
         pre_stack_weight_list = NULL
         
-        pre_stack_image_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp'))%dopar%{
-          if(inherits(image_list[[i]], 'Rfits_pointer')){
-            temp_image = image_list[[i]][,]
-          }else{
-            temp_image = image_list[[i]]
+        if(dump_frames){
+          message('Loading Images ',seq_start,' to ',seq_end,' of ',Nim)
+          
+          pre_stack_image_list = foreach(i = seq_start:seq_end)%dopar%{
+            Rfits::Rfits_read_image(paste0(dump_dir,'/image_warp_',i,'.fits'))
           }
+        }else{
+          message('Projecting Images ',seq_start,' to ',seq_end,' of ',Nim)
           
-          if(zero_point_scale[i] != 1){
-            temp_image$imDat = temp_image$imDat*zero_point_scale[i]
-          }
-          
-          if(any(!is.finite(temp_image$imDat))){
-            temp_image$imDat[!is.finite(temp_image$imDat)] = NA
-          }
-          
-          if(!is.null(mask_list)){
-            if(inherits(mask_list[[i]], 'Rfits_pointer')){
-              mask_list[[i]]$header = FALSE
-              temp_image$imDat[mask_list[[i]][,] != 0] = NA
-            }else if(inherits(mask_list[[i]], 'Rfits_image')){
-              temp_image$imDat[mask_list[[i]]$imDat != 0] = NA
-            }else{
-              temp_image$imDat[mask_list != 0] = NA
-            }
-          }
-          
-          return(Rwcs_warp(
-            image_in = temp_image,
-            keyvalues_out = keyvalues_out,
-            dim_out = dim_out,
-            doscale = TRUE,
-            dotightcrop = TRUE,
-            keepcrop = TRUE,
-            ...
-          ))
-        }
-        
-        if(!is.null(inVar_list)){
-          message('Projecting Inverse Variance ',seq_start,' to ',seq_end,' of ',Nim)
-          
-          pre_stack_inVar_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list'))%dopar%{
+          pre_stack_image_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp'))%dopar%{
             if(inherits(image_list[[i]], 'Rfits_pointer')){
-              temp_inVar = image_list[[i]][,]
+              temp_image = image_list[[i]][,]
             }else{
-              temp_inVar = image_list[[i]]
-            }
-            
-            if(inherits(inVar_list[[i]], 'Rfits_pointer')){
-              inVar_list[[i]]$header = FALSE
-              temp_inVar$imDat[] = inVar_list[[i]][,]
-            }else if(inherits(inVar_list[[i]], 'Rfits_image')){
-              temp_inVar$imDat[] = inVar_list[[i]]$imDat
-            }else{
-              temp_inVar$imDat[] = inVar_list[[i]]
+              temp_image = image_list[[i]]
             }
             
             if(zero_point_scale[i] != 1){
-              temp_inVar$imDat = temp_inVar$imDat/(zero_point_scale[i]^2)
+              temp_image$imDat = temp_image$imDat*zero_point_scale[i]
             }
             
-            suppressMessages({
-              return(Rwcs_warp(
-                image_in = temp_inVar,
-                keyvalues_out = keyvalues_out,
-                dim_out = dim_out,
-                doscale = FALSE,
-                dotightcrop = TRUE,
-                keepcrop = TRUE,
-                ...
-                )*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixel area
-              )
-            })
+            if(any(!is.finite(temp_image$imDat))){
+              temp_image$imDat[!is.finite(temp_image$imDat)] = NA
+            }
+            
+            if(!is.null(mask_list)){
+              if(inherits(mask_list[[i]], 'Rfits_pointer')){
+                mask_list[[i]]$header = FALSE
+                temp_image$imDat[mask_list[[i]][,] != 0] = NA
+              }else if(inherits(mask_list[[i]], 'Rfits_image')){
+                temp_image$imDat[mask_list[[i]]$imDat != 0] = NA
+              }else{
+                temp_image$imDat[mask_list != 0] = NA
+              }
+            }
+            
+            return(Rwcs_warp(
+              image_in = temp_image,
+              keyvalues_out = keyvalues_out,
+              dim_out = dim_out,
+              doscale = TRUE,
+              dotightcrop = TRUE,
+              keepcrop = TRUE,
+              ...
+            ))
+          }
+        }
+        
+        if(!is.null(inVar_list)){
+          if(dump_frames){
+            message('Loading Inverse Variance ',seq_start,' to ',seq_end,' of ',Nim)
+            
+            pre_stack_inVar_list = foreach(i = seq_start:seq_end)%dopar%{
+              Rfits::Rfits_read_image(paste0(dump_dir,'/inVar_warp_',i,'.fits'))
+            }
+          }else{
+            message('Projecting Inverse Variance ',seq_start,' to ',seq_end,' of ',Nim)
+            
+            pre_stack_inVar_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list'))%dopar%{
+              if(inherits(image_list[[i]], 'Rfits_pointer')){
+                temp_inVar = image_list[[i]][,]
+              }else{
+                temp_inVar = image_list[[i]]
+              }
+              
+              if(inherits(inVar_list[[i]], 'Rfits_pointer')){
+                inVar_list[[i]]$header = FALSE
+                temp_inVar$imDat[] = inVar_list[[i]][,]
+              }else if(inherits(inVar_list[[i]], 'Rfits_image')){
+                temp_inVar$imDat[] = inVar_list[[i]]$imDat
+              }else{
+                temp_inVar$imDat[] = inVar_list[[i]]
+              }
+              
+              if(zero_point_scale[i] != 1){
+                temp_inVar$imDat = temp_inVar$imDat/(zero_point_scale[i]^2)
+              }
+              
+              suppressMessages({
+                return(Rwcs_warp(
+                  image_in = temp_inVar,
+                  keyvalues_out = keyvalues_out,
+                  dim_out = dim_out,
+                  doscale = FALSE,
+                  dotightcrop = TRUE,
+                  keepcrop = TRUE,
+                  ...
+                  )*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixel area
+                )
+              })
+            }
           }
         }
         
@@ -721,34 +741,42 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         # }
         
         if(any(weight_image)){
-          message('Projecting Weights ',seq_start,' to ',seq_end,' of ',Nim)
+          if(dump_frames){
+            message('Loading Weights ',seq_start,' to ',seq_end,' of ',Nim)
+          }else{
+            message('Projecting Weights ',seq_start,' to ',seq_end,' of ',Nim)
+          }
           pre_stack_weight_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list', 'pre_stack_inVar_list', 'pre_stack_exp_list'))%dopar%{
             if(weight_image[i]){
-              if(inherits(image_list[[i]], 'Rfits_pointer')){
-                temp_weight = image_list[[i]][,]
+              if(dump_frames){
+                Rfits::Rfits_read_image(paste0(dump_dir,'/weight_warp_',i,'.fits'))
               }else{
-                temp_weight = image_list[[i]]
+                if(inherits(image_list[[i]], 'Rfits_pointer')){
+                  temp_weight = image_list[[i]][,]
+                }else{
+                  temp_weight = image_list[[i]]
+                }
+                
+                #need [] because this will assign a single value to all elements of a matrix
+                if(inherits(weight_list[[i]], 'Rfits_pointer')){
+                  weight_list[[i]]$header = FALSE
+                  temp_weight$imDat[] = weight_list[[i]][,]
+                }else if(inherits(weight_list[[i]], 'Rfits_image')){
+                  temp_weight$imDat[] = weight_list[[i]]$imDat
+                }else{
+                  temp_weight$imDat[] = weight_list[[i]]
+                }
+                
+                return(Rwcs_warp(
+                  image_in = temp_weight,
+                  keyvalues_out = keyvalues_out,
+                  dim_out = dim_out,
+                  doscale = FALSE,
+                  dotightcrop = TRUE,
+                  keepcrop = TRUE,
+                  ...
+                ))
               }
-              
-              #need [] because this will assign a single value to all elements of a matrix
-              if(inherits(weight_list[[i]], 'Rfits_pointer')){
-                weight_list[[i]]$header = FALSE
-                temp_weight$imDat[] = weight_list[[i]][,]
-              }else if(inherits(weight_list[[i]], 'Rfits_image')){
-                temp_weight$imDat[] = weight_list[[i]]$imDat
-              }else{
-                temp_weight$imDat[] = weight_list[[i]]
-              }
-              
-              return(Rwcs_warp(
-                image_in = temp_weight,
-                keyvalues_out = keyvalues_out,
-                dim_out = dim_out,
-                doscale = FALSE,
-                dotightcrop = TRUE,
-                keepcrop = TRUE,
-                ...
-              ))
             }else{
               return(weight_list[[i]])
             }
@@ -766,6 +794,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             if(clip_dilate > 0){
               temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
             }
+            mode(temp_mask_clip) = 'logical'
             
             if(weight_image[i]){
               pre_weight = pre_stack_weight_list[[i]]$imDat
@@ -776,7 +805,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                              post_weight = post_stack_weight,
                              pre_image = pre_stack_image_list[[i]]$imDat,
                              pre_weight = pre_weight,
-                             offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
+                             offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')]),
                              post_mask = temp_mask_clip
             )
           }
@@ -789,6 +818,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             if(clip_dilate > 0){
               temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
             }
+            mode(temp_mask_clip) = 'logical'
             
             if(weight_image[i]){
               pre_weight = pre_stack_weight_list[[i]]$imDat
@@ -801,12 +831,12 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                                    pre_image = pre_stack_image_list[[i]]$imDat,
                                    pre_inVar = pre_stack_inVar_list[[i]]$imDat,
                                    pre_weight = pre_weight,
-                                   offset = pre_stack_image_list[[i]]$crop[c('xlo','ylo')],
+                                   offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')]),
                                    post_mask = temp_mask_clip
             )
             
-            # xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
-            # ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+            # xsub = pre_stack_image_list[[i]]$keyvalues$XCUTLO:pre_stack_image_list[[i]]$keyvalues$XCUTHI
+            # ysub = pre_stack_image_list[[i]]$keyvalues$YCUTLO:pre_stack_image_list[[i]]$keyvalues$YCUTHI
             # 
             # if(anyNA(pre_stack_image_list[[i]]$imDat) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]$imDat) | any(pre_stack_inVar_list[[i]]$imDat < 0, na.rm=TRUE) | any(temp_mask_clip[xsub,ysub])){
             #   addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & is.finite(pre_stack_inVar_list[[i]]$imDat) & pre_stack_inVar_list[[i]]$imDat > 0 & temp_mask_clip[xsub,ysub]==FALSE, arr.ind=TRUE)
@@ -828,8 +858,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             #     .int_mat_add_sin_cpp(post_stack_weight, weight_list[[i]], addID, pre_stack_image_list[[i]]$crop[c('xlo','ylo')])
             #   }
             # }else{
-            #   xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
-            #   ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+            #   xsub = pre_stack_image_list[[i]]$keyvalues$XCUTLO:pre_stack_image_list[[i]]$keyvalues$XCUTHI
+            #   ysub = pre_stack_image_list[[i]]$keyvalues$YCUTLO:pre_stack_image_list[[i]]$keyvalues$YCUTHI
             #   
             #   post_stack_image[xsub,ysub] = post_stack_image[xsub,ysub] + pre_stack_image_list[[i]]$imDat*pre_stack_inVar_list[[i]]$imDat
             #   post_stack_inVar[xsub,ysub] = post_stack_inVar[xsub,ysub] + pre_stack_inVar_list[[i]]$imDat
@@ -856,8 +886,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         #       
         #       .num_mat_add_cpp(post_stack_exp, pre_stack_exp_list[[i]]$imDat, addID, pre_stack_image_list[[i]]$crop[c('xlo','ylo')])
         #     }else{
-        #       xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
-        #       ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+        #       xsub = pre_stack_image_list[[i]]$keyvalues$XCUTLO:pre_stack_image_list[[i]]$keyvalues$XCUTHI
+        #       ysub = pre_stack_image_list[[i]]$keyvalues$YCUTLO:pre_stack_image_list[[i]]$keyvalues$YCUTHI
         #       
         #       post_stack_exp[xsub,ysub] = post_stack_exp[xsub,ysub] + pre_stack_exp_list[[i]]$imDat
         #     }
@@ -873,11 +903,12 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             if(clip_dilate > 0){
               temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
             }
+            mode(temp_mask_clip) = 'logical'
 
             mask_clip = mask_clip + temp_mask_clip
             
-            xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
-            ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
+            xsub = pre_stack_image_list[[i]]$keyvalues$XCUTLO:pre_stack_image_list[[i]]$keyvalues$XCUTHI
+            ysub = pre_stack_image_list[[i]]$keyvalues$YCUTLO:pre_stack_image_list[[i]]$keyvalues$YCUTHI
             
             new_cold = which(pre_stack_image_list[[i]]$imDat < post_stack_cold[xsub,ysub] & temp_mask_clip[xsub,ysub]==FALSE)
             new_hot = which(pre_stack_image_list[[i]]$imDat > post_stack_hot[xsub,ysub] & temp_mask_clip[xsub,ysub]==FALSE)
