@@ -1,9 +1,20 @@
+.warpfunc_in2out = function(x, y, keyvalues_in=NULL, header_in=NULL, WCSref_in=NULL, keyvalues_out=NULL, raw_out=NULL, WCSref_out=NULL) {
+  radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_in, header = header_in, WCSref = WCSref_in)
+  xy_out = Rwcs_s2p(radectemp[,1], radectemp[,2], keyvalues = keyvalues_out, header = raw_out, WCSref = WCSref_out)
+  return(xy_out)
+}
+.warpfunc_out2in = function(x, y, keyvalues_in=NULL, header_in=NULL, WCSref_in=NULL, keyvalues_out=NULL, raw_out=NULL, WCSref_out=NULL) {
+  radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_out, header = raw_out, WCSref = WCSref_in)
+  xy_out = Rwcs_s2p(radectemp[,1], radectemp[,2], keyvalues = keyvalues_in, header = header_in, WCSref = WCSref_out)
+  return(xy_out)
+}
+
 Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out = NULL,
                       pixscale_out = NULL, pixscale_in = NULL,
           direction = "auto", boundary = "dirichlet", interpolation = "cubic", 
           doscale = TRUE, dofinenorm = TRUE, plot = FALSE, header_out = NULL, header_in = NULL, dotightcrop = TRUE,
           keepcrop=FALSE, WCSref_out = NULL, WCSref_in = NULL, magzero_out = NULL, magzero_in = NULL,
-          blank=NA, ...) 
+          blank=NA, warpfield=NULL, warpfield_return=FALSE, ...) 
 {
   if (!requireNamespace("imager", quietly = TRUE)) {
     stop("The imager package is needed for this function to work. Please install it from CRAN.", 
@@ -181,18 +192,42 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     max_y = dim_out[2]
   }
   
-  .warpfunc_in2out = function(x, y) {
-    radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_in, header = header_in, WCSref = WCSref_in)
-    xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_out, header = raw_out, WCSref = WCSref_out)
-    #return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
-    return(list(x = xy_out[, 1], y = xy_out[,2]))
-  }
-  .warpfunc_out2in = function(x, y) {
-    radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_out, header = raw_out, WCSref = WCSref_in)
-    xy_out = Rwcs_s2p(radectemp, keyvalues = keyvalues_in, header = header_in, , WCSref = WCSref_out)
-    #return(list(x = xy_out[, 1] + warpoffset, y = xy_out[,2] + warpoffset))
-    return(list(x = xy_out[, 1], y = xy_out[,2]))
-  }
+  # .warpfunc_in2out = function(x, y) {
+  #   radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_in, header = header_in, WCSref = WCSref_in)
+  #   xy_out = Rwcs_s2p(radectemp[,1], radectemp[,2], keyvalues = keyvalues_out, header = raw_out, WCSref = WCSref_out)
+  #   return(list(x = xy_out[, 1], y = xy_out[,2]))
+  # }
+  # .warpfunc_out2in = function(x, y) {
+  #   radectemp = Rwcs_p2s(x, y, keyvalues = keyvalues_out, header = raw_out, WCSref = WCSref_in)
+  #   xy_out = Rwcs_s2p(radectemp[,1], radectemp[,2], keyvalues = keyvalues_in, header = header_in, , WCSref = WCSref_out)
+  #   return(list(x = xy_out[, 1], y = xy_out[,2]))
+  # }
+  #sort out NULL issues
+  #keyvalues_in=NULL, header_in=NULL, WCSref_in=NULL, keyvalues_out=NULL, raw_out=NULL
+  # if(!is.null(keyvalues_in)){
+  #   formals(.warpfunc_in2out)$keyvalues_in = keyvalues_in
+  #   formals(.warpfunc_out2in)$keyvalues_in = keyvalues_in
+  # }
+  # if(!is.null(header_in)){
+  #   formals(.warpfunc_in2out)$header_in = header_in
+  #   formals(.warpfunc_out2in)$header_in = header_in
+  # }
+  # if(!is.null(WCSref_in)){
+  #   formals(.warpfunc_in2out)$WCSref_in = WCSref_in
+  #   formals(.warpfunc_out2in)$WCSref_in = WCSref_in
+  # }
+  # if(!is.null(keyvalues_out)){
+  #   formals(.warpfunc_in2out)$keyvalues_out = keyvalues_out
+  #   formals(.warpfunc_out2in)$keyvalues_out = keyvalues_out
+  # }
+  # if(!is.null(raw_out)){
+  #   formals(.warpfunc_in2out)$raw_out = raw_out
+  #   formals(.warpfunc_out2in)$raw_out = raw_out
+  # }
+  # if(!is.null(WCSref_out)){
+  #   formals(.warpfunc_in2out)$WCSref_out = WCSref_out
+  #   formals(.warpfunc_out2in)$WCSref_out = WCSref_out
+  # }
   
   dim_min_x = min(dim(image_in)[1], dim(image_out$imDat)[1])
   dim_min_y = min(dim(image_in)[2], dim(image_out$imDat)[2])
@@ -216,47 +251,140 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
       direction = "backward"
     }
   }
-  if (direction == "forward") {
-    out = imager::imwarp(im = imager::as.cimg(image_out$imDat), 
-                         map = .warpfunc_in2out, direction = direction, coordinates = "absolute", 
-                         boundary = boundary, interpolation = interpolation)
+  
+  if(is.null(warpfield)){
+    pix_grid = expand.grid(1:dim(image_out$imDat)[1], 1:dim(image_out$imDat)[2])
     
-    if(doscale){
-      out = out*(pixscale_out/pixscale_in)^2
-      
-      if(dofinenorm){
-        norm = matrix(1, dim(image_out$imDat)[1], dim(image_out$imDat)[2])
-        norm = imager::imwarp(im = imager::as.cimg(norm), 
-                              map = .warpfunc_in2out, direction = direction, coordinates = "absolute", 
-                              boundary = boundary, interpolation = interpolation)
-        out = out/norm
-      }
-    }
-  }
-  if (direction == "backward") {
-    out = imager::imwarp(im = imager::as.cimg(image_out$imDat), 
-                         map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
-                         boundary = boundary, interpolation = interpolation)
+    #if (direction == "forward") {
+    #image_out$imDat = imager::imwarp(im = imager::as.cimg(image_out$imDat),
+    #                     map = function(x,y){.warpfunc_in2out(x,y)}, direction = direction, coordinates = "absolute",
+    #                     boundary = boundary, interpolation = interpolation)
     
-    if(doscale){
-      out = out*(pixscale_out/pixscale_in)^2
-      
-      if(dofinenorm){
-        norm = matrix(1, dim(image_out$imDat)[1], dim(image_out$imDat)[2])
-        norm = imager::imwarp(im = imager::as.cimg(norm), 
-                              map = .warpfunc_out2in, direction = direction, coordinates = "absolute", 
-                              boundary = boundary, interpolation = interpolation)
-        
-        #goodnorm = norm > 0
-        
-        #out = out*goodnorm
-        #out[goodnorm] = out[norm > 0]/norm[norm > 0]
-        out = out / norm
-      }
+    if (direction == "forward") {
+      warp_out = .warpfunc_in2out(
+        x = pix_grid[, 1],
+        y = pix_grid[, 2],
+        keyvalues_in = keyvalues_in,
+        header_in = header_in,
+        WCSref_in = WCSref_in,
+        keyvalues_out = keyvalues_out,
+        raw_out = raw_out,
+        WCSref_out = WCSref_out
+      )
+    } else if (direction == 'backward') {
+      warp_out = .warpfunc_out2in(
+        x = pix_grid[, 1],
+        y = pix_grid[, 2],
+        keyvalues_in = keyvalues_in,
+        header_in = header_in,
+        WCSref_in = WCSref_in,
+        keyvalues_out = keyvalues_out,
+        raw_out = raw_out,
+        WCSref_out = WCSref_out
+      )
     }
+    
+    warpfield = imager::imappend(list(imager::as.cimg(matrix(
+      warp_out[, 1], dim(image_out$imDat)[1], dim(image_out$imDat)[2]
+    )),
+    imager::as.cimg(matrix(
+      warp_out[, 2], dim(image_out$imDat)[1], dim(image_out$imDat)[2]
+    ))), 'c')
+    
+    rm(pix_grid)
+    rm(warp_out)
   }
   
-  image_out$imDat[] = out
+  image_out$imDat = imager::warp(
+    im = imager::as.cimg(image_out$imDat),
+    warpfield = warpfield,
+    mode = switch(direction, backward = 0L, forward =
+                    2L),
+    interpolation = switch(
+      interpolation,
+      nearest = 0L,
+      linear = 1L,
+      cubic = 2L
+    ),
+    boundary_conditions = switch(
+      boundary,
+      dirichlet = 0L,
+      neumann = 1L,
+      periodic = 2L
+    )
+  )
+  
+  if (doscale) {
+    image_out$imDat = image_out$imDat * (pixscale_out / pixscale_in) ^ 2
+    
+    if (dofinenorm) {
+      norm = matrix(1, dim(image_out$imDat)[1], dim(image_out$imDat)[2])
+      norm = imager::warp(
+        im = imager::as.cimg(norm),
+        warpfield = warpfield,
+        mode = switch(direction, backward = 0L, forward = 2L),
+        interpolation = switch(
+          interpolation,
+          nearest = 0L,
+          linear = 1L,
+          cubic = 2L
+        ),
+        boundary_conditions = switch(
+          boundary,
+          dirichlet = 0L,
+          neumann = 1L,
+          periodic = 2L
+        )
+      )
+      # norm = imager::imwarp(im = imager::as.cimg(norm),
+      #                       map = function(x,y){.warpfunc_in2out(x,y)}, direction = direction, coordinates = "absolute",
+      #                       boundary = boundary, interpolation = interpolation)
+      image_out$imDat = image_out$imDat / norm
+      rm(norm)
+    }
+  }
+  #}
+  # if (direction == "backward") {
+  #   # image_out$imDat = imager::imwarp(im = imager::as.cimg(image_out$imDat),
+  #   #                      map = function(x,y){.warpfunc_out2in(x,y)}, direction = direction, coordinates = "absolute",
+  #   #                      boundary = boundary, interpolation = interpolation)
+  #
+  #   warp_out = .warpfunc_out2in(pix_grid[,1],
+  #                               pix_grid[,2],
+  #                               keyvalues_in=keyvalues_in,
+  #                               header_in=header_in,
+  #                               WCSref_in=WCSref_in,
+  #                               keyvalues_out=keyvalues_out,
+  #                               raw_out=raw_out,
+  #                               WCSref_out=WCSref_out)
+  #
+  #   warpfield = imager::imappend(list(imager::as.cimg(matrix(warp_out[,1])), imager::as.cimg(matrix(warp_out[,2]))) ,'c')
+  #   rm(pix_grid)
+  #   rm(warp_out)
+  #
+  #   image_out$imDat = imager::warp(im = imager::as.cimg(image_out$imDat),
+  #                                  warpfield = warpfield,
+  #                                  mode = 2L,
+  #                                  interpolation = switch(interpolation, nearest=0L, linear=1L, cubic=2L),
+  #                                  boundary_conditions = switch(boundary, dirichlet=0L, neumann=1L, periodic=2L)
+  #   )
+  #
+  #   if(doscale){
+  #     image_out$imDat = image_out$imDat*(pixscale_out/pixscale_in)^2
+  #
+  #     if(dofinenorm){
+  #       norm = matrix(1, dim(image_out$imDat)[1], dim(image_out$imDat)[2])
+  #       norm = imager::imwarp(im = imager::as.cimg(norm),
+  #                             map = function(x,y){.warpfunc_in2out(x,y)}, direction = direction, coordinates = "absolute",
+  #                             boundary = boundary, interpolation = interpolation)
+  #
+  #       image_out$imDat = image_out$imDat/norm
+  #       rm(norm)
+  #     }
+  #   }
+  # }
+  
+  image_out$imDat = as.matrix(image_out$imDat)
   
   if(dotightcrop==FALSE | keepcrop==FALSE){
     image_out = image_out[c(1L - (min_x - 1L), dim_out[1] - (min_x - 1L)),c(1L - (min_y - 1L), dim_out[2] - (min_y - 1L)), box=1] #box=1 just in case we have a single pixel left
@@ -299,6 +427,11 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   if (plot) {
     Rwcs_image(image_out, ...)
   }
+  
+  if(warpfield_return){
+    image_out$warpfield = warpfield
+  }
+  
   return(invisible(image_out))
 }
 

@@ -18,7 +18,7 @@ Rwcs_warp(image_in, keyvalues_out = NULL, keyvalues_in = NULL, dim_out = NULL,
   interpolation = "cubic", doscale = TRUE, dofinenorm = TRUE, plot = FALSE,
   header_out = NULL, header_in = NULL, dotightcrop = TRUE, keepcrop = FALSE,
   WCSref_out = NULL, WCSref_in = NULL, magzero_out = NULL, magzero_in = NULL,
-  blank = NA, ...)
+  blank = NA, warpfield = NULL, warpfield_return = FALSE, ...)
 
 Rwcs_warp_promo(promo_in, keyvalues_out = NULL, dim_out = NULL, magzero_out = NULL, ...)
 
@@ -113,6 +113,12 @@ Logical; should the shift applied be purely integer (TRUE) or fractional pixel (
   \item{blank}{
 Scalar; the value to initially fill the output blank matrix with. In effect, this means that regions that receive to warped data (empty/blank regions) will all inherit this value. Sensibly you might want this to be NA (the default, implying missing), or for stacking purposes 0.
 }
+  \item{warpfield}{
+Cimg imager_array; a warp field to be used. You almost very certainly never want to actually make this yourself, but rather pass in a previously saved \option{warpfield} output for speeding up future warping operations.  
+}
+  \item{warpfield_return}{
+Logical; should a \option{warpfield} be appended to the output list? This can be used later with the \option{warpfield} argument to speed up identical WCS warping operations.
+}
   \item{\dots}{
 For \code{Rwcs_warp} dots are passed to \code{\link{Rwcs_image}} (only relevant if \option{plot}=TRUE). For \code{Rwcs_warp_promo} dots are passed to \code{Rwcs_warp}.
 }  
@@ -149,6 +155,8 @@ For \code{Rwcs_warp} if \option{dotightcrop} and \option{keepcrop} are both TRUE
 \code{Rwcs_tran} simply returns the shifted numeric matrix.
 
 \code{Rwcs_warp_promo}
+
+If \option{warpfield_return} is TRUE then \code{Rwcs_warp} will also have a \option{warpfield} list output. The idea is this can be passed back into the \option{warpfield} argument of a future \code{Rwcs_warp} operation to speed up computation.
 
 The output is an object of class 'ProMo' (warped as appropriate) containing:
 

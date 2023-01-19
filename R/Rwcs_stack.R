@@ -207,6 +207,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           doscale = TRUE,
           dotightcrop = TRUE,
           keepcrop = TRUE,
+          warpfield_return = TRUE,
           ...
         )
         
@@ -220,7 +221,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     if(!is.null(inVar_list)){
       message('Projecting Inverse Variance ',seq_start,' to ',seq_end,' of ',Nim)
       
-      pre_stack_inVar_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list'))%dopar%{
+      pre_stack_inVar_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp'))%dopar%{
         if(inherits(image_list[[i]], 'Rfits_pointer')){
           temp_inVar = image_list[[i]][,]
         }else{
@@ -248,6 +249,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             doscale = FALSE,
             dotightcrop = TRUE,
             keepcrop = TRUE,
+            warpfield = pre_stack_image_list[[i - seq_start + 1L]]$warpfield,
             ...
             )*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixel area. Using Rfits * method here
 
@@ -267,7 +269,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       if(length(exp_list) != Nim){
         stop("Length of Exposure Times not equal to length of image_list!")
       }
-      pre_stack_exp_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list', 'pre_stack_inVar_list'))%dopar%{
+      pre_stack_exp_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_inVar_list'))%dopar%{
         if(inherits(image_list[[i]], 'Rfits_pointer')){
           temp_exp = image_list[[i]][,]
         }else{
@@ -292,6 +294,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             doscale = FALSE,
             dotightcrop = TRUE,
             keepcrop = TRUE,
+            warpfield = pre_stack_image_list[[i - seq_start + 1L]]$warpfield,
             ...
           )
           
@@ -307,7 +310,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     
     if(any(weight_image)){
       message('Projecting Weights ',seq_start,' to ',seq_end,' of ',Nim)
-      pre_stack_weight_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list', 'pre_stack_inVar_list', 'pre_stack_exp_list'))%dopar%{
+      pre_stack_weight_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_inVar_list', 'pre_stack_exp_list'))%dopar%{
         if(weight_image[i]){
           if(inherits(image_list[[i]], 'Rfits_pointer')){
             temp_weight = image_list[[i]][,]
@@ -333,6 +336,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
               doscale = FALSE,
               dotightcrop = TRUE,
               keepcrop = TRUE,
+              warpfield = pre_stack_image_list[[i - seq_start + 1L]]$warpfield,
               ...
             )
             
@@ -360,7 +364,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         .stack_image_cpp(post_image = post_stack_image,
                          post_weight = post_stack_weight,
                          pre_image = pre_stack_image_list[[i]]$imDat,
-                         pre_weight = pre_weight,
+                         pre_weight_sexp = pre_weight,
                          offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')])
         )
       }
@@ -377,7 +381,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                                post_weight = post_stack_weight,
                                pre_image = pre_stack_image_list[[i]]$imDat,
                                pre_inVar = pre_stack_inVar_list[[i]]$imDat,
-                               pre_weight = pre_weight,
+                               pre_weight_sexp = pre_weight,
                                offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')])
         )
       }
@@ -520,7 +524,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           .stack_image_cpp(post_image = post_stack_image,
                            post_weight = post_stack_weight,
                            pre_image = pre_stack_image_list[[i]]$imDat,
-                           pre_weight = pre_weight,
+                           pre_weight_sexp = pre_weight,
                            offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')]),
                            post_mask = temp_mask_clip
           )
@@ -557,7 +561,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                                  post_weight = post_stack_weight,
                                  pre_image = pre_stack_image_list[[i]]$imDat,
                                  pre_inVar = pre_stack_inVar_list[[i]]$imDat,
-                                 pre_weight = pre_weight,
+                                 pre_weight_sexp = pre_weight,
                                  offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')]),
                                  post_mask = temp_mask_clip
           )
@@ -649,6 +653,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
               doscale = TRUE,
               dotightcrop = TRUE,
               keepcrop = TRUE,
+              warpfield_return = TRUE,
               ...
             ))
           }
@@ -664,7 +669,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           }else{
             message('Projecting Inverse Variance ',seq_start,' to ',seq_end,' of ',Nim)
             
-            pre_stack_inVar_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list'))%dopar%{
+            pre_stack_inVar_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp'))%dopar%{
               if(inherits(image_list[[i]], 'Rfits_pointer')){
                 temp_inVar = image_list[[i]][,]
               }else{
@@ -692,6 +697,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                   doscale = FALSE,
                   dotightcrop = TRUE,
                   keepcrop = TRUE,
+                  warpfield = pre_stack_image_list[[i - seq_start + 1L]]$warpfield,
                   ...
                   )*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixel area
                 )
@@ -746,7 +752,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           }else{
             message('Projecting Weights ',seq_start,' to ',seq_end,' of ',Nim)
           }
-          pre_stack_weight_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list', 'pre_stack_inVar_list', 'pre_stack_exp_list'))%dopar%{
+          pre_stack_weight_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_inVar_list', 'pre_stack_exp_list'))%dopar%{
             if(weight_image[i]){
               if(dump_frames){
                 Rfits::Rfits_read_image(paste0(dump_dir,'/weight_warp_',i,'.fits'))
@@ -774,6 +780,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                   doscale = FALSE,
                   dotightcrop = TRUE,
                   keepcrop = TRUE,
+                  warpfield = pre_stack_image_list[[i - seq_start + 1L]]$warpfield,
                   ...
                 ))
               }
@@ -804,7 +811,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             .stack_image_cpp(post_image = post_stack_image,
                              post_weight = post_stack_weight,
                              pre_image = pre_stack_image_list[[i]]$imDat,
-                             pre_weight = pre_weight,
+                             pre_weight_sexp = pre_weight,
                              offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')]),
                              post_mask = temp_mask_clip
             )
@@ -830,7 +837,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                                    post_weight = post_stack_weight,
                                    pre_image = pre_stack_image_list[[i]]$imDat,
                                    pre_inVar = pre_stack_inVar_list[[i]]$imDat,
-                                   pre_weight = pre_weight,
+                                   pre_weight_sexp = pre_weight,
                                    offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')]),
                                    post_mask = temp_mask_clip
             )
