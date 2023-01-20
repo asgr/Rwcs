@@ -146,9 +146,14 @@ stack2 = Rwcs_stack(image_list=list(stack$image, stack$image[20:350, 20:350]),
 plot(stack2$image)
 plot(stack2$weight, magmap=FALSE)
 
-# A better example with some real data that we can stack!
+#A better example with some real data that we can stack!
 
-# Define a distinct WCS to stack to (otherwise it uses the first in the image_list):
+#Define a distinct WCS to stack to (otherwise it uses the first in the image_list):
+
+image_list = foreach(i=1:8)\%do\%{
+  Rfits_read_image(system.file(paste0('extdata/stack/image_',i,'.fits'),
+    package="Rwcs"), ext=2)
+}
 
 keyvalues_out = Rwcs_setkeyvalues(
     CRVAL1 = 36.8962,
@@ -157,11 +162,6 @@ keyvalues_out = Rwcs_setkeyvalues(
     NAXIS1 = 2200,
     NAXIS2 = 2200
 )
-
-image_list = foreach(i=1:8)\%do\%{
-  Rfits_read_image(system.file(paste0('extdata/stack/image_',i,'.fits'),
-    package="Rwcs"), ext=2)
-}
 
 stack = Rwcs_stack(image_list = image_list,
                    inVar_list = 0.000468, #assume all have the same inVar
@@ -186,12 +186,25 @@ stack2 = Rwcs_stack(image_list = image_list,
                    magzero_in = 30,
                    magzero_out = 23.9 #micro-jansky output
                    )
-}
 
 #Now we can easily see the depth improvment!
 
 plot(image_list[[1]])
 plot(stack2$image)
+
+#We can compute the rough sky noise in the stacked images:
+
+sd(stack$image$imDat[stack$image$imDat < 0.3], na.rm=TRUE) #stack 1
+sd(stack2$image$imDat[stack2$image$imDat < 0.3], na.rm=TRUE) #stack 2
+
+#Compare this to the stacked inverse variance prediction:
+
+1/sqrt(median(stack$inVar$imDat, na.rm=TRUE)) #stack 1
+1/sqrt(median(stack2$inVar$imDat, na.rm=TRUE)) #stack 2
+
+#Pretty similar! Note when changing pixel scales a lot this can be wrong due to pixel
+#covariance, which we do not correct for.
+}
 }
 \concept{ ~warp }
 \concept{ ~stack }

@@ -761,7 +761,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             )%dopar%{
             if(weight_image[i]){
               if(dump_frames){
-                Rfits_read_image(paste0(dump_dir,'/weight_warp_',i,'.fits'))
+                Rfits::Rfits_read_image(paste0(dump_dir,'/weight_warp_',i,'.fits'))
               }else{
                 if(inherits(image_list[[i]], 'Rfits_pointer')){
                   temp_weight = image_list[[i]][,]

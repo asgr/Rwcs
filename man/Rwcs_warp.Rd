@@ -63,10 +63,10 @@ boundary conditions: "dirichlet", "neumann", "periodic" (default "dirichlet"), s
 Character/integer scalar; For \code{Rwcs_warp}: "nearest", "linear", "cubic" (default "linear"), see \code{imwarp}. For \code{imresize}: Linear is 3, Cubic is 5, Lanczos (higher quality), default) is 6.
 }
   \item{doscale}{
-Logical; if TRUE (default) then the image is scaled by the change in pixel scale, i.e. it properly conserves angular flux density. This is usually what you minimally want when warping a flux image between different WCS. If FALSE then nothing is done to rescale the image. This is useful when the input \option{image_in} is something like a segmentation map, where the actual values matter.
+Logical; if TRUE (default) then the image is scaled by the change in pixel scale, i.e. it properly conserves angular flux density. This is usually what you minimally want when warping a flux image between different WCS. If FALSE then nothing is done to rescale the image. This is useful when the input \option{image_in} is something like a segmentation or exposure map, where the actual values matter.
 }
   \item{dofinenorm}{
-Logical; if TRUE (default) and \option{doscale} is also TRUE then the image is scaled by the relative change the change in flux per pixel found in a reference normalisation image. This is usually what you want when converting images between different WCS (since we really want to make sure we conserve overall flux). It mostly adjusts fluxes around the image edge (where interpolation artefacts may cause flux loss) and changes things often by on milli-mag. If that level of accuracy is not required then turning this to FALSE will speed things up considerably (by almost a factor of 2 for big images).
+Logical; if TRUE (default) then the image is scaled by the relative change the change in flux per pixel found in a reference normalisation image. This is usually what you want when converting images between different WCS (since we really want to make sure we conserve overall flux). It mostly adjusts fluxes around the image edge (where interpolation artefacts may cause flux loss) and changes things often by on milli-mag. If that level of accuracy is not required then turning this to FALSE will speed things up considerably (by almost a factor of 2 for big images).
 }
   \item{plot}{
 Logical; should a \code{\link{Rwcs_image}} plot of the output be generated? 

@@ -314,34 +314,34 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
     )
   )
   
+  if (dofinenorm) {
+    norm = matrix(1, dim(image_out$imDat)[1], dim(image_out$imDat)[2])
+    norm = imager::warp(
+      im = imager::as.cimg(norm),
+      warpfield = warpfield,
+      mode = switch(direction, backward = 0L, forward = 2L),
+      interpolation = switch(
+        interpolation,
+        nearest = 0L,
+        linear = 1L,
+        cubic = 2L
+      ),
+      boundary_conditions = switch(
+        boundary,
+        dirichlet = 0L,
+        neumann = 1L,
+        periodic = 2L
+      )
+    )
+    # norm = imager::imwarp(im = imager::as.cimg(norm),
+    #                       map = function(x,y){.warpfunc_in2out(x,y)}, direction = direction, coordinates = "absolute",
+    #                       boundary = boundary, interpolation = interpolation)
+    image_out$imDat = image_out$imDat / norm
+    rm(norm)
+  }
+  
   if (doscale) {
     image_out$imDat = image_out$imDat * (pixscale_out / pixscale_in) ^ 2
-    
-    if (dofinenorm) {
-      norm = matrix(1, dim(image_out$imDat)[1], dim(image_out$imDat)[2])
-      norm = imager::warp(
-        im = imager::as.cimg(norm),
-        warpfield = warpfield,
-        mode = switch(direction, backward = 0L, forward = 2L),
-        interpolation = switch(
-          interpolation,
-          nearest = 0L,
-          linear = 1L,
-          cubic = 2L
-        ),
-        boundary_conditions = switch(
-          boundary,
-          dirichlet = 0L,
-          neumann = 1L,
-          periodic = 2L
-        )
-      )
-      # norm = imager::imwarp(im = imager::as.cimg(norm),
-      #                       map = function(x,y){.warpfunc_in2out(x,y)}, direction = direction, coordinates = "absolute",
-      #                       boundary = boundary, interpolation = interpolation)
-      image_out$imDat = image_out$imDat / norm
-      rm(norm)
-    }
   }
   #}
   # if (direction == "backward") {
