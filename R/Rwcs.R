@@ -146,10 +146,10 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   }
   
   if(loc.diff[1] != 0){
-    output[,1]=output[,1]-loc.diff[1]
+    output[,1] = output[,1] - loc.diff[1]
   }
   if(loc.diff[2] != 0){
-    output[,2]=output[,2]-loc.diff[2]
+    output[,2] = output[,2] - loc.diff[2]
   }
   
   if(pixcen == 'R'){
@@ -653,7 +653,7 @@ Rwcs_in_image = function(RA, Dec, xlim, ylim, buffer=0, plot=FALSE, style='point
     }
     
   }
-  return(as.logical(test_xy[,'x'] >= xlim[1] + buffer & test_xy[,'x'] <= xlim[2] - buffer & test_xy[,'y'] >= ylim[1] + buffer & test_xy[,'y'] <= ylim[2] - buffer))
+  return(as.logical(test_xy[,'x'] >= xlim[1] - buffer & test_xy[,'x'] <= xlim[2] + buffer & test_xy[,'y'] >= ylim[1] - buffer & test_xy[,'y'] <= ylim[2] + buffer))
 }
 
 Rwcs_overlap = function(keyvalues_test, keyvalues_ref=NULL, buffer=0.5, plot=FALSE, pad=0, add=FALSE){

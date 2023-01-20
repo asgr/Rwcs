@@ -45,7 +45,12 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     stop('Need keyvalues out!') 
   }
   
-  dim_im = c(keyvalues_out$NAXIS1, keyvalues_out$NAXIS2)
+  if(isTRUE(keyvalues_out$ZIMAGE)){
+    dim_im = c(keyvalues_out$ZNAXIS1, keyvalues_out$ZNAXIS2)
+  }else{
+    dim_im = c(keyvalues_out$NAXIS1, keyvalues_out$NAXIS2)
+  }
+  
   mask_clip = NULL
   
   post_stack_image = matrix(0, dim_im[1], dim_im[2])
@@ -263,9 +268,6 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     
     if(!is.null(exp_list)){
       message('Projecting Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
-      if(length(exp_list) == 1){
-        exp_list = rep(exp_list, Nim)
-      }
       if(length(exp_list) != Nim){
         stop("Length of Exposure Times not equal to length of image_list!")
       }
@@ -752,10 +754,14 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           }else{
             message('Projecting Weights ',seq_start,' to ',seq_end,' of ',Nim)
           }
-          pre_stack_weight_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_inVar_list', 'pre_stack_exp_list'))%dopar%{
+          pre_stack_weight_list = foreach(i = seq_start:seq_end,
+            .packages = c('Rwcs', 'Rfits'),
+            export = c('image_list', 'dump_dir', 'weight_image')
+            #.noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_inVar_list', 'pre_stack_exp_list')
+            )%dopar%{
             if(weight_image[i]){
               if(dump_frames){
-                Rfits::Rfits_read_image(paste0(dump_dir,'/weight_warp_',i,'.fits'))
+                Rfits_read_image(paste0(dump_dir,'/weight_warp_',i,'.fits'))
               }else{
                 if(inherits(image_list[[i]], 'Rfits_pointer')){
                   temp_weight = image_list[[i]][,]

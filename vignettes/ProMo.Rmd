@@ -1,0 +1,19 @@
+---
+title: "ProMo: Let's do the Space Warp Again!"
+author: "Aaron Robotham"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The **Rwcs** package comes with key utilities for warping between different WCS systems: **Rwcs_warp** (for warping individual frames once) and **Rwcs_stack** for creating large stacks of many warped frames.

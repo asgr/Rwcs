@@ -122,6 +122,7 @@ Aaron Robotham
 \dontrun{
 #Recommended to use Rfits (will be supported longer term):
 library(Rfits)
+library(foreach)
 
 file_image = system.file('extdata', 'image.fits', package = "Rfits")
 image = Rfits_read_image(file_image)
@@ -144,8 +145,53 @@ stack2 = Rwcs_stack(image_list=list(stack$image, stack$image[20:350, 20:350]),
   
 plot(stack2$image)
 plot(stack2$weight, magmap=FALSE)
+
+# A better example with some real data that we can stack!
+
+# Define a distinct WCS to stack to (otherwise it uses the first in the image_list):
+
+keyvalues_out = Rwcs_setkeyvalues(
+    CRVAL1 = 36.8962,
+    CRVAL2 = -5.1906,
+    pixscale = 0.3,
+    NAXIS1 = 2200,
+    NAXIS2 = 2200
+)
+
+image_list = foreach(i=1:8)\%do\%{
+  Rfits_read_image(system.file(paste0('extdata/stack/image_',i,'.fits'),
+    package="Rwcs"), ext=2)
 }
 
+stack = Rwcs_stack(image_list = image_list,
+                   inVar_list = 0.000468, #assume all have the same inVar
+                   exp_list = 10, #all have the same exposure time of 10s
+                   cores = 8,
+                   keyvalues_out = keyvalues_out,
+                   magzero_in = 30,
+                   magzero_out = 23.9 #micro-jansky output
+                   )
+
+plot(stack$image, qdiff=TRUE)
+plot(stack$inVar, magmap=FALSE)
+plot(stack$weight, magmap=FALSE)
+plot(stack$exp, magmap=FALSE)
+
+#If we do not supply the keyvalues_out the target WCS will be the first image:
+
+stack2 = Rwcs_stack(image_list = image_list,
+                   inVar_list = 0.000468, #assume all have the same inVar
+                   exp_list = 10, #all have the same exposure time of 10s
+                   cores = 8,
+                   magzero_in = 30,
+                   magzero_out = 23.9 #micro-jansky output
+                   )
+}
+
+#Now we can easily see the depth improvment!
+
+plot(image_list[[1]])
+plot(stack2$image)
 }
 \concept{ ~warp }
 \concept{ ~stack }
