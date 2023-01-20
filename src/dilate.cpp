@@ -137,7 +137,6 @@ static void check_same_size(T a, U b, const char *name)
       "%s has non-conforming size: (%d, %d) != (%d, %d))",
       name, a.nrow(), a.ncol(), b.nrow(), b.ncol()
     );
-  Rprintf("%s has required size of (%d, %d)\n", name, a.nrow(), a.ncol());
 }
 
 template<typename T>
@@ -159,10 +158,6 @@ static void check_required_size(NumericMatrix pre, IntegerVector offset, Numeric
       "post image has smaller size than required: (%d, %d) < (%d, %d) + [%d, %d])",
       post.nrow(), post.ncol(), pre.nrow(), pre.ncol(), offset_x, offset_y
     );
-  Rprintf(
-    "post image has required size: (%d, %d) => (%d, %d) + [%d, %d])\n",
-    post.nrow(), post.ncol(), pre.nrow(), pre.ncol(), offset_x, offset_y
-  );
 }
 
 static bool is_mask_set(Nullable<LogicalMatrix> mask, int i, int j)
