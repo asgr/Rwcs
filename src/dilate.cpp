@@ -129,6 +129,42 @@ IntegerMatrix int_mat_add_sin(IntegerMatrix base, int add, IntegerMatrix ind, In
   return base;
 }
 
+template<typename T, typename U>
+static void check_same_size(T a, U b, const char *name)
+{
+  if (a.nrow() != b.nrow() || a.ncol() != b.ncol())
+    Rcpp::stop(
+      "%s has non-conforming size: (%d, %d) != (%d, %d))",
+      name, a.nrow(), a.ncol(), b.nrow(), b.ncol()
+    );
+  Rprintf("%s has required size of (%d, %d)\n", name, a.nrow(), a.ncol());
+}
+
+template<typename T>
+static void check_same_size(T a, Nullable<LogicalMatrix> b, const char *name)
+{
+  if (b.isNull())
+    return;
+  check_same_size(a, LogicalMatrix(b), name);
+}
+
+static void check_required_size(NumericMatrix pre, IntegerVector offset, NumericMatrix post)
+{
+  if (offset.size() < 2)
+    Rcpp::stop("offset has size < 2");
+  auto offset_x = offset[0] - 1;
+  auto offset_y = offset[1] - 1;
+  if (post.nrow() < pre.nrow() + offset_x || post.ncol() < pre.ncol() + offset_y)
+    Rcpp::stop(
+      "post image has smaller size than required: (%d, %d) < (%d, %d) + [%d, %d])",
+      post.nrow(), post.ncol(), pre.nrow(), pre.ncol(), offset_x, offset_y
+    );
+  Rprintf(
+    "post image has required size: (%d, %d) => (%d, %d) + [%d, %d])\n",
+    post.nrow(), post.ncol(), pre.nrow(), pre.ncol(), offset_x, offset_y
+  );
+}
+
 static bool is_mask_set(Nullable<LogicalMatrix> mask, int i, int j)
 {
   if (mask.isNull())
@@ -141,6 +177,11 @@ static SEXP _stack_image_inVar(NumericMatrix post_image, NumericMatrix post_inVa
                                NumericMatrix pre_image, NumericMatrix pre_inVar, WeightGetter weight, IntegerVector offset,
                                Nullable<LogicalMatrix> post_mask)
 {
+  check_same_size(post_image, post_inVar, "post_inVar");
+  check_same_size(post_image, post_weight, "post_weight");
+  check_same_size(post_image, post_mask, "post_mask");
+  check_same_size(pre_image, pre_inVar, "pre_inVar");
+  check_required_size(pre_image, offset, post_image);
   int post_j = offset[1] - 1;
   for (int j = 0; j < pre_image.ncol(); j++, post_j++) {
     int post_i = offset[0] - 1;
@@ -165,6 +206,9 @@ static SEXP _stack_image(NumericMatrix post_image, IntegerMatrix post_weight,
                          NumericMatrix pre_image, WeightGetter weight, IntegerVector offset,
                          Nullable<LogicalMatrix> post_mask)
 {
+  check_same_size(post_image, post_weight, "post_weight");
+  check_same_size(post_image, post_mask, "post_mask");
+  check_required_size(pre_image, offset, post_image);
   int post_j = offset[1] - 1;
   for (int j = 0; j < pre_image.ncol(); j++, post_j++) {
     int post_i = offset[0] - 1;
@@ -188,6 +232,7 @@ SEXP stack_image_inVar(NumericMatrix post_image, NumericMatrix post_inVar, Integ
 {
   if (Rf_isMatrix(pre_weight_sexp)) {
     NumericMatrix pre_weight(pre_weight_sexp);
+    check_same_size(pre_image, pre_weight, "pre_weight");
     return _stack_image_inVar(post_image, post_inVar, post_weight, pre_image, pre_inVar, [&](int i, int j) { return pre_weight(i, j); }, offset, post_mask);
   }
   int pre_weight = Rf_asInteger(pre_weight_sexp);
@@ -201,6 +246,7 @@ SEXP stack_image(NumericMatrix post_image, IntegerMatrix post_weight,
 {
   if (Rf_isMatrix(pre_weight_sexp)) {
     NumericMatrix pre_weight(pre_weight_sexp);
+    check_same_size(pre_image, pre_weight, "pre_weight");
     return _stack_image(post_image, post_weight, pre_image, [&](int i, int j) { return pre_weight(i, j); }, offset, post_mask);
   }
   int pre_weight = Rf_asInteger(pre_weight_sexp);
