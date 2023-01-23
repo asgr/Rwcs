@@ -388,10 +388,10 @@ Rwcs_warp = function (image_in, keyvalues_out=NULL, keyvalues_in = NULL, dim_out
   
   if(dotightcrop==FALSE | keepcrop==FALSE){
     image_out = image_out[c(1L - (min_x - 1L), dim_out[1] - (min_x - 1L)),c(1L - (min_y - 1L), dim_out[2] - (min_y - 1L)), box=1] #box=1 just in case we have a single pixel left
-    # image_out$keyvalues$XCUTLO = NULL
-    # image_out$keyvalues$XCUTHI = NULL
-    # image_out$keyvalues$YCUTLO = NULL
-    # image_out$keyvalues$YCUTHI = NULL
+    image_out$keyvalues$XCUTLO = 1L
+    image_out$keyvalues$XCUTHI = dim_out[1]
+    image_out$keyvalues$YCUTLO = 1L
+    image_out$keyvalues$YCUTHI = dim_out[2]
   }else{
     
     if(max_x > dim_out[1]){

@@ -1,5 +1,5 @@
 Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_list=NULL, mask_list=NULL, magzero_in=0,
-                      magzero_out=23.9, keyvalues_out=NULL, dim_out=NULL, cores=4, Nbatch=cores,
+                      magzero_out=23.9, keyvalues_out=NULL, dim_out=NULL, cores=4, Nbatch=cores, keepcrop=TRUE,
                       keep_extreme_pix=FALSE, doclip=FALSE, clip_tol=100, clip_dilate=0, clip_sigma=5,
                       return_all=FALSE, dump_frames=FALSE, dump_dir=tempdir(), ...){
   
@@ -211,7 +211,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           dim_out = dim_out,
           doscale = TRUE,
           dotightcrop = TRUE,
-          keepcrop = TRUE,
+          keepcrop = keepcrop,
           warpfield_return = TRUE,
           ...
         )
@@ -222,6 +222,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       })
       return(temp_warp)
     }
+    
+    gc()
     
     if(!is.null(inVar_list)){
       message('Projecting Inverse Variance ',seq_start,' to ',seq_end,' of ',Nim)
@@ -253,7 +255,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             dim_out = dim_out,
             doscale = FALSE,
             dotightcrop = TRUE,
-            keepcrop = TRUE,
+            keepcrop = keepcrop,
             warpfield = pre_stack_image_list[[i - seq_start + 1L]]$warpfield,
             ...
             )*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixel area. Using Rfits * method here
@@ -265,6 +267,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         return(temp_warp)
       }
     }
+    
+    gc()
     
     if(!is.null(exp_list)){
       message('Projecting Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
@@ -295,7 +299,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             dim_out = dim_out,
             doscale = FALSE,
             dotightcrop = TRUE,
-            keepcrop = TRUE,
+            keepcrop = keepcrop,
             warpfield = pre_stack_image_list[[i - seq_start + 1L]]$warpfield,
             ...
           )
@@ -307,6 +311,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         return(temp_warp)
       }
     }
+    
+    gc()
     
     #new weight projections (if relevant)
     
@@ -337,7 +343,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
               dim_out = dim_out,
               doscale = FALSE,
               dotightcrop = TRUE,
-              keepcrop = TRUE,
+              keepcrop = keepcrop,
               warpfield = pre_stack_image_list[[i - seq_start + 1L]]$warpfield,
               ...
             )
@@ -351,6 +357,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           return(weight_list[[i]])
         }
       }
+      
+      gc()
     }else{
       pre_stack_weight_list = weight_list
     }
@@ -389,6 +397,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       }
     }
     
+    gc()
+    
     if(!is.null(pre_stack_exp_list)){
       message('Stacking Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
       for(i in 1:Nbatch_sub){
@@ -396,23 +406,10 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                        pre_exp = pre_stack_exp_list[[i]]$imDat,
                        offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')])
         )
-        # if(anyNA(pre_stack_exp_list[[i]]$imDat)){
-        #   addID = which(!is.na(pre_stack_exp_list[[i]]$imDat), arr.ind=TRUE)
-        #   #addID_sub = addID
-        #   #addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
-        #   #addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
-        #   
-        #   #post_stack_exp[addID_sub] = post_stack_exp[addID_sub] + pre_stack_exp_list[[i]]$imDat[addID]
-        #   
-        #   .num_mat_add_cpp(post_stack_exp, pre_stack_exp_list[[i]]$imDat, addID, pre_stack_image_list[[i]]$crop[c('xlo','ylo')])
-        # }else{
-        #   xsub = pre_stack_image_list[[i]]$crop['xlo']:pre_stack_image_list[[i]]$crop['xhi']
-        #   ysub = pre_stack_image_list[[i]]$crop['ylo']:pre_stack_image_list[[i]]$crop['yhi']
-        #   
-        #   post_stack_exp[xsub,ysub] = post_stack_exp[xsub,ysub] + pre_stack_exp_list[[i]]$imDat
-        # }
       }
     }
+    
+    gc()
     
     if(keep_extreme_pix | doclip){
       message('Calculating Extreme Pixels ',seq_start,' to ',seq_end,' of ',Nim)
@@ -432,6 +429,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         }
       }
     }
+    
+    gc()
   }
   
   if(return_all==FALSE){
@@ -455,11 +454,6 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
   
   post_stack_image[!weight_sel] = NA
   
-  #Changed my mind on this- I think I should count exposure as a photon hitting a legal part of a sensor (bad pixel or not). I.e. fully masked regions with NA in the final image might still have a positive exposure time.
-  # if(!is.null(post_stack_exp)){
-  #   post_stack_exp[!weight_sel] = NA
-  # }
-  
   if(doclip & !is.null(post_stack_inVar)){
     message('Clipping out extreme cold/hot pixels')
     
@@ -474,15 +468,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     rm(bad_cold)
     rm(bad_hot)
     rm(post_stack_inRMS)
-    
-    # post_mask_list = list()
-    # 
-    # for(i in 1:Nim){
-    #   post_mask_list[[i]] = (post_stack_cold_id == i) | (post_stack_hot_id == i)
-    #   if(clip_dilate > 0){
-    #     post_mask_list[[i]] = .dilate_R(post_mask_list[[i]], size=clip_dilate)
-    #   }
-    # }
+    gc()
     
     #reset post stack outputs
     
@@ -544,6 +530,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             post_stack_hot[xsub,ysub][new_hot] = pre_stack_image_list[[i]]$imDat[new_hot]
           }
         }
+        
+        gc()
       }else{
         message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
         for(i in 1:Nim){
@@ -581,26 +569,12 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             post_stack_hot[xsub,ysub][new_hot] = pre_stack_image_list[[i]]$imDat[new_hot]
           }
         }
+        
+        gc()
       }
     }else{
       # If we need to batch process the image_list then we need to re-project everything again
       #would maybe be neater to break this out a distinct function, but that is a job for another day...
-      
-      #I don't think we need to re-zero this actually?
-      # if(!is.null(exp_list)){
-      #   
-      #   if(length(exp_list) == 1){
-      #     exp_list = rep(exp_list, Nim) 
-      #   }
-      #   
-      #   if(length(exp_list) != Nim){
-      #     stop("Length of exp_list not equal to length of image_list!")  
-      #   }
-      #   
-      #   post_stack_exp = matrix(0, dim_im[1], dim_im[2])
-      # }else{
-      #   post_stack_exp = NULL
-      # }
       
       message('Reprojecting and restacking without clipped cold/hot pixels')
       for(seq_start in seq_process){
@@ -654,11 +628,13 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
               dim_out = dim_out,
               doscale = TRUE,
               dotightcrop = TRUE,
-              keepcrop = TRUE,
+              keepcrop = keepcrop,
               warpfield_return = TRUE,
               ...
             ))
           }
+          
+          gc()
         }
         
         if(!is.null(inVar_list)){
@@ -698,55 +674,17 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                   dim_out = dim_out,
                   doscale = FALSE,
                   dotightcrop = TRUE,
-                  keepcrop = TRUE,
+                  keepcrop = keepcrop,
                   warpfield = pre_stack_image_list[[i - seq_start + 1L]]$warpfield,
                   ...
                   )*(Rwcs_pixscale(temp_inVar$keyvalues)^4 / Rwcs_pixscale(keyvalues_out)^4) #this is because RMS scales as linear pixel area
                 )
               })
             }
+            
+            gc()
           }
         }
-        
-        # Shouldn't need to reproject exposure times!
-        # if(!is.null(exp_list)){
-        #   message('Projecting Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
-        #   if(length(exp_list) == 1){
-        #     exp_list = rep(exp_list, Nim)
-        #   }
-        #   if(length(exp_list) != Nim){
-        #     stop("Length of Exposure Times not equal to length of image_list!")
-        #   }
-        #   pre_stack_exp_list = foreach(i = seq_start:seq_end, .noexport=c('post_stack_image', 'post_stack_weight', 'post_stack_inVar', 'post_stack_exp', 'pre_stack_image_list', 'pre_stack_inVar_list'))%dopar%{
-        #     if(inherits(image_list[[i]], 'Rfits_pointer')){
-        #       temp_exp = image_list[[i]][,]
-        #     }else{
-        #       temp_exp = image_list[[i]]
-        #     }
-        #     
-        #     #need [] because this will assign a single value to all elements of a matrix
-        #     if(inherits(exp_list[[i]], 'Rfits_pointer')){
-        #       exp_list[[i]]$header = FALSE
-        #       temp_exp$imDat[] = exp_list[[i]][,]
-        #     }else if(inherits(exp_list[[i]], 'Rfits_image')){
-        #       temp_exp$imDat[] = exp_list[[i]]$imDat
-        #     }else{
-        #       temp_exp$imDat[] = exp_list[[i]]
-        #     }
-        #     
-        #     return(Rwcs_warp(
-        #       image_in = temp_exp,
-        #       keyvalues_out = keyvalues_out,
-        #       dim_out = dim_out,
-        #       doscale = FALSE,
-        #       dotightcrop = TRUE,
-        #       keepcrop = TRUE,
-        #       ...
-        #     ))
-        #   }
-        # }else{
-        #   pre_stack_exp_list = NULL
-        # }
         
         if(any(weight_image)){
           if(dump_frames){
@@ -785,7 +723,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                   dim_out = dim_out,
                   doscale = FALSE,
                   dotightcrop = TRUE,
-                  keepcrop = TRUE,
+                  keepcrop = keepcrop,
                   warpfield = pre_stack_image_list[[i - seq_start + 1L]]$warpfield,
                   ...
                 ))
@@ -793,7 +731,9 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             }else{
               return(weight_list[[i]])
             }
-          }
+            }
+          
+          gc()
         }else{
           pre_stack_weight_list = weight_list
         }
@@ -822,6 +762,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                              post_mask = temp_mask_clip
             )
           }
+          
+          gc()
         }else{
           message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
           for(i in 1:Nbatch_sub){
@@ -847,65 +789,10 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                                    offset = unlist(pre_stack_image_list[[i]]$keyvalues[c('XCUTLO','YCUTLO')]),
                                    post_mask = temp_mask_clip
             )
-            
-            # xsub = pre_stack_image_list[[i]]$keyvalues$XCUTLO:pre_stack_image_list[[i]]$keyvalues$XCUTHI
-            # ysub = pre_stack_image_list[[i]]$keyvalues$YCUTLO:pre_stack_image_list[[i]]$keyvalues$YCUTHI
-            # 
-            # if(anyNA(pre_stack_image_list[[i]]$imDat) | checkmate::anyInfinite(pre_stack_inVar_list[[i]]$imDat) | any(pre_stack_inVar_list[[i]]$imDat < 0, na.rm=TRUE) | any(temp_mask_clip[xsub,ysub])){
-            #   addID = which(!is.na(pre_stack_image_list[[i]]$imDat) & is.finite(pre_stack_inVar_list[[i]]$imDat) & pre_stack_inVar_list[[i]]$imDat > 0 & temp_mask_clip[xsub,ysub]==FALSE, arr.ind=TRUE)
-            #   #addID_sub = addID
-            #   #addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
-            #   #addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
-            #   
-            #   #post_stack_image[addID_sub] = post_stack_image[addID_sub] + pre_stack_image_list[[i]]$imDat[addID]*pre_stack_inVar_list[[i]]$imDat[addID]
-            #   #post_stack_inVar[addID_sub] = post_stack_inVar[addID_sub] + pre_stack_inVar_list[[i]]$imDat[addID]
-            #   
-            #   .num_mat_add_mult_cpp(post_stack_image, pre_stack_image_list[[i]]$imDat, pre_stack_inVar_list[[i]]$imDat, addID, pre_stack_image_list[[i]]$crop[c('xlo','ylo')])
-            #   .num_mat_add_cpp(post_stack_inVar, pre_stack_inVar_list[[i]]$imDat, addID, pre_stack_image_list[[i]]$crop[c('xlo','ylo')])
-            #   
-            #   if(weight_image[i]){
-            #     #post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + pre_stack_weight_list[[i]]$imDat[addID]
-            #     .int_mat_add_cpp(post_stack_weight, pre_stack_weight_list[[i]]$imDat, addID, pre_stack_image_list[[i]]$crop[c('xlo','ylo')])
-            #   }else{
-            #     #post_stack_weight[addID_sub] = post_stack_weight[addID_sub] + weight_list[[i]]
-            #     .int_mat_add_sin_cpp(post_stack_weight, weight_list[[i]], addID, pre_stack_image_list[[i]]$crop[c('xlo','ylo')])
-            #   }
-            # }else{
-            #   xsub = pre_stack_image_list[[i]]$keyvalues$XCUTLO:pre_stack_image_list[[i]]$keyvalues$XCUTHI
-            #   ysub = pre_stack_image_list[[i]]$keyvalues$YCUTLO:pre_stack_image_list[[i]]$keyvalues$YCUTHI
-            #   
-            #   post_stack_image[xsub,ysub] = post_stack_image[xsub,ysub] + pre_stack_image_list[[i]]$imDat*pre_stack_inVar_list[[i]]$imDat
-            #   post_stack_inVar[xsub,ysub] = post_stack_inVar[xsub,ysub] + pre_stack_inVar_list[[i]]$imDat
-            #   if(weight_image[i]){
-            #     post_stack_weight[xsub,ysub] = post_stack_weight[xsub,ysub] + pre_stack_weight_list[[i]]$imDat
-            #   }else{
-            #     post_stack_weight[xsub,ysub] = post_stack_weight[xsub,ysub] + weight_list[[i]]
-            #   }
-            # }
           }
+          
+          gc()
         }
-        
-        # this should already exist? Probably need to check this more carefully
-        # if(!is.null(pre_stack_exp_list)){
-        #   message('Stacking Exposure Times ',seq_start,' to ',seq_end,' of ',Nim)
-        #   for(i in 1:Nbatch_sub){
-        #     if(anyNA(pre_stack_exp_list[[i]]$imDat)){
-        #       addID = which(!is.na(pre_stack_exp_list[[i]]$imDat), arr.ind=TRUE)
-        #       #addID_sub = addID
-        #       #addID_sub[,1] = addID_sub[,1] + pre_stack_image_list[[i]]$crop['xlo'] - 1L
-        #       #addID_sub[,2] = addID_sub[,2] + pre_stack_image_list[[i]]$crop['ylo'] - 1L
-        #       
-        #       #post_stack_exp[addID_sub] = post_stack_exp[addID_sub] + pre_stack_exp_list[[i]]$imDat[addID]
-        #       
-        #       .num_mat_add_cpp(post_stack_exp, pre_stack_exp_list[[i]]$imDat, addID, pre_stack_image_list[[i]]$crop[c('xlo','ylo')])
-        #     }else{
-        #       xsub = pre_stack_image_list[[i]]$keyvalues$XCUTLO:pre_stack_image_list[[i]]$keyvalues$XCUTHI
-        #       ysub = pre_stack_image_list[[i]]$keyvalues$YCUTLO:pre_stack_image_list[[i]]$keyvalues$YCUTHI
-        #       
-        #       post_stack_exp[xsub,ysub] = post_stack_exp[xsub,ysub] + pre_stack_exp_list[[i]]$imDat
-        #     }
-        #   }
-        # }
         
         if(keep_extreme_pix){
           message('Calculating Extreme Pixels ',seq_start,' to ',seq_end,' of ',Nim)
@@ -929,6 +816,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
             post_stack_cold[xsub,ysub][new_cold] = pre_stack_image_list[[i]]$imDat[new_cold]
             post_stack_hot[xsub,ysub][new_hot] = pre_stack_image_list[[i]]$imDat[new_hot]
           }
+          
+          gc()
         }
       }
     }
