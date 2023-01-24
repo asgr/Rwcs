@@ -119,6 +119,124 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// num_mat_add
+NumericMatrix num_mat_add(NumericMatrix base, NumericMatrix add, IntegerMatrix ind, IntegerVector offset);
+RcppExport SEXP _Rwcs_num_mat_add(SEXP baseSEXP, SEXP addSEXP, SEXP indSEXP, SEXP offsetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type base(baseSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type add(addSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type ind(indSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type offset(offsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(num_mat_add(base, add, ind, offset));
+    return rcpp_result_gen;
+END_RCPP
+}
+// num_mat_add_mult
+NumericMatrix num_mat_add_mult(NumericMatrix base, NumericMatrix add, NumericMatrix mult, IntegerMatrix ind, IntegerVector offset);
+RcppExport SEXP _Rwcs_num_mat_add_mult(SEXP baseSEXP, SEXP addSEXP, SEXP multSEXP, SEXP indSEXP, SEXP offsetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type base(baseSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type add(addSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type mult(multSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type ind(indSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type offset(offsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(num_mat_add_mult(base, add, mult, ind, offset));
+    return rcpp_result_gen;
+END_RCPP
+}
+// int_mat_add
+IntegerMatrix int_mat_add(IntegerMatrix base, IntegerMatrix add, IntegerMatrix ind, IntegerVector offset);
+RcppExport SEXP _Rwcs_int_mat_add(SEXP baseSEXP, SEXP addSEXP, SEXP indSEXP, SEXP offsetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type base(baseSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type add(addSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type ind(indSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type offset(offsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(int_mat_add(base, add, ind, offset));
+    return rcpp_result_gen;
+END_RCPP
+}
+// int_mat_add_sin
+IntegerMatrix int_mat_add_sin(IntegerMatrix base, int add, IntegerMatrix ind, IntegerVector offset);
+RcppExport SEXP _Rwcs_int_mat_add_sin(SEXP baseSEXP, SEXP addSEXP, SEXP indSEXP, SEXP offsetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type base(baseSEXP);
+    Rcpp::traits::input_parameter< int >::type add(addSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type ind(indSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type offset(offsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(int_mat_add_sin(base, add, ind, offset));
+    return rcpp_result_gen;
+END_RCPP
+}
+// stack_image_inVar
+SEXP stack_image_inVar(NumericMatrix post_image, NumericMatrix post_inVar, IntegerMatrix post_weight, NumericMatrix pre_image, NumericMatrix pre_inVar, SEXP pre_weight_sexp, IntegerVector offset, Nullable<LogicalMatrix> post_mask);
+RcppExport SEXP _Rwcs_stack_image_inVar(SEXP post_imageSEXP, SEXP post_inVarSEXP, SEXP post_weightSEXP, SEXP pre_imageSEXP, SEXP pre_inVarSEXP, SEXP pre_weight_sexpSEXP, SEXP offsetSEXP, SEXP post_maskSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type post_image(post_imageSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type post_inVar(post_inVarSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type post_weight(post_weightSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type pre_image(pre_imageSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type pre_inVar(pre_inVarSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type pre_weight_sexp(pre_weight_sexpSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type offset(offsetSEXP);
+    Rcpp::traits::input_parameter< Nullable<LogicalMatrix> >::type post_mask(post_maskSEXP);
+    rcpp_result_gen = Rcpp::wrap(stack_image_inVar(post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight_sexp, offset, post_mask));
+    return rcpp_result_gen;
+END_RCPP
+}
+// stack_image
+SEXP stack_image(NumericMatrix post_image, IntegerMatrix post_weight, NumericMatrix pre_image, SEXP pre_weight_sexp, IntegerVector offset, Nullable<LogicalMatrix> post_mask);
+RcppExport SEXP _Rwcs_stack_image(SEXP post_imageSEXP, SEXP post_weightSEXP, SEXP pre_imageSEXP, SEXP pre_weight_sexpSEXP, SEXP offsetSEXP, SEXP post_maskSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type post_image(post_imageSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type post_weight(post_weightSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type pre_image(pre_imageSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type pre_weight_sexp(pre_weight_sexpSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type offset(offsetSEXP);
+    Rcpp::traits::input_parameter< Nullable<LogicalMatrix> >::type post_mask(post_maskSEXP);
+    rcpp_result_gen = Rcpp::wrap(stack_image(post_image, post_weight, pre_image, pre_weight_sexp, offset, post_mask));
+    return rcpp_result_gen;
+END_RCPP
+}
+// stack_exp
+SEXP stack_exp(NumericMatrix post_exp, NumericMatrix pre_exp, IntegerVector offset);
+RcppExport SEXP _Rwcs_stack_exp(SEXP post_expSEXP, SEXP pre_expSEXP, SEXP offsetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type post_exp(post_expSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type pre_exp(pre_expSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type offset(offsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(stack_exp(post_exp, pre_exp, offset));
+    return rcpp_result_gen;
+END_RCPP
+}
+// stack_exp_mask
+SEXP stack_exp_mask(NumericMatrix post_exp, NumericMatrix pre_exp, IntegerVector offset, LogicalMatrix post_mask);
+RcppExport SEXP _Rwcs_stack_exp_mask(SEXP post_expSEXP, SEXP pre_expSEXP, SEXP offsetSEXP, SEXP post_maskSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type post_exp(post_expSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type pre_exp(pre_expSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type offset(offsetSEXP);
+    Rcpp::traits::input_parameter< LogicalMatrix >::type post_mask(post_maskSEXP);
+    rcpp_result_gen = Rcpp::wrap(stack_exp_mask(post_exp, pre_exp, offset, post_mask));
+    return rcpp_result_gen;
+END_RCPP
+}
 // mat_diff_sum
 double mat_diff_sum(Rcpp::NumericMatrix mat1, Rcpp::NumericMatrix mat2, double scale, int delta_x, int delta_y);
 RcppExport SEXP _Rwcs_mat_diff_sum(SEXP mat1SEXP, SEXP mat2SEXP, SEXP scaleSEXP, SEXP delta_xSEXP, SEXP delta_ySEXP) {
@@ -155,6 +273,14 @@ static const R_CallMethodDef CallEntries[] = {
     {"_Rwcs_Cwcs_head_p2s", (DL_FUNC) &_Rwcs_Cwcs_head_p2s, 6},
     {"_Rwcs_Cwcs_head_s2p", (DL_FUNC) &_Rwcs_Cwcs_head_s2p, 6},
     {"_Rwcs_dilate_cpp", (DL_FUNC) &_Rwcs_dilate_cpp, 3},
+    {"_Rwcs_num_mat_add", (DL_FUNC) &_Rwcs_num_mat_add, 4},
+    {"_Rwcs_num_mat_add_mult", (DL_FUNC) &_Rwcs_num_mat_add_mult, 5},
+    {"_Rwcs_int_mat_add", (DL_FUNC) &_Rwcs_int_mat_add, 4},
+    {"_Rwcs_int_mat_add_sin", (DL_FUNC) &_Rwcs_int_mat_add_sin, 4},
+    {"_Rwcs_stack_image_inVar", (DL_FUNC) &_Rwcs_stack_image_inVar, 8},
+    {"_Rwcs_stack_image", (DL_FUNC) &_Rwcs_stack_image, 6},
+    {"_Rwcs_stack_exp", (DL_FUNC) &_Rwcs_stack_exp, 3},
+    {"_Rwcs_stack_exp_mask", (DL_FUNC) &_Rwcs_stack_exp_mask, 4},
     {"_Rwcs_mat_diff_sum", (DL_FUNC) &_Rwcs_mat_diff_sum, 5},
     {"_Rwcs_pnpoly", (DL_FUNC) &_Rwcs_pnpoly, 4},
     {NULL, NULL, 0}

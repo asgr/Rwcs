@@ -1,0 +1,274 @@
+---
+title: "ProMo: Let's do the Space Warp Again!"
+author: "Aaron Robotham"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ProMo: Let's do the Space Warp Again!}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+First we load the packages we will need for this vignette:
+
+```{r}
+library(Rwcs)
+library(Rfits)
+library(foreach)
+library(magicaxis)
+```
+
+The **Rwcs** package comes with key utilities for warping between different WCS systems: **Rwcs_warp** (for warping individual frames once) and **Rwcs_stack** for creating large stacks of many warped frames (which is of class *ProMo*, which roughly means Professional-Mosaic, or maybe Professional-Moustache). 
+
+## A Stacking Case Study
+
+First we are going to load 8 frames of data that is included with the **Rwcs** package:
+
+```{r}
+image_list = foreach(i=1:8)%do%{
+  Rfits_point(system.file(paste0('extdata/stack/image_',i,'.fits'), package="Rwcs"),
+              ext=2, header=TRUE)
+}
+```
+
+In general the above is how you will probably load data for stacking. You can also fully load the images if the resultant list is small enough (easily fits within memory). That will be a bit faster in cases where it is possible.
+
+Let's check the loaded image pointers. They are overlapping regions of sky:
+
+```{r, fig.width=8, fig.height=8, dpi=40}
+for(i in 1:8){
+  plot(image_list[[i]])
+}
+```
+
+Now we will create a target WCS for stacking (if not provided then the WCS of the first image is used instead):
+
+```{r}
+keyvalues_out = Rwcs_setkeyvalues(
+    CRVAL1 = 36.8962, #Roughly the middle of the images
+    CRVAL2 = -5.1906, #Roughly the middle of the images
+    pixscale = 0.3, #this is a bit finer than the input pixel scale of 0.337
+    NAXIS1 = 2200,
+    NAXIS2 = 2200
+)
+```
+
+Now we make a simple stack:
+
+```{r}
+stack = Rwcs_stack(image_list = image_list,
+                   inVar_list = 0.000468, #assume all have the same inVar
+                   exp_list = 10, #all have the same exposure time of 10s
+                   cores = 8,
+                   keyvalues_out = keyvalues_out,
+                   magzero_in = 30,
+                   magzero_out = 23.9 #micro-jansky output
+                   )
+```
+
+```{r, fig.width=8, fig.height=8, dpi=40}
+plot(stack$image, qdiff=TRUE)
+plot(stack$weight, magmap=FALSE)
+```
+
+We can see how deep most of the image is:
+
+```{r}
+table(as.integer(stack$weight$imDat)) / prod(dim(stack$weight))
+```
+
+So about 83% of the image has 8 frames contributing.
+
+We can visually see the change in depth:
+
+```{r, fig.width=8, fig.height=8, dpi=40}
+Rwcs_warp(image_list[[1]][,], keyvalues_out = keyvalues_out, plot=TRUE, qdiff=TRUE)
+```
+
+We can also check the statistic of the stack:
+
+```{r}
+maghist(stack$image$imDat[stack$weight$imDat==8], xlim=5)
+```
+
+This implies the sky RMS in the deepest region is about 0.039 ADU (which happens to be in micro-jansky). We can compare this to the predicted:
+
+```{r}
+1/sqrt(median(stack$inVar$imDat[stack$weight$imDat==8]))
+```
+
+This is a bit larger at about 0.046 ADU. The main source of the difference is pixel covariance, which has the effect of artificially reducing the apparent RMS.
+
+## A Coarser Case
+
+Now we are going to look at using a coarser pixel scale on the target WCS:
+
+```{r}
+keyvalues_out_2 = Rwcs_setkeyvalues(
+    CRVAL1 = 36.8962, #Roughly the middle of the images
+    CRVAL2 = -5.1906, #Roughly the middle of the images
+    pixscale = 1, #this is coarser than the input pixel scale of 0.337
+    NAXIS1 = 800,
+    NAXIS2 = 800
+)
+```
+
+First we will do a forward projection, where all source pixels are caste onto the target WCS (which is like drizzling):
+
+```{r}
+stack_2_forward = Rwcs_stack(image_list = image_list,
+                   inVar_list = 0.000468, #assume all have the same inVar
+                   exp_list = 10, #all have the same exposure time of 10s
+                   cores = 8,
+                   keyvalues_out = keyvalues_out_2,
+                   magzero_in = 30,
+                   magzero_out = 23.9, #micro-jansky output
+                   direction = 'forward'
+                   )
+```
+
+Then we can try back projection, where we use the final WCS to look up input fluxes (more like Swarp):
+
+```{r}
+stack_2_backward = Rwcs_stack(image_list = image_list,
+                   inVar_list = 0.000468, #assume all have the same inVar
+                   exp_list = 10, #all have the same exposure time of 10s
+                   cores = 8,
+                   keyvalues_out = keyvalues_out_2,
+                   magzero_in = 30,
+                   magzero_out = 23.9, #micro-jansky output
+                   direction = 'backward'
+                   )
+```
+
+And now let's look at them:
+
+```{r, fig.width=8, fig.height=8, dpi=40}
+plot(stack_2_forward$image, qdiff=TRUE)
+plot(stack_2_backward$image, qdiff=TRUE)
+```
+
+Is there a different in apparent depth?
+
+```{r}
+maghist(stack_2_forward$image$imDat, xlim=5)
+maghist(stack_2_backward$image$imDat, xlim=5)
+```
+
+Indeed- the forward propagated data is deeper, which makes sense because more pixels are caste into each target pixel. The backwards stack is still deeper than a single frame since we have still stacked 8 images! The forward propagated data is however much more covariant:
+
+```{r}
+cor(as.numeric(stack_2_forward$image$imDat[1:799,1:799]),
+    as.numeric(stack_2_forward$image$imDat[2:800,2:800]), use='complete.obs')
+cor(as.numeric(stack_2_backward$image$imDat[1:799,1:799]),
+    as.numeric(stack_2_backward$image$imDat[2:800,2:800]), use='complete.obs')
+```
+
+The default is to project from the higher resolution grid, so in this case without specifiying **Rwcs_stack** would carry out forward propagation. Which makes more sense is really a choice for the user.
+
+## A Quick Clip
+
+Commonly when we have multiple input frames we want to detect outlier hot/cold pixels and clip them out from the stacked image. In **Rwcs_Stack** this is achieved with the *diclip* option. To speed up the re-stacking of frames we can set *dump_frames* to TRUE (meaning warped frames are saved to a temporary directory and loaded back in as needed, saving re-projection time when ignoring clipped pixels). To see information regarding clipping we can also set *keep_extreme_pix* to TRUE.
+
+```{r}
+stack_clip = Rwcs_stack(image_list = image_list,
+                   inVar_list = 0.000468, #assume all have the same inVar
+                   exp_list = 10, #all have the same exposure time of 10s
+                   cores = 8,
+                   keyvalues_out = keyvalues_out,
+                   magzero_in = 30,
+                   magzero_out = 23.9, #micro-jansky output
+                   keep_extreme_pix = TRUE,
+                   keepcrop = FALSE,
+                   doclip = TRUE,
+                   dump_frames = TRUE,
+                   return_all = TRUE
+                   )
+```
+
+The resulting stacking looks very similar, but we can see small differences:
+
+```{r, fig.width=8, fig.height=8, dpi=40}
+plot(stack$image - stack_clip$image)
+```
+
+We can check the actual clipped pixels directly:
+
+```{r, fig.width=8, fig.height=8, dpi=40}
+plot(stack_clip$clip)
+```
+
+And we can zoom in to see the difference in more detail:
+
+```{r, fig.width=8, fig.height=8, dpi=40}
+plot(stack$image[1000,500,box=500])
+plot(stack_clip$image[1000,500,box=500])
+```
+
+In this case the clipped sources look a bit odd. We saved the input warped frames so we can check out all 8:
+
+```{r, fig.width=8, fig.height=8, dpi=40}
+for(i in 1:8){
+  plot(stack_clip$image_pre_stack[[i]][1000,500,box=500])
+}
+```
+
+Frames 1 and 4 seem to have unusual sources (perhaps cosmic rays) that are not present in the other frames. It is notable that our stack has not been aggressive enough in removing these bad regions, so we can tweak the *clip_tol*:
+
+```{r}
+stack_clip2 = Rwcs_stack(image_list = image_list,
+                   inVar_list = 0.000468, #assume all have the same inVar
+                   exp_list = 10, #all have the same exposure time of 10s
+                   cores = 8,
+                   keyvalues_out = keyvalues_out,
+                   magzero_in = 30,
+                   magzero_out = 23.9, #micro-jansky output
+                   keep_extreme_pix = TRUE,
+                   keepcrop = FALSE,
+                   doclip = TRUE,
+                   clip_tol = 10,
+                   dump_frames = TRUE,
+                   return_all = TRUE
+                   )
+```
+```{r, fig.width=8, fig.height=8, dpi=40}
+plot(stack_clip2$clip[1000,500,box=500])
+plot(stack_clip2$image[1000,500,box=500])
+```
+
+That looks much better! The *clip_tol* is effectively the sigma clipping to apply, so setting it to a lower number like 5-10 is often sensible (the default is a deliberately very high 100).
+
+Another route is to use the more conservative *clip_tol* but specify that we dilate around the clipped pixels (to capture bleeding around cosmic rays etc):
+
+```{r}
+stack_clip3 = Rwcs_stack(image_list = image_list,
+                   inVar_list = 0.000468, #assume all have the same inVar
+                   exp_list = 10, #all have the same exposure time of 10s
+                   cores = 8,
+                   keyvalues_out = keyvalues_out,
+                   magzero_in = 30,
+                   magzero_out = 23.9, #micro-jansky output
+                   keep_extreme_pix = TRUE,
+                   keepcrop = FALSE,
+                   doclip = TRUE,
+                   clip_tol = 50,
+                   clip_dilate = 5,
+                   return_all = TRUE #This will save the warped outputs
+                   )
+```
+
+```{r, fig.width=8, fig.height=8, dpi=40}
+plot(stack_clip3$clip[1000,500,box=500])
+plot(stack_clip3$image[1000,500,box=500])
+```
+
+The best route to clipping is very much data dependent, so some experimentation from the user might be required. In general you will want to set \option{clip_tol} in the range 5-100 though.
+
+Note if you are doing clipping on a lot of frames then it will not be feasible to run with *return_all* = TRUE since this will keep all the warped projections in memory. The better option in that case is to run with *dump_frames* = TRUE, which will save the warped frames to a temporary directory and load them as needed when applying the per-frame clipping.

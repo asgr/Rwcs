@@ -7,6 +7,7 @@ export(Rwcs_pixscale)
 export(Rwcs_in_image)
 export(Rwcs_overlap)
 export(Rwcs_setscreen)
+export(Rwcs_setkeyvalues)
 
 export(Cwcs_s2p)
 export(Cwcs_p2s)

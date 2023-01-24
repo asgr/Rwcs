@@ -21,6 +21,38 @@ Cwcs_head_s2p <- function(RA, Dec, header, nkey, WCSref = 0L, ctrl = 2L) {
     .Call(`_Rwcs_dilate_cpp`, segim, kern, expand)
 }
 
+.num_mat_add_cpp <- function(base, add, ind, offset) {
+    .Call(`_Rwcs_num_mat_add`, base, add, ind, offset)
+}
+
+.num_mat_add_mult_cpp <- function(base, add, mult, ind, offset) {
+    .Call(`_Rwcs_num_mat_add_mult`, base, add, mult, ind, offset)
+}
+
+.int_mat_add_cpp <- function(base, add, ind, offset) {
+    .Call(`_Rwcs_int_mat_add`, base, add, ind, offset)
+}
+
+.int_mat_add_sin_cpp <- function(base, add, ind, offset) {
+    .Call(`_Rwcs_int_mat_add_sin`, base, add, ind, offset)
+}
+
+.stack_image_inVar_cpp <- function(post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight_sexp, offset, post_mask = NULL) {
+    .Call(`_Rwcs_stack_image_inVar`, post_image, post_inVar, post_weight, pre_image, pre_inVar, pre_weight_sexp, offset, post_mask)
+}
+
+.stack_image_cpp <- function(post_image, post_weight, pre_image, pre_weight_sexp, offset, post_mask = NULL) {
+    .Call(`_Rwcs_stack_image`, post_image, post_weight, pre_image, pre_weight_sexp, offset, post_mask)
+}
+
+.stack_exp_cpp <- function(post_exp, pre_exp, offset) {
+    .Call(`_Rwcs_stack_exp`, post_exp, pre_exp, offset)
+}
+
+.stack_exp_mask_cpp <- function(post_exp, pre_exp, offset, post_mask) {
+    .Call(`_Rwcs_stack_exp_mask`, post_exp, pre_exp, offset, post_mask)
+}
+
 .mat_diff_sum <- function(mat1, mat2, scale = 1, delta_x = 0L, delta_y = 0L) {
     .Call(`_Rwcs_mat_diff_sum`, mat1, mat2, scale, delta_x, delta_y)
 }

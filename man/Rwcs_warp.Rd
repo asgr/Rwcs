@@ -15,9 +15,10 @@ Remaps an input projection system to a different target WCS.
 \usage{
 Rwcs_warp(image_in, keyvalues_out = NULL, keyvalues_in = NULL, dim_out = NULL,
   pixscale_out = NULL, pixscale_in = NULL, direction = "auto", boundary = "dirichlet",
-  interpolation = "cubic", doscale = TRUE, plot = FALSE, header_out = NULL,
-  header_in = NULL, dotightcrop = TRUE, keepcrop = FALSE, WCSref_out = NULL,
-  WCSref_in = NULL, magzero_out = NULL, magzero_in = NULL, ...)
+  interpolation = "cubic", doscale = TRUE, dofinenorm = TRUE, plot = FALSE,
+  header_out = NULL, header_in = NULL, dotightcrop = TRUE, keepcrop = FALSE,
+  WCSref_out = NULL, WCSref_in = NULL, magzero_out = NULL, magzero_in = NULL,
+  blank = NA, warpfield = NULL, warpfield_return = FALSE, ...)
 
 Rwcs_warp_promo(promo_in, keyvalues_out = NULL, dim_out = NULL, magzero_out = NULL, ...)
 
@@ -62,7 +63,10 @@ boundary conditions: "dirichlet", "neumann", "periodic" (default "dirichlet"), s
 Character/integer scalar; For \code{Rwcs_warp}: "nearest", "linear", "cubic" (default "linear"), see \code{imwarp}. For \code{imresize}: Linear is 3, Cubic is 5, Lanczos (higher quality), default) is 6.
 }
   \item{doscale}{
-Logical; if TRUE (default) then the image is scaled by the relative change the change in flux per pixel found in a reference normalisation image. This is usually what you want when converting images between different WCS (since we really want to make sure we conserve overall flux). If FALSE then nothing is done to rescale the image. This is useful when the input \option{image_in} is something like a segmentation map, where the actual values matter.
+Logical; if TRUE (default) then the image is scaled by the change in pixel scale, i.e. it properly conserves angular flux density. This is usually what you minimally want when warping a flux image between different WCS. If FALSE then nothing is done to rescale the image. This is useful when the input \option{image_in} is something like a segmentation or exposure map, where the actual values matter.
+}
+  \item{dofinenorm}{
+Logical; if TRUE (default) then the image is scaled by the relative change the change in flux per pixel found in a reference normalisation image. This is usually what you want when converting images between different WCS (since we really want to make sure we conserve overall flux). It mostly adjusts fluxes around the image edge (where interpolation artefacts may cause flux loss) and changes things often by on milli-mag. If that level of accuracy is not required then turning this to FALSE will speed things up considerably (by almost a factor of 2 for big images).
 }
   \item{plot}{
 Logical; should a \code{\link{Rwcs_image}} plot of the output be generated? 
@@ -106,6 +110,15 @@ Logical; should vacant pixels be padded with NA (TRUE) or left as 0 (FALSE).
   \item{shift_int}{
 Logical; should the shift applied be purely integer (TRUE) or fractional pixel (FALSE). Integer shifts are much faster to compute, and are better at conserving flux and not introducing pixel covariance, so think carefully before setting to FALSE.
 }
+  \item{blank}{
+Scalar; the value to initially fill the output blank matrix with. In effect, this means that regions that receive to warped data (empty/blank regions) will all inherit this value. Sensibly you might want this to be NA (the default, implying missing), or for stacking purposes 0.
+}
+  \item{warpfield}{
+Cimg imager_array; a warp field to be used. You almost very certainly never want to actually make this yourself, but rather pass in a previously saved \option{warpfield} output for speeding up future warping operations.  
+}
+  \item{warpfield_return}{
+Logical; should a \option{warpfield} be appended to the output list? This can be used later with the \option{warpfield} argument to speed up identical WCS warping operations.
+}
   \item{\dots}{
 For \code{Rwcs_warp} dots are passed to \code{\link{Rwcs_image}} (only relevant if \option{plot}=TRUE). For \code{Rwcs_warp_promo} dots are passed to \code{Rwcs_warp}.
 }  
@@ -142,6 +155,8 @@ For \code{Rwcs_warp} if \option{dotightcrop} and \option{keepcrop} are both TRUE
 \code{Rwcs_tran} simply returns the shifted numeric matrix.
 
 \code{Rwcs_warp_promo}
+
+If \option{warpfield_return} is TRUE then \code{Rwcs_warp} will also have a \option{warpfield} list output. The idea is this can be passed back into the \option{warpfield} argument of a future \code{Rwcs_warp} operation to speed up computation.
 
 The output is an object of class 'ProMo' (warped as appropriate) containing:
 
