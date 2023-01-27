@@ -11,6 +11,11 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
       }
     }
   }
+  
+  # if(is.null(keyvalues) & is.null(header)){
+  #   stop('Need one of keyvalues or header!')  
+  # }
+  
   assertChoice(pixcen, c('R','FITS'))
   assertNumeric(loc.diff, len=2)
   assertChoice(coord.type, c('deg','sex'))
@@ -103,14 +108,28 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
       CD2_2 = keyvalues$CD2_2,
       RADESYS = keyvalues$RADESYS,
       EQUINOX = keyvalues$EQUINOX,
+      PV1_0 = keyvalues$PV1_0,
       PV1_1 = keyvalues$PV1_1,
       PV1_2 = keyvalues$PV1_2,
       PV1_3 = keyvalues$PV1_3,
+      PV1_4 = keyvalues$PV1_4,
+      # PV1_5 = keyvalues$PV1_5,
+      # PV1_6 = keyvalues$PV1_6,
+      # PV1_7 = keyvalues$PV1_7,
+      # PV1_8 = keyvalues$PV1_8,
+      # PV1_9 = keyvalues$PV1_9,
+      # PV1_10 = keyvalues$PV1_10,
+      PV2_0 = keyvalues$PV2_0,
       PV2_1 = keyvalues$PV2_1,
       PV2_2 = keyvalues$PV2_2,
       PV2_3 = keyvalues$PV2_3,
       PV2_4 = keyvalues$PV2_4,
       PV2_5 = keyvalues$PV2_5
+      # PV2_6 = keyvalues$PV2_6,
+      # PV2_7 = keyvalues$PV2_7,
+      # PV2_8 = keyvalues$PV2_8,
+      # PV2_9 = keyvalues$PV2_9,
+      # PV2_10 = keyvalues$PV2_10
     )
     
     if(is.null(dim(output))){
@@ -132,14 +151,28 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
           CD2_2 = keyvalues$CD2_2,
           RADESYS = keyvalues$RADESYS,
           EQUINOX = keyvalues$EQUINOX,
+          PV1_0 = keyvalues$PV1_0,
           PV1_1 = keyvalues$PV1_1,
           PV1_2 = keyvalues$PV1_2,
           PV1_3 = keyvalues$PV1_3,
+          PV1_4 = keyvalues$PV1_4,
+          # PV1_5 = keyvalues$PV1_5,
+          # PV1_6 = keyvalues$PV1_6,
+          # PV1_7 = keyvalues$PV1_7,
+          # PV1_8 = keyvalues$PV1_8,
+          # PV1_9 = keyvalues$PV1_9,
+          # PV1_10 = keyvalues$PV1_10,
+          PV2_0 = keyvalues$PV2_0,
           PV2_1 = keyvalues$PV2_1,
           PV2_2 = keyvalues$PV2_2,
           PV2_3 = keyvalues$PV2_3,
           PV2_4 = keyvalues$PV2_4,
           PV2_5 = keyvalues$PV2_5
+          # PV2_6 = keyvalues$PV2_6,
+          # PV2_7 = keyvalues$PV2_7,
+          # PV2_8 = keyvalues$PV2_8,
+          # PV2_9 = keyvalues$PV2_9,
+          # PV2_10 = keyvalues$PV2_10
         )
       }
     }
@@ -175,6 +208,11 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
       }
     }
   }
+  
+  # if(is.null(keyvalues) & is.null(header)){
+  #   stop('Need one of keyvalues or header!')  
+  # }
+  
   assertChoice(pixcen, c('R','FITS'))
   assertNumeric(loc.diff, len=2)
   assertChoice(coord.type, c('deg','sex'))
@@ -284,14 +322,28 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
       CD2_2 = keyvalues$CD2_2,
       RADESYS = keyvalues$RADESYS,
       EQUINOX = keyvalues$EQUINOX,
+      PV1_0 = keyvalues$PV1_0,
       PV1_1 = keyvalues$PV1_1,
       PV1_2 = keyvalues$PV1_2,
       PV1_3 = keyvalues$PV1_3,
+      PV1_4 = keyvalues$PV1_4,
+      # PV1_5 = keyvalues$PV1_5,
+      # PV1_6 = keyvalues$PV1_6,
+      # PV1_7 = keyvalues$PV1_7,
+      # PV1_8 = keyvalues$PV1_8,
+      # PV1_9 = keyvalues$PV1_9,
+      # PV1_10 = keyvalues$PV1_10,
+      PV2_0 = keyvalues$PV2_0,
       PV2_1 = keyvalues$PV2_1,
       PV2_2 = keyvalues$PV2_2,
       PV2_3 = keyvalues$PV2_3,
       PV2_4 = keyvalues$PV2_4,
       PV2_5 = keyvalues$PV2_5
+      # PV2_6 = keyvalues$PV2_6,
+      # PV2_7 = keyvalues$PV2_7,
+      # PV2_8 = keyvalues$PV2_8,
+      # PV2_9 = keyvalues$PV2_9,
+      # PV2_10 = keyvalues$PV2_10
     )
     
     if(is.null(dim(output))){
@@ -313,14 +365,28 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
           CD2_2 = keyvalues$CD2_2,
           RADESYS = keyvalues$RADESYS,
           EQUINOX = keyvalues$EQUINOX,
+          PV1_0 = keyvalues$PV1_0,
           PV1_1 = keyvalues$PV1_1,
           PV1_2 = keyvalues$PV1_2,
           PV1_3 = keyvalues$PV1_3,
+          PV1_4 = keyvalues$PV1_4,
+          # PV1_5 = keyvalues$PV1_5,
+          # PV1_6 = keyvalues$PV1_6,
+          # PV1_7 = keyvalues$PV1_7,
+          # PV1_8 = keyvalues$PV1_8,
+          # PV1_9 = keyvalues$PV1_9,
+          # PV1_10 = keyvalues$PV1_10,
+          PV2_0 = keyvalues$PV2_0,
           PV2_1 = keyvalues$PV2_1,
           PV2_2 = keyvalues$PV2_2,
           PV2_3 = keyvalues$PV2_3,
           PV2_4 = keyvalues$PV2_4,
           PV2_5 = keyvalues$PV2_5
+          # PV2_6 = keyvalues$PV2_6,
+          # PV2_7 = keyvalues$PV2_7,
+          # PV2_8 = keyvalues$PV2_8,
+          # PV2_9 = keyvalues$PV2_9,
+          # PV2_10 = keyvalues$PV2_10
         )
       }
     }
@@ -346,8 +412,10 @@ Rwcs_keypass=function(keyvalues=NULL,
                       RADESYS='ICRS',
                       EQUINOX='infer',
                       CUNIT1='deg', CUNIT2='deg',
-                      PV1_1=NA, PV1_2=NA, PV1_3=NA,
-                      PV2_1=NA, PV2_2=NA, PV2_3=NA, PV2_4=NA, PV2_5=NA,
+                      PV1_0=NULL, PV1_1=NULL, PV1_2=NULL, PV1_3=NULL, PV1_4=NULL,
+                      #PV1_5=NULL, PV1_6=NULL, PV1_7=NULL, PV1_8=NULL, PV1_9=NULL, PV1_10=NULL,
+                      PV2_0=NULL, PV2_1=NULL, PV2_2=NULL, PV2_3=NULL, PV2_4=NULL, PV2_5=NULL,
+                      #PV2_6=NULL, PV2_7=NULL, PV2_8=NULL, PV2_9=NULL, PV2_10=NULL,
                       ...){
   if(!is.null(keyvalues)){
     if(missing(CTYPE1)){if(!is.null(keyvalues$CTYPE1)){CTYPE1 = keyvalues$CTYPE1}else{message('CTYPE1 is not defined!')}}
@@ -438,16 +506,45 @@ Rwcs_keypass=function(keyvalues=NULL,
       CUNIT2 = 'deg'
       message('CUNIT1 is blank, setting to \'deg\'!')
     }
-    if(missing(PV1_1)){if(!is.null(keyvalues$PV1_1)){PV1_1 = keyvalues$PV1_1}}
-    if(missing(PV1_2)){if(!is.null(keyvalues$PV1_2)){PV1_2 = keyvalues$PV1_2}}
-    if(missing(PV1_3)){if(!is.null(keyvalues$PV1_3)){PV1_3 = keyvalues$PV1_3}}
-    if(missing(PV2_1)){if(!is.null(keyvalues$PV2_1)){PV2_1 = keyvalues$PV2_1}}
-    if(missing(PV2_2)){if(!is.null(keyvalues$PV2_2)){PV2_2 = keyvalues$PV2_2}}
-    if(missing(PV2_3)){if(!is.null(keyvalues$PV2_3)){PV2_3 = keyvalues$PV2_3}}
-    if(missing(PV2_4)){if(!is.null(keyvalues$PV2_4)){PV2_4 = keyvalues$PV2_4}}
-    if(missing(PV2_5)){if(!is.null(keyvalues$PV2_5)){PV2_5 = keyvalues$PV2_5}}
+    
+    if(is.null(PV1_0)){if(!is.null(keyvalues$PV1_0)){PV1_0 = keyvalues$PV1_0}else{PV1_0 = NA}}
+    if(is.null(PV1_1)){if(!is.null(keyvalues$PV1_1)){PV1_1 = keyvalues$PV1_1}else{PV1_1 = NA}}
+    if(is.null(PV1_2)){if(!is.null(keyvalues$PV1_2)){PV1_2 = keyvalues$PV1_2}else{PV1_2 = NA}}
+    if(is.null(PV1_3)){if(!is.null(keyvalues$PV1_3)){PV1_3 = keyvalues$PV1_3}else{PV1_3 = NA}}
+    if(is.null(PV1_4)){if(!is.null(keyvalues$PV1_4)){PV1_4 = keyvalues$PV1_4}else{PV1_4 = NA}}
+    # if(is.null(PV1_5)){if(!is.null(keyvalues$PV1_5)){PV1_5 = keyvalues$PV1_5}else{PV1_5 = NA}}
+    # if(is.null(PV1_6)){if(!is.null(keyvalues$PV1_6)){PV1_6 = keyvalues$PV1_6}else{PV1_6 = NA}}
+    # if(is.null(PV1_7)){if(!is.null(keyvalues$PV1_7)){PV1_7 = keyvalues$PV1_7}else{PV1_7 = NA}}
+    # if(is.null(PV1_8)){if(!is.null(keyvalues$PV1_8)){PV1_8 = keyvalues$PV1_8}else{PV1_8 = NA}}
+    # if(is.null(PV1_9)){if(!is.null(keyvalues$PV1_9)){PV1_9 = keyvalues$PV1_9}else{PV1_9 = NA}}
+    # if(is.null(PV1_10)){if(!is.null(keyvalues$PV1_10)){PV1_10 = keyvalues$PV1_10}else{PV1_10 = NA}}
+    
+    if(is.null(PV2_0)){if(!is.null(keyvalues$PV2_0)){PV2_0 = keyvalues$PV2_0}else{PV2_0 = NA}}
+    if(is.null(PV2_1)){if(!is.null(keyvalues$PV2_1)){PV2_1 = keyvalues$PV2_1}else{PV2_1 = NA}}
+    if(is.null(PV2_2)){if(!is.null(keyvalues$PV2_2)){PV2_2 = keyvalues$PV2_2}else{PV2_2 = NA}}
+    if(is.null(PV2_3)){if(!is.null(keyvalues$PV2_3)){PV2_3 = keyvalues$PV2_3}else{PV2_3 = NA}}
+    if(is.null(PV2_4)){if(!is.null(keyvalues$PV2_4)){PV2_4 = keyvalues$PV2_4}else{PV2_4 = NA}}
+    if(is.null(PV2_5)){if(!is.null(keyvalues$PV2_5)){PV2_5 = keyvalues$PV2_5}else{PV2_5 = NA}}
+    # if(is.null(PV2_6)){if(!is.null(keyvalues$PV2_6)){PV2_6 = keyvalues$PV2_6}else{PV2_6 = NA}}
+    # if(is.null(PV2_7)){if(!is.null(keyvalues$PV2_7)){PV2_7 = keyvalues$PV2_7}else{PV2_7 = NA}}
+    # if(is.null(PV2_8)){if(!is.null(keyvalues$PV2_8)){PV2_8 = keyvalues$PV2_8}else{PV2_8 = NA}}
+    # if(is.null(PV2_9)){if(!is.null(keyvalues$PV2_9)){PV2_9 = keyvalues$PV2_9}else{PV2_9 = NA}}
+    # if(is.null(PV2_10)){if(!is.null(keyvalues$PV2_10)){PV2_10 = keyvalues$PV2_10}else{PV2_10 = NA}}
   }else{
     keyvalues=list()
+    
+    if(is.null(PV1_0)){PV1_0 = NA}
+    if(is.null(PV1_1)){PV1_1 = NA}
+    if(is.null(PV1_2)){PV1_2 = NA}
+    if(is.null(PV1_3)){PV1_3 = NA}
+    if(is.null(PV1_4)){PV1_4 = NA}
+    
+    if(is.null(PV2_0)){PV2_0 = NA}
+    if(is.null(PV2_1)){PV2_1 = NA}
+    if(is.null(PV2_2)){PV2_2 = NA}
+    if(is.null(PV2_3)){PV2_3 = NA}
+    if(is.null(PV2_4)){PV2_4 = NA}
+    if(is.null(PV2_5)){PV2_5 = NA}
   }
   
   if(EQUINOX == 'infer'){
@@ -540,14 +637,28 @@ Rwcs_keypass=function(keyvalues=NULL,
   assertCharacter(RADESYS, len=1)
   assertChoice(RADESYS, choices = allowed_rade)
   assertChoice(EQUINOX, choices = c(1950, 2000))
-  assertNumeric(PV1_1, len=1)
-  assertNumeric(PV1_2, len=1)
-  assertNumeric(PV1_3, len=1)
-  assertNumeric(PV2_2, len=1)
-  assertNumeric(PV2_2, len=1)
-  assertNumeric(PV2_3, len=1)
-  assertNumeric(PV2_4, len=1)
-  assertNumeric(PV2_5, len=1)
+  assertNumeric(PV1_0, len=1, null.ok = FALSE)
+  assertNumeric(PV1_1, len=1, null.ok = FALSE)
+  assertNumeric(PV1_2, len=1, null.ok = FALSE)
+  assertNumeric(PV1_3, len=1, null.ok = FALSE)
+  assertNumeric(PV1_4, len=1, null.ok = FALSE)
+  # assertNumeric(PV1_5, len=1, null.ok = FALSE)
+  # assertNumeric(PV1_6, len=1, null.ok = FALSE)
+  # assertNumeric(PV1_7, len=1, null.ok = FALSE)
+  # assertNumeric(PV1_8, len=1, null.ok = FALSE)
+  # assertNumeric(PV1_9, len=1, null.ok = FALSE)
+  # assertNumeric(PV1_10, len=1, null.ok = FALSE)
+  assertNumeric(PV2_0, len=1, null.ok = FALSE)
+  assertNumeric(PV2_1, len=1, null.ok = FALSE)
+  assertNumeric(PV2_2, len=1, null.ok = FALSE)
+  assertNumeric(PV2_3, len=1, null.ok = FALSE)
+  assertNumeric(PV2_4, len=1, null.ok = FALSE)
+  assertNumeric(PV2_5, len=1, null.ok = FALSE)
+  # assertNumeric(PV2_6, len=1, null.ok = FALSE)
+  # assertNumeric(PV2_7, len=1, null.ok = FALSE)
+  # assertNumeric(PV2_8, len=1, null.ok = FALSE)
+  # assertNumeric(PV2_9, len=1, null.ok = FALSE)
+  # assertNumeric(PV2_10, len=1, null.ok = FALSE)
   
   keyvalues$CTYPE1 = CTYPE1
   keyvalues$CTYPE2 = CTYPE2
@@ -563,14 +674,28 @@ Rwcs_keypass=function(keyvalues=NULL,
   keyvalues$EQUINOX = EQUINOX
   keyvalues$CUNIT1 = CUNIT1
   keyvalues$CUNIT2 = CUNIT2
+  keyvalues$PV1_0 = PV1_0
   keyvalues$PV1_1 = PV1_1
   keyvalues$PV1_2 = PV1_2
   keyvalues$PV1_3 = PV1_3
+  keyvalues$PV1_4 = PV1_4
+  # keyvalues$PV1_5 = PV1_5
+  # keyvalues$PV1_6 = PV1_6
+  # keyvalues$PV1_7 = PV1_7
+  # keyvalues$PV1_8 = PV1_8
+  # keyvalues$PV1_9 = PV1_9
+  # keyvalues$PV1_10 = PV1_10
+  keyvalues$PV2_0 = PV2_0
   keyvalues$PV2_1 = PV2_1
   keyvalues$PV2_2 = PV2_2
   keyvalues$PV2_3 = PV2_3
   keyvalues$PV2_4 = PV2_4
   keyvalues$PV2_5 = PV2_5
+  # keyvalues$PV2_6 = PV2_6
+  # keyvalues$PV2_7 = PV2_7
+  # keyvalues$PV2_8 = PV2_8
+  # keyvalues$PV2_9 = PV2_9
+  # keyvalues$PV2_10 = PV2_10
   
   return(keyvalues)
 }

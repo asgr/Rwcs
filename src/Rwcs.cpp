@@ -89,9 +89,12 @@ static void _wcsset(struct wcsprm* wcs,
                     double CRVAL1, double CRVAL2, double CRPIX1, double CRPIX2,
                     double CD1_1, double CD1_2, double CD2_1, double CD2_2,
                     Rcpp::String RADESYS, int EQUINOX,
-                    double PV1_1, double PV1_2, double PV1_3,
-                    double PV2_1, double PV2_2, double PV2_3,
-                    double PV2_4, double PV2_5)
+                    double PV1_0, double PV1_1, double PV1_2, double PV1_3, double PV1_4,
+                    // double PV1_5, double PV1_6, double PV1_7, double PV1_8, double PV1_9, double PV1_10,
+                    double PV2_0, double PV2_1, double PV2_2, double PV2_3, double PV2_4, double PV2_5
+                    // double PV2_6, double PV2_7, double PV2_8, double PV2_9, double PV2_10
+                    )
+                    
 {
   //setup wcs
   wcs->flag = -1;
@@ -133,14 +136,28 @@ static void _wcsset(struct wcsprm* wcs,
   }
 
   wcs->npv = 0;
+  FILL_PV(PV1_0, 1, 0);
   FILL_PV(PV1_1, 1, 1);
   FILL_PV(PV1_2, 1, 2);
   FILL_PV(PV1_3, 1, 3);
+  FILL_PV(PV1_4, 1, 4);
+  // FILL_PV(PV1_5, 1, 5);
+  // FILL_PV(PV1_6, 1, 6);
+  // FILL_PV(PV1_7, 1, 7);
+  // FILL_PV(PV1_8, 1, 8);
+  // FILL_PV(PV1_9, 1, 9);
+  // FILL_PV(PV1_10, 1, 10);
+  FILL_PV(PV2_0, 2, 0);
   FILL_PV(PV2_1, 2, 1);
   FILL_PV(PV2_2, 2, 2);
   FILL_PV(PV2_3, 2, 3);
   FILL_PV(PV2_4, 2, 4);
   FILL_PV(PV2_5, 2, 5);
+  // FILL_PV(PV2_6, 2, 6);
+  // FILL_PV(PV2_7, 2, 7);
+  // FILL_PV(PV2_8, 2, 8);
+  // FILL_PV(PV2_9, 2, 9);
+  // FILL_PV(PV2_10, 2, 10);
 
   //set long and lat axis positions
   wcs->lng = 0;
@@ -157,14 +174,18 @@ SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec,
               double CD1_1 = 1, double CD1_2 = 0,
               double CD2_1 = 0, double CD2_2 = 1,
               Rcpp::String RADESYS = "ICRS", int EQUINOX = 2000,
-              double PV1_1 = NA_REAL, double PV1_2 = NA_REAL, double PV1_3 = NA_REAL,
-              double PV2_1 = NA_REAL, double PV2_2 = NA_REAL, double PV2_3 = NA_REAL,
-              double PV2_4 = NA_REAL, double PV2_5 = NA_REAL)
+              double PV1_0 = NA_REAL, double PV1_1 = NA_REAL, double PV1_2 = NA_REAL, double PV1_3 = NA_REAL, double PV1_4 = NA_REAL,
+              double PV2_0 = NA_REAL, double PV2_1 = NA_REAL, double PV2_2 = NA_REAL, double PV2_3 = NA_REAL, double PV2_4 = NA_REAL, double PV2_5 = NA_REAL
+              )
 {
   enable_wcsperr();
   struct wcsprm wcs;
   _wcsset(&wcs, CTYPE1, CTYPE2, CRVAL1, CRVAL2, CRPIX1, CRPIX2, CD1_1, CD1_2, CD2_1, CD2_2, RADESYS, EQUINOX,
-    PV1_1, PV1_2, PV1_3, PV2_1, PV2_2, PV2_3, PV2_4, PV2_5);
+    PV1_0, PV1_1, PV1_2, PV1_3, PV1_4,
+    // PV1_5, PV1_6, PV1_7, PV1_8, PV1_9, PV1_10,
+    PV2_0, PV2_1, PV2_2, PV2_3, PV2_4, PV2_5
+    // PV2_6, PV2_7, PV2_8, PV2_9, PV2_10
+    );
   auto result = _wcss2p(&wcs, RA, Dec);
   wcsfree(&wcs);
   return result;
@@ -178,14 +199,18 @@ SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y,
               double CD1_1 = 1, double CD1_2 = 0,
               double CD2_1 = 0, double CD2_2 = 1,
               Rcpp::String RADESYS = "ICRS", int EQUINOX = 2000,
-              double PV1_1 = NA_REAL, double PV1_2 = NA_REAL, double PV1_3 = NA_REAL,
-              double PV2_1 = NA_REAL, double PV2_2 = NA_REAL, double PV2_3 = NA_REAL,
-              double PV2_4 = NA_REAL, double PV2_5 = NA_REAL)
+              double PV1_0 = NA_REAL, double PV1_1 = NA_REAL, double PV1_2 = NA_REAL, double PV1_3 = NA_REAL, double PV1_4 = NA_REAL,
+              double PV2_0 = NA_REAL, double PV2_1 = NA_REAL, double PV2_2 = NA_REAL, double PV2_3 = NA_REAL, double PV2_4 = NA_REAL, double PV2_5 = NA_REAL
+              )
 {
   enable_wcsperr();
   struct wcsprm wcs;
   _wcsset(&wcs, CTYPE1, CTYPE2, CRVAL1, CRVAL2, CRPIX1, CRPIX2, CD1_1, CD1_2, CD2_1, CD2_2, RADESYS, EQUINOX,
-    PV1_1, PV1_2, PV1_3, PV2_1, PV2_2, PV2_3, PV2_4, PV2_5);
+    PV1_0, PV1_1, PV1_2, PV1_3, PV1_4, 
+    //PV1_5, PV1_6, PV1_7, PV1_8, PV1_9, PV1_10,
+    PV2_0, PV2_1, PV2_2, PV2_3, PV2_4, PV2_5
+    //PV2_6, PV2_7, PV2_8, PV2_9, PV2_10
+    );
   auto result = _wcsp2s(&wcs, x, y);
   wcsfree(&wcs);
   return result;

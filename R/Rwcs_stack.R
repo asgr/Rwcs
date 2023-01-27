@@ -98,7 +98,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     weight_list = rep(1L, Nim) 
   }
   
-  weight_image = sapply(weight_list, is.matrix)
+  weight_image = sapply(weight_list, is.matrix) | sapply(weight_list, inherits, c('Rfits_image', 'Rfits_pointer'))
   
   post_stack_weight = matrix(0L, dim_im[1], dim_im[2])
   
@@ -933,7 +933,9 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                   exp_pre_stack = pre_stack_exp_list,
                   weight_pre_stack = pre_stack_weight_list,
                   which_overlap = which_overlap,
-                  time = time_taken)
+                  time = time_taken,
+                  Nim = Nim,
+                  dump_dir = dump_dir)
   }else{
     output = list(image = image_out,
                   weight = weight_out,
@@ -943,7 +945,9 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
                   hot = hot_out,
                   clip = mask_clip,
                   which_overlap = which_overlap,
-                  time = time_taken)
+                  time = time_taken,
+                  Nim = Nim,
+                  dump_dir = dump_dir)
   }
   class(output) = "ProMo"
   return(invisible(output))

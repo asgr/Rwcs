@@ -11,8 +11,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // Cwcs_s2p
-SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec, Rcpp::String CTYPE1, Rcpp::String CTYPE2, double CRVAL1, double CRVAL2, double CRPIX1, double CRPIX2, double CD1_1, double CD1_2, double CD2_1, double CD2_2, Rcpp::String RADESYS, int EQUINOX, double PV1_1, double PV1_2, double PV1_3, double PV2_1, double PV2_2, double PV2_3, double PV2_4, double PV2_5);
-RcppExport SEXP _Rwcs_Cwcs_s2p(SEXP RASEXP, SEXP DecSEXP, SEXP CTYPE1SEXP, SEXP CTYPE2SEXP, SEXP CRVAL1SEXP, SEXP CRVAL2SEXP, SEXP CRPIX1SEXP, SEXP CRPIX2SEXP, SEXP CD1_1SEXP, SEXP CD1_2SEXP, SEXP CD2_1SEXP, SEXP CD2_2SEXP, SEXP RADESYSSEXP, SEXP EQUINOXSEXP, SEXP PV1_1SEXP, SEXP PV1_2SEXP, SEXP PV1_3SEXP, SEXP PV2_1SEXP, SEXP PV2_2SEXP, SEXP PV2_3SEXP, SEXP PV2_4SEXP, SEXP PV2_5SEXP) {
+SEXP Cwcs_s2p(Rcpp::NumericVector RA, Rcpp::NumericVector Dec, Rcpp::String CTYPE1, Rcpp::String CTYPE2, double CRVAL1, double CRVAL2, double CRPIX1, double CRPIX2, double CD1_1, double CD1_2, double CD2_1, double CD2_2, Rcpp::String RADESYS, int EQUINOX, double PV1_0, double PV1_1, double PV1_2, double PV1_3, double PV1_4, double PV2_0, double PV2_1, double PV2_2, double PV2_3, double PV2_4, double PV2_5);
+RcppExport SEXP _Rwcs_Cwcs_s2p(SEXP RASEXP, SEXP DecSEXP, SEXP CTYPE1SEXP, SEXP CTYPE2SEXP, SEXP CRVAL1SEXP, SEXP CRVAL2SEXP, SEXP CRPIX1SEXP, SEXP CRPIX2SEXP, SEXP CD1_1SEXP, SEXP CD1_2SEXP, SEXP CD2_1SEXP, SEXP CD2_2SEXP, SEXP RADESYSSEXP, SEXP EQUINOXSEXP, SEXP PV1_0SEXP, SEXP PV1_1SEXP, SEXP PV1_2SEXP, SEXP PV1_3SEXP, SEXP PV1_4SEXP, SEXP PV2_0SEXP, SEXP PV2_1SEXP, SEXP PV2_2SEXP, SEXP PV2_3SEXP, SEXP PV2_4SEXP, SEXP PV2_5SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -30,21 +30,24 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type CD2_2(CD2_2SEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type RADESYS(RADESYSSEXP);
     Rcpp::traits::input_parameter< int >::type EQUINOX(EQUINOXSEXP);
+    Rcpp::traits::input_parameter< double >::type PV1_0(PV1_0SEXP);
     Rcpp::traits::input_parameter< double >::type PV1_1(PV1_1SEXP);
     Rcpp::traits::input_parameter< double >::type PV1_2(PV1_2SEXP);
     Rcpp::traits::input_parameter< double >::type PV1_3(PV1_3SEXP);
+    Rcpp::traits::input_parameter< double >::type PV1_4(PV1_4SEXP);
+    Rcpp::traits::input_parameter< double >::type PV2_0(PV2_0SEXP);
     Rcpp::traits::input_parameter< double >::type PV2_1(PV2_1SEXP);
     Rcpp::traits::input_parameter< double >::type PV2_2(PV2_2SEXP);
     Rcpp::traits::input_parameter< double >::type PV2_3(PV2_3SEXP);
     Rcpp::traits::input_parameter< double >::type PV2_4(PV2_4SEXP);
     Rcpp::traits::input_parameter< double >::type PV2_5(PV2_5SEXP);
-    rcpp_result_gen = Rcpp::wrap(Cwcs_s2p(RA, Dec, CTYPE1, CTYPE2, CRVAL1, CRVAL2, CRPIX1, CRPIX2, CD1_1, CD1_2, CD2_1, CD2_2, RADESYS, EQUINOX, PV1_1, PV1_2, PV1_3, PV2_1, PV2_2, PV2_3, PV2_4, PV2_5));
+    rcpp_result_gen = Rcpp::wrap(Cwcs_s2p(RA, Dec, CTYPE1, CTYPE2, CRVAL1, CRVAL2, CRPIX1, CRPIX2, CD1_1, CD1_2, CD2_1, CD2_2, RADESYS, EQUINOX, PV1_0, PV1_1, PV1_2, PV1_3, PV1_4, PV2_0, PV2_1, PV2_2, PV2_3, PV2_4, PV2_5));
     return rcpp_result_gen;
 END_RCPP
 }
 // Cwcs_p2s
-SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String CTYPE1, Rcpp::String CTYPE2, double CRVAL1, double CRVAL2, double CRPIX1, double CRPIX2, double CD1_1, double CD1_2, double CD2_1, double CD2_2, Rcpp::String RADESYS, int EQUINOX, double PV1_1, double PV1_2, double PV1_3, double PV2_1, double PV2_2, double PV2_3, double PV2_4, double PV2_5);
-RcppExport SEXP _Rwcs_Cwcs_p2s(SEXP xSEXP, SEXP ySEXP, SEXP CTYPE1SEXP, SEXP CTYPE2SEXP, SEXP CRVAL1SEXP, SEXP CRVAL2SEXP, SEXP CRPIX1SEXP, SEXP CRPIX2SEXP, SEXP CD1_1SEXP, SEXP CD1_2SEXP, SEXP CD2_1SEXP, SEXP CD2_2SEXP, SEXP RADESYSSEXP, SEXP EQUINOXSEXP, SEXP PV1_1SEXP, SEXP PV1_2SEXP, SEXP PV1_3SEXP, SEXP PV2_1SEXP, SEXP PV2_2SEXP, SEXP PV2_3SEXP, SEXP PV2_4SEXP, SEXP PV2_5SEXP) {
+SEXP Cwcs_p2s(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::String CTYPE1, Rcpp::String CTYPE2, double CRVAL1, double CRVAL2, double CRPIX1, double CRPIX2, double CD1_1, double CD1_2, double CD2_1, double CD2_2, Rcpp::String RADESYS, int EQUINOX, double PV1_0, double PV1_1, double PV1_2, double PV1_3, double PV1_4, double PV2_0, double PV2_1, double PV2_2, double PV2_3, double PV2_4, double PV2_5);
+RcppExport SEXP _Rwcs_Cwcs_p2s(SEXP xSEXP, SEXP ySEXP, SEXP CTYPE1SEXP, SEXP CTYPE2SEXP, SEXP CRVAL1SEXP, SEXP CRVAL2SEXP, SEXP CRPIX1SEXP, SEXP CRPIX2SEXP, SEXP CD1_1SEXP, SEXP CD1_2SEXP, SEXP CD2_1SEXP, SEXP CD2_2SEXP, SEXP RADESYSSEXP, SEXP EQUINOXSEXP, SEXP PV1_0SEXP, SEXP PV1_1SEXP, SEXP PV1_2SEXP, SEXP PV1_3SEXP, SEXP PV1_4SEXP, SEXP PV2_0SEXP, SEXP PV2_1SEXP, SEXP PV2_2SEXP, SEXP PV2_3SEXP, SEXP PV2_4SEXP, SEXP PV2_5SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -62,15 +65,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type CD2_2(CD2_2SEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type RADESYS(RADESYSSEXP);
     Rcpp::traits::input_parameter< int >::type EQUINOX(EQUINOXSEXP);
+    Rcpp::traits::input_parameter< double >::type PV1_0(PV1_0SEXP);
     Rcpp::traits::input_parameter< double >::type PV1_1(PV1_1SEXP);
     Rcpp::traits::input_parameter< double >::type PV1_2(PV1_2SEXP);
     Rcpp::traits::input_parameter< double >::type PV1_3(PV1_3SEXP);
+    Rcpp::traits::input_parameter< double >::type PV1_4(PV1_4SEXP);
+    Rcpp::traits::input_parameter< double >::type PV2_0(PV2_0SEXP);
     Rcpp::traits::input_parameter< double >::type PV2_1(PV2_1SEXP);
     Rcpp::traits::input_parameter< double >::type PV2_2(PV2_2SEXP);
     Rcpp::traits::input_parameter< double >::type PV2_3(PV2_3SEXP);
     Rcpp::traits::input_parameter< double >::type PV2_4(PV2_4SEXP);
     Rcpp::traits::input_parameter< double >::type PV2_5(PV2_5SEXP);
-    rcpp_result_gen = Rcpp::wrap(Cwcs_p2s(x, y, CTYPE1, CTYPE2, CRVAL1, CRVAL2, CRPIX1, CRPIX2, CD1_1, CD1_2, CD2_1, CD2_2, RADESYS, EQUINOX, PV1_1, PV1_2, PV1_3, PV2_1, PV2_2, PV2_3, PV2_4, PV2_5));
+    rcpp_result_gen = Rcpp::wrap(Cwcs_p2s(x, y, CTYPE1, CTYPE2, CRVAL1, CRVAL2, CRPIX1, CRPIX2, CD1_1, CD1_2, CD2_1, CD2_2, RADESYS, EQUINOX, PV1_0, PV1_1, PV1_2, PV1_3, PV1_4, PV2_0, PV2_1, PV2_2, PV2_3, PV2_4, PV2_5));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -268,8 +274,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_Rwcs_Cwcs_s2p", (DL_FUNC) &_Rwcs_Cwcs_s2p, 22},
-    {"_Rwcs_Cwcs_p2s", (DL_FUNC) &_Rwcs_Cwcs_p2s, 22},
+    {"_Rwcs_Cwcs_s2p", (DL_FUNC) &_Rwcs_Cwcs_s2p, 25},
+    {"_Rwcs_Cwcs_p2s", (DL_FUNC) &_Rwcs_Cwcs_p2s, 25},
     {"_Rwcs_Cwcs_head_p2s", (DL_FUNC) &_Rwcs_Cwcs_head_p2s, 6},
     {"_Rwcs_Cwcs_head_s2p", (DL_FUNC) &_Rwcs_Cwcs_head_s2p, 6},
     {"_Rwcs_dilate_cpp", (DL_FUNC) &_Rwcs_dilate_cpp, 3},

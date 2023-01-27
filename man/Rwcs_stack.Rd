@@ -107,6 +107,8 @@ The output is an object of class 'ProMo' containing:
 \item{clip}{The number of frames clipped from the stacked \option{image}. This is only relevant when \option{doclip} is TRUE. Values larger than 1 can indicate that both cold and hot pixels have been clipped in this location, and also that the dilation process has masked a pixel multiple times.}
 \item{which_overlap}{Vector of IDs for the frames that overlap the target WCS.}
 \item{time}{Numeric scalar; the total clock time taken (not collective CPU time) for the stacking.}
+\item{Nim}{Integer scalar; number of images used in the stack.}
+\item{dump_dir}{Character scalar; the input \option{dump_dir}.}
 
 And optionally (if \option{returnall} = TRUE) these outputs are appended to the list:
 
