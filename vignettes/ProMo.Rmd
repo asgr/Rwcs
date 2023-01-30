@@ -175,7 +175,7 @@ The default is to project from the higher resolution grid, so in this case witho
 
 ## A Quick Clip
 
-Commonly when we have multiple input frames we want to detect outlier hot/cold pixels and clip them out from the stacked image. In **Rwcs_Stack** this is achieved with the *diclip* option. To speed up the re-stacking of frames we can set *dump_frames* to TRUE (meaning warped frames are saved to a temporary directory and loaded back in as needed, saving re-projection time when ignoring clipped pixels). To see information regarding clipping we can also set *keep_extreme_pix* to TRUE.
+Commonly when we have multiple input frames we want to detect outlier hot/cold pixels and clip them out from the stacked image. In **Rwcs_Stack** this is achieved with the *doclip* option. To speed up the re-stacking of frames we can set *dump_frames* to TRUE (meaning warped frames are saved to a temporary directory and loaded back in as needed, saving re-projection time when ignoring clipped pixels). To see information regarding clipping we can also set *keep_extreme_pix* to TRUE.
 
 ```{r}
 stack_clip = Rwcs_stack(image_list = image_list,
@@ -272,3 +272,29 @@ plot(stack_clip3$image[1000,500,box=500])
 The best route to clipping is very much data dependent, so some experimentation from the user might be required. In general you will want to set \option{clip_tol} in the range 5-100 though.
 
 Note if you are doing clipping on a lot of frames then it will not be feasible to run with *return_all* = TRUE since this will keep all the warped projections in memory. The better option in that case is to run with *dump_frames* = TRUE, which will save the warped frames to a temporary directory and load them as needed when applying the per-frame clipping.
+
+## A Median Clip
+
+You can also take the warped frames to compute a median stack. The advantage of this can be robustness to very bad data, but the caveat is that in the realm of well behaved data a median stack has an RMS larger by a factor 1.253 (no such thing as money for nothing). That might not sound like a lot, but it basically means you would need to observe everything 50% longer again to get the same signal-to-noise when doing median stack (which is quite a big overhead).
+
+```{r}
+library(ProFound)
+library(imager)
+
+stack_med = profoundCombine(stack_clip3$image_pre_stack, imager_func = parmed)
+```
+
+```{r, fig.width=8, fig.height=8, dpi=40}
+magimage(stack_med$image); legend('topleft', legend='Median Stack')
+magimage(stack_clip3$image$imDat); legend('topleft', legend='inVar Stack')
+magimage(stack_med$image - stack_clip3$image$imDat, qdiff=TRUE); legend('topleft', legend='Diff')
+```
+
+We can see there is a difference in depth when comparing the image histograms:
+
+```{r}
+maghist(stack_med$image, xlim=5)
+maghist(stack_clip3$image$imDat, xlim=5)
+```
+
+The median stack as a sky RMS near to 0.049 whilst he weighted stack is deeper at 0.044. The exact ratio is complicated by the clipping removing effective frames and pixel correlation, but the difference is still quite notable.

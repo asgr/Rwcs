@@ -29,6 +29,8 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     Nbatch = Nim
   }
   
+  Nbatch = as.integer(Nbatch)
+  
   message('Stacking ', Nim,' images; Nbatch: ', Nbatch,'; cores: ',cores)
   
   if(length(magzero_in) == 1){
@@ -164,7 +166,7 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     }
   }
   
-  seq_process = seq(1,Nim,by=Nbatch)
+  seq_process = seq(1L,Nim,by=Nbatch)
   
   for(seq_start in seq_process){
     seq_end = min(seq_start + Nbatch - 1L, Nim)
@@ -202,6 +204,21 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         }else{
           temp_image$imDat[mask_list != 0] = NA
         }
+      }
+      
+      if(!is.null(inVar_list)){
+        if(inherits(inVar_list[[i]], 'Rfits_pointer')){
+          inVar_list[[i]]$header = FALSE
+          temp_inVar = inVar_list[[i]][,]
+        }else if(inherits(inVar_list[[i]], 'Rfits_image')){
+          temp_inVar = inVar_list[[i]]$imDat
+        }else{
+          temp_inVar = inVar_list[[i]]
+        }
+        if(is.matrix(temp_inVar)){
+          temp_image$imDat[temp_inVar == 0] = NA
+        }
+        rm(temp_inVar)
       }
       
       suppressMessages({
@@ -620,6 +637,21 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
               }else{
                 temp_image$imDat[mask_list != 0] = NA
               }
+            }
+            
+            if(!is.null(inVar_list)){
+              if(inherits(inVar_list[[i]], 'Rfits_pointer')){
+                inVar_list[[i]]$header = FALSE
+                temp_inVar = inVar_list[[i]][,]
+              }else if(inherits(inVar_list[[i]], 'Rfits_image')){
+                temp_inVar = inVar_list[[i]]$imDat
+              }else{
+                temp_inVar = inVar_list[[i]]
+              }
+              if(is.matrix(temp_inVar)){
+                temp_image$imDat[temp_inVar == 0] = NA
+              }
+              rm(temp_inVar)
             }
             
             return(Rwcs_warp(
