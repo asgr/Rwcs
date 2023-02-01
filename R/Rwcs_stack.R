@@ -53,8 +53,6 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     dim_im = c(keyvalues_out$NAXIS1, keyvalues_out$NAXIS2)
   }
   
-  mask_clip = NULL
-  
   post_stack_image = matrix(0, dim_im[1], dim_im[2])
   
   if(!is.null(inVar_list)){
@@ -107,12 +105,14 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
   if(keep_extreme_pix | doclip){
     post_stack_cold = matrix(Inf, dim_im[1], dim_im[2])
     post_stack_hot = matrix(-Inf, dim_im[1], dim_im[2])
-    mask_clip = matrix(0L, dim_im[1], dim_im[2])
+    #mask_clip = matrix(0L, dim_im[1], dim_im[2])
   }else{
     post_stack_cold = NULL
     post_stack_hot = NULL
-    mask_clip = NULL
+    #mask_clip = NULL
   }
+  
+  mask_clip = NULL
   
   if(doclip){
     
@@ -471,6 +471,11 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
   
   post_stack_image[!weight_sel] = NA
   
+  #This is an important branch, since it means we can clip out pixels.
+  #Some of this code is currently quite slow for large matrices.
+  
+  #browser()
+  
   if(doclip & !is.null(post_stack_inVar)){
     message('Clipping out extreme cold/hot pixels')
     
@@ -489,36 +494,50 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     
     #reset post stack outputs
     
-    post_stack_image = matrix(0, dim_im[1], dim_im[2])
-    post_stack_weight = matrix(0L, dim_im[1], dim_im[2])
+    post_stack_image[] = 0 # = matrix(0, dim_im[1], dim_im[2])
+    post_stack_weight[] = 0L # = matrix(0L, dim_im[1], dim_im[2])
     
     if(!is.null(inVar_list)){
-      post_stack_inVar = matrix(0, dim_im[1], dim_im[2])
+      post_stack_inVar[] = 0 # = matrix(0, dim_im[1], dim_im[2])
     }else{
       post_stack_inVar = NULL
     }
-    
-    post_stack_cold = NULL
-    post_stack_hot = NULL
-    mask_clip = NULL
-    
+
     if(keep_extreme_pix){
-      post_stack_cold = matrix(Inf, dim_im[1], dim_im[2])
-      post_stack_hot = matrix(-Inf, dim_im[1], dim_im[2])
-      if(doclip){
-        mask_clip = matrix(0L, dim_im[1], dim_im[2])
-      }
+      post_stack_cold[] = Inf # = matrix(Inf, dim_im[1], dim_im[2])
+      post_stack_hot[] -Inf # = matrix(-Inf, dim_im[1], dim_im[2])
+    }else{
+      post_stack_cold = NULL
+      post_stack_hot = NULL
     }
+    
+    if(doclip){
+      temp_mask_clip = matrix(0L, dim_im[1], dim_im[2])
+      mask_clip = matrix(0L, dim_im[1], dim_im[2])
+    }
+    
+    post_stack_DT = data.table(cold=as.integer(post_stack_cold_id), hot=as.integer(post_stack_hot_id), ID=1:length(post_stack_cold_id), key=c('cold', 'hot'))
+    
+    rm(post_stack_cold_id)
+    rm(post_stack_hot_id)
+    gc()
     
     if(Nbatch == Nim){ #if we already have all projections in memory we can just re-stack
       message('Restacking without clipped cold/hot pixels')
       if(is.null(pre_stack_inVar_list)){
         message('Stacking Images ',seq_start,' to ',seq_end,' of ',Nim)
         for(i in 1:Nim){
-          temp_mask_clip = (post_stack_cold_id == i) | (post_stack_hot_id == i)
+          
+          #temp_mask_clip = (post_stack_cold_id == i) | (post_stack_hot_id == i)
+          if(i > 1){temp_mask_clip[] = 0L}
+          #temp_mask_clip[post_stack_DT[cold == i | hot == i, ID]] = 1L
+          #this seems faster because of how the threading works inside data.table:
+          temp_mask_clip[unique(c(post_stack_DT[cold == i,ID], post_stack_DT[hot == i,ID]))] = 1L
+          
           if(clip_dilate > 0){
             temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
           }
+          mask_clip = mask_clip + temp_mask_clip
           mode(temp_mask_clip) = 'logical'
           
           if(weight_image[i]){
@@ -535,8 +554,6 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           )
           
           if(keep_extreme_pix){
-            mask_clip = mask_clip + temp_mask_clip
-            
             xsub = pre_stack_image_list[[i]]$keyvalues$XCUTLO:pre_stack_image_list[[i]]$keyvalues$XCUTHI
             ysub = pre_stack_image_list[[i]]$keyvalues$YCUTLO:pre_stack_image_list[[i]]$keyvalues$YCUTHI
             
@@ -550,12 +567,22 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         
         gc()
       }else{
+        # if('fastmatch' %in% .packages()){ #remove things that will not be dilated
+        #   segim_new[fastmatch::fmatch(segim_new, expand, nomatch = 0L) == 0L] = 0L
+        # }else{
+        #   segim_new[!(segim_new %in% expand)] = 0L
+        # }
         message('Stacking Images and InVar ',seq_start,' to ',seq_end,' of ',Nim)
         for(i in 1:Nim){
-          temp_mask_clip = (post_stack_cold_id == i) | (post_stack_hot_id == i)
+          #temp_mask_clip = (post_stack_cold_id == i) | (post_stack_hot_id == i)
+          if(i > 1){temp_mask_clip[] = 0L}
+          #temp_mask_clip[post_stack_DT[cold == i | hot == i, ID]] = 1L
+          temp_mask_clip[unique(c(post_stack_DT[cold == i,ID], post_stack_DT[hot == i,ID]))] = 1L 
+          
           if(clip_dilate > 0){
             temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
           }
+          mask_clip = mask_clip + temp_mask_clip
           mode(temp_mask_clip) = 'logical'
           
           if(weight_image[i]){
@@ -574,8 +601,6 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           )
           
           if(keep_extreme_pix){
-            mask_clip = mask_clip + temp_mask_clip
-            
             xsub = pre_stack_image_list[[i]]$keyvalues$XCUTLO:pre_stack_image_list[[i]]$keyvalues$XCUTHI
             ysub = pre_stack_image_list[[i]]$keyvalues$YCUTLO:pre_stack_image_list[[i]]$keyvalues$YCUTHI
             
@@ -774,11 +799,15 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           message('Stacking Images ',seq_start,' to ',seq_end,' of ',Nim)
           for(i in 1:Nbatch_sub){
             i_stack = seq_start + i - 1L
+            #temp_mask_clip = (post_stack_cold_id == i_stack) | (post_stack_hot_id == i_stack)
+            if(i > 1){temp_mask_clip[] = 0L}
+            #temp_mask_clip[post_stack_DT[cold == i_stack | hot == i_stack, ID]] = 1L
+            temp_mask_clip[unique(c(post_stack_DT[cold == i_stack,ID], post_stack_DT[hot == i_stack,ID]))] = 1L
             
-            temp_mask_clip = (post_stack_cold_id == i_stack) | (post_stack_hot_id == i_stack)
             if(clip_dilate > 0){
               temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
             }
+            mask_clip = mask_clip + temp_mask_clip
             mode(temp_mask_clip) = 'logical'
             
             if(weight_image[i]){
@@ -801,10 +830,15 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
           for(i in 1:Nbatch_sub){
             i_stack = seq_start + i - 1L
             
-            temp_mask_clip = (post_stack_cold_id == i_stack) | (post_stack_hot_id == i_stack)
+            #temp_mask_clip = (post_stack_cold_id == i_stack) | (post_stack_hot_id == i_stack)
+            if(i > 1){temp_mask_clip[] = 0L}
+            #temp_mask_clip[post_stack_DT[cold == i_stack | hot == i_stack, ID]] = 1L
+            temp_mask_clip[unique(c(post_stack_DT[cold == i_stack,ID], post_stack_DT[hot == i_stack,ID]))] = 1L
+            
             if(clip_dilate > 0){
               temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
             }
+            mask_clip = mask_clip + temp_mask_clip
             mode(temp_mask_clip) = 'logical'
             
             if(weight_image[i]){
@@ -828,16 +862,18 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         
         if(keep_extreme_pix){
           message('Calculating Extreme Pixels ',seq_start,' to ',seq_end,' of ',Nim)
+          temp_mask_clip = matrix(0L, dim_im[1], dim_im[2])
           for(i in 1:Nbatch_sub){
             i_stack = seq_start + i - 1L
+            #temp_mask_clip = (post_stack_cold_id == i_stack) | (post_stack_hot_id == i_stack)
+            if(i > 1){temp_mask_clip[] = 0L}
+            #temp_mask_clip[post_stack_DT[cold == i_stack | hot == i_stack, ID]] = 1L
+            temp_mask_clip[unique(c(post_stack_DT[cold == i_stack,ID], post_stack_DT[hot == i_stack,ID]))] = 1L
             
-            temp_mask_clip = (post_stack_cold_id == i_stack) | (post_stack_hot_id == i_stack)
             if(clip_dilate > 0){
               temp_mask_clip = .dilate_R(temp_mask_clip, size=clip_dilate)
             }
             mode(temp_mask_clip) = 'logical'
-
-            mask_clip = mask_clip + temp_mask_clip
             
             xsub = pre_stack_image_list[[i]]$keyvalues$XCUTLO:pre_stack_image_list[[i]]$keyvalues$XCUTHI
             ysub = pre_stack_image_list[[i]]$keyvalues$YCUTLO:pre_stack_image_list[[i]]$keyvalues$YCUTHI
@@ -933,20 +969,19 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
     hot_out = Rfits::Rfits_create_image(image=post_stack_hot,
                                          keyvalues=keyvalues_out,
                                          keypass=FALSE)
-    
-    if(!is.null(mask_clip)){
-      mask_clip[weight_out$imDat == 0L] = NA
-      
-      keyvalues_out$EXTNAME = 'clip'
-      keyvalues_out$MAGZERO = NULL
-      mask_clip = Rfits::Rfits_create_image(image=mask_clip,
-                                          keyvalues=keyvalues_out,
-                                          keypass=FALSE)
-    }
   }else{
     cold_out = NULL
     hot_out = NULL
-    mask_clip = NULL
+  }
+  
+  if(!is.null(mask_clip)){
+    mask_clip[weight_out$imDat == 0L] = NA
+    
+    keyvalues_out$EXTNAME = 'clip'
+    keyvalues_out$MAGZERO = NULL
+    mask_clip = Rfits::Rfits_create_image(image=mask_clip,
+                                          keyvalues=keyvalues_out,
+                                          keypass=FALSE)
   }
   
   time_taken = proc.time()[3] - timestart

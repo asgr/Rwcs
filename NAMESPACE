@@ -37,6 +37,7 @@ import("checkmate")
 import("magicaxis")
 import("foreach")
 import("doParallel")
+import("data.table")
 
 importFrom(celestial, hms2deg, dms2deg, deg2hms, deg2dms)
 importFrom("graphics", "arrows", "axis", "box", "lines", "mtext",
