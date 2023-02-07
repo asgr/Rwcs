@@ -1,5 +1,6 @@
 \name{Rwcs_stack}
 \alias{Rwcs_stack}
+\alias{Rwcs_stack_median}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Image Warping and Stacking
@@ -13,6 +14,9 @@ Rwcs_stack(image_list = NULL, inVar_list = NULL, exp_list = NULL, weight_list = 
   dim_out = NULL, cores = 4, Nbatch = cores, keepcrop = TRUE, keep_extreme_pix = FALSE,
   doclip = FALSE, clip_tol = 100, clip_dilate = 0, clip_sigma = 5, return_all = FALSE,
   dump_frames = FALSE, dump_dir = tempdir(), ...)
+  
+Rwcs_stack_median(keyvalues_out = NULL, dump_dir = NULL, cores = 4, chunk = 1e3,
+  doweight = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -73,8 +77,14 @@ Logical; should the pre stack projected images and inverse variances be returns 
   \item{dump_frames}{
 Logical; if TRUE then warped frames will be dumped out to the specified \option{dump_dir} as the stacking continues. This can be useful to inspect the pre-stack inputs (if too large for the \option{return_all} = TRUE option), or if the stack is failing unexpectedly. Frames will inherit the names image_i, inVar_i, weight_i and exp_i as appropriate (i.e. only if warping is occurring for these data).
 }
-\item{dump_dir}{
-Character scalar; target directory to write out the dumped frames.
+  \item{dump_dir}{
+Character scalar; target directory to write out the dumped frames or (in the case of \code{Rwcs_stack_median}) read them in.
+}
+  \item{chunk}{
+Integer scalar; chunk sizes to maximally break the image up into to compute the median stacks. The sweet spot seems to be around 1000 - 2000 depending on sytem RAM and number of \option{cores}.
+}
+  \item{doweight}{
+Logical; should weights (so number of frames contributing to pixel medians) be computed? If this is FALSE then the weight attribute of the list returns from \code{Rwcs_stack_median} will be NULL.
 }
   \item{\dots}{
 Other arguments to pass into \code{\link{Rwcs_warp}}.
@@ -93,10 +103,10 @@ Which route is better to use depends on the memory available- passing in in-memo
 
 Care needs to be taken to choose appropriate values for \option{cores} and \option{Nbatch}. Ultimately at least a few copies of the full target image will need to be kept in memory at some point in this stacking process, since the stacking happens in RAM not on disk. For that reason there is an upper limit on how big the target image can be without hitting some pretty brutal performance issues (when you start using disk swap, things become very very slow). As an idea, a 10k x 10k pixel image with bitpix = -32 (sinlge precision) will take up 400 MB on disk and loaded in \code{R} 800 MB (since \code{R} only supports double precision floats internally). This means a 40k x 40k will require 12.8 GB of RAM. Given that number at least doubles during any \code{\link{Rwcs_warp}} process, and we possibly have a weight map and exposure to compute, you want to be pretty certain that x4 this value fits well within half of available RAM even if we are using \code{Nbatch} = 1. Even on a machine with 128 GB of RAM (my local machine) that is about as big an image as we could possibly target for stacking.
 
-Longer term I would like to add support for fully on disk stacking (which is how Swarp is able to stack very large images), but we have not yet hit that required use-case. For really really big images Swarp is still the better answer! For other stacking options look at the \code{profoundMakeStack} and \code{profoundCombine} function in the \code{ProFound} package. The latter supports a range of different stacking option (median combine, etc), but is single threaded and all in memory.
+\code{Rwcs_stack_median} is a dedicated median combine stacking function. The difference in operation is that it only works on pre-dumped frames that will have been projected with \code{Rwcs_stack} with the \option{dump_frames} option set to TRUE. The reason for this is that the median combine can generally only be run on quite small chunked subsets (usually in the range 1000 - 2000 and set with the \option{chunk} argument). Warping on the fly to such subsets is expensive (for reasonable sized inputs most pixels get thrown away each time), so it is faster to compute frame overlap on the dumped frames and combine them together as needed. The actual median combine is done using the \code{parmed} function of the \code{imager} package. If this has been compiled with OpenMP flags then you will also see massive speed up during the combining phase. The keen user will probably need to do some Googling to get this right, but for large stacking it could be worth the effort.
 }
 \value{
-The output is an object of class 'ProMo' containing:
+The output of \code{Rwcs_stack} is an object of class 'ProMo' containing:
 
 \item{image}{The stacked image, of class Rfits_image.}
 \item{weight}{The number of available un-masked pixels in every output pixel of \option{image}. Class Rfits_image.}
@@ -115,6 +125,15 @@ And optionally (if \option{returnall} = TRUE) these outputs are appended to the 
 \item{image_pre_stack}{The projected pre stack images.}
 \item{inVar_pre_stack}{The projected pre stack inverse variance.}
 \item{exp_pre_stack}{The projected pre stack exposure times.}
+
+The output of \code{Rwcs_stack} is an object of class 'ProMo' containing:
+
+\item{image}{The median stacked image, of class Rfits_image.}
+\item{weight}{The number of available un-masked pixels in every output pixel of \option{image}. Class Rfits_image.}
+\item{which_overlap}{Vector of IDs for the frames that overlap the target WCS.}
+\item{time}{Numeric scalar; the total clock time taken (not collective CPU time) for the stacking.}
+\item{Nim}{Integer scalar; number of images used in the stack.}
+\item{dump_dir}{Character scalar; the input \option{dump_dir}.}
 }
 \author{
 Aaron Robotham

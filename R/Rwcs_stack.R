@@ -9,8 +9,15 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
   
   timestart = proc.time()[3]
   
+  cold = hot = ID = j = NULL
+  
   if(dump_frames){
+    dump_dir = path.expand(dump_dir)
+    if(dir.exists(dump_dir) == FALSE){
+      dir.create(dump_dir, recursive = TRUE)
+    }
     message('Frames being dumped to ', dump_dir)
+    
   }
   
   registerDoParallel(cores=cores)
@@ -234,6 +241,9 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
         )
         
         if(dump_frames){
+          temp_warp$keyvalues$MAGZERO = magzero_out
+          temp_warp$keycomments$MAGZERO = ""
+          temp_warp$keynames['MAGZERO'] = "MAGZERO"
           Rfits::Rfits_write_image(temp_warp, paste0(dump_dir,'/image_warp_',i,'.fits'))
         }
       })
@@ -516,7 +526,10 @@ Rwcs_stack = function(image_list=NULL, inVar_list=NULL, exp_list=NULL, weight_li
       mask_clip = matrix(0L, dim_im[1], dim_im[2])
     }
     
-    post_stack_DT = data.table(cold=as.integer(post_stack_cold_id), hot=as.integer(post_stack_hot_id), ID=1:length(post_stack_cold_id), key=c('cold', 'hot'))
+    post_stack_DT = data.table(cold=as.integer(post_stack_cold_id),
+                               hot=as.integer(post_stack_hot_id),
+                               ID=1:length(post_stack_cold_id),
+                               key=c('cold', 'hot'))
     
     rm(post_stack_cold_id)
     rm(post_stack_hot_id)

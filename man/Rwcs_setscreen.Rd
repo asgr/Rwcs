@@ -1,12 +1,13 @@
 \name{Rwcs_setscreen}
 \alias{Rwcs_setscreen}
 \alias{Rwcs_setkeyvalues}
+\alias{Rwcs_keyvalues_sub}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Create a WCS Projection
 }
 \description{
-This is useful for creating a simple reference WCS to plot various images on top of, e.g. if you have many images that overlap on the sky and they have a complex WCS geometry- it is usually best to SWarp to a common simple WCS.
+This is useful for creating a simple reference WCS to plot various images on top of, e.g. if you have many images that overlap on the sky and they have a complex WCS geometry- it is usually best to use \code{\link{Rwcs_warp}} to warp to a common simple WCS.
 }
 \usage{
 Rwcs_setscreen(CRVAL1 = 0, CRVAL2 = 0, pixscale = 1, NAXIS1 = 1000, NAXIS2 = 1000,
@@ -18,6 +19,8 @@ Rwcs_setkeyvalues(CRVAL1 = 0, CRVAL2 = 0, pixscale = 1, NAXIS1 = 1000, NAXIS2 = 
   CRPIX1 = NAXIS1/2 + 0.5, CRPIX2 = NAXIS2/2 + 0.5, CTYPE1 = "RA---TAN",
   CTYPE2 = "DEC--TAN", CD1_1 = -pixscale/3600, CD1_2 = 0, CD2_1 = 0,
   CD2_2 = pixscale/3600, CUNIT1 = "deg", CUNIT2 = "deg")
+
+Rwcs_keyvalues_sub(keyvalues=NULL, xsub=NULL, ysub=NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -66,6 +69,15 @@ Character scalar; the units of the WCS for the RA axis. Is de facto 'deg' almost
   \item{CUNIT2}{
 Character scalar; the units of the WCS for the Dec axis. Is de facto 'deg' almost always these days, to the degree that many headers do not even list it (or list it and leave it blank) assuming the user will assume it is in degrees. If found and set to a blank string it will be changed to 'deg'.
 }
+  \item{keyvalues}{
+List; header values to be used for the base WCS.  
+}
+  \item{xsub}{
+Integer vector; the lower and upper limits of the subset in the x-dimension.
+}
+  \item{ysub}{
+Integer vector; the lower and upper limits of the subset in the y-dimension.
+}
   \item{\dots}{
 Extra arguments to be passed to \code{\link{Rwcs_image}}. These will be the decoration arguments in practice.
 }
@@ -77,6 +89,8 @@ This is mostly useful for creating a simple projection of multiple over-lapping 
 \code{Rwcs_setscreen} is run for the side effect of creating a new WCS view, updating the global options for current_keyvalues in the process.
 
 \code{Rwcs_setkevalues} returns a keyvalues list based on the user inputs.
+
+\code{Rwcs_keyvalues_sub} returns the requested subset WCS.
 }
 \author{
 Aaron Robotham

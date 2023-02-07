@@ -92,7 +92,7 @@ We can visually see the change in depth:
 Rwcs_warp(image_list[[1]][,], keyvalues_out = keyvalues_out, plot=TRUE, qdiff=TRUE)
 ```
 
-We can also check the statistic of the stack:
+We can also check the pixel statistics of the stack:
 
 ```{r}
 maghist(stack$image$imDat[stack$weight$imDat==8], xlim=5)
@@ -234,7 +234,7 @@ stack_clip2 = Rwcs_stack(image_list = image_list,
                    keepcrop = FALSE,
                    doclip = TRUE,
                    clip_tol = 10,
-                   dump_frames = TRUE,
+                   dump_frames = FALSE,
                    return_all = TRUE
                    )
 ```
@@ -275,7 +275,7 @@ Note if you are doing clipping on a lot of frames then it will not be feasible t
 
 ## A Median Clip
 
-You can also take the warped frames to compute a median stack. The advantage of this can be robustness to very bad data, but the caveat is that in the realm of well behaved data a median stack has an RMS larger by a factor 1.253 (no such thing as money for nothing). That might not sound like a lot, but it basically means you would need to observe everything 50% longer again to get the same signal-to-noise when doing median stack (which is quite a big overhead).
+You can also take the warped frames to compute a median stack. The advantage of this can be robustness to very bad data, but the caveat is that in the realm of well behaved data a median stack has an RMS larger by a factor $\sqrt{\pi/2} = 1.253$ (no such thing as money for nothing). That might not sound like a lot, but it basically means you would need to observe everything 50% longer again to get the same signal-to-noise when doing median stack (which is quite a big overhead).
 
 ```{r}
 library(ProFound)
@@ -298,3 +298,25 @@ maghist(stack_clip3$image$imDat, xlim=5)
 ```
 
 The median stack as a sky RMS near to 0.049 whilst he weighted stack is deeper at 0.044. The exact ratio is complicated by the clipping removing effective frames and pixel correlation, but the difference is still quite notable.
+
+In general median stacking is hard for large images because to do this the brute force way you need to keep all projected images in memory for the entire region, so in this case it would be eight 2,200 x 2,200 images, but for large regions (we often stack square degrees) you might have a few hundred 20,000 x 20,0000. This becomes intractable even on the biggest memory machines (e.g. that would required TBs of RAM). To solve this we implement a similar solution to Swarp where projected frames saved on disk are median stacked in chunks and the contiguous image is then put back together at the end.
+
+We can make use of the frames we have already dumped to do this with *Rwcs_stack_median*:
+
+```{r}
+stack_med2 = Rwcs_stack_median(keyvalues_out = keyvalues_out,
+                               dump_dir = stack_clip$dump_dir,
+                               cores = 8
+                               )
+```
+
+And now we can compare the region with the bad cosmic rays:
+
+```{r, fig.width=8, fig.height=8, dpi=40}
+plot(stack$image[1000,500,box=500])
+plot(stack_clip2$image[1000,500,box=500])
+plot(stack_clip3$image[1000,500,box=500])
+plot(stack_med2$image[1000,500,box=500])
+```
+
+In general the best quality data will come from using clipped inverse variance weighted stacks (since it will remove the outliers and keep the higher $S/N$), but if little is known about the data then a median might be the best practical solution, being quite robust to artefacts and not requiring data specific clipping tuning (**clip_tol**, **clip_dilate** etc).

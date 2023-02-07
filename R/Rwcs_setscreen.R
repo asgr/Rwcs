@@ -62,3 +62,17 @@ Rwcs_setkeyvalues = function(CRVAL1=0, CRVAL2=0,
   
   return(keyvalues)
 }
+
+Rwcs_keyvalues_sub = function(keyvalues=NULL, xsub=NULL, ysub=NULL){
+  keyvalues$CRPIX1 = keyvalues$CRPIX1 - min(xsub) + 1L
+  keyvalues$CRPIX2 = keyvalues$CRPIX2 - min(ysub) + 1L
+  
+  if(isTRUE(keyvalues$ZIMAGE)){
+    keyvalues$ZNAXIS1 = diff(range(xsub)) + 1L
+    keyvalues$ZNAXIS2 = diff(range(ysub)) + 1L
+  }else{
+    keyvalues$NAXIS1 = diff(range(xsub)) + 1L
+    keyvalues$NAXIS2 = diff(range(ysub)) + 1L
+  }
+  return(keyvalues)
+}
