@@ -1,5 +1,5 @@
 Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg',
-                    sep=':', header=NULL, inherit=TRUE, WCSref=NULL, ctrl=2L, ...){
+                    sep=':', header=NULL, inherit=TRUE, WCSref=NULL, ctrl=2L, cores=1, ...){
   assertList(keyvalues, null.ok = TRUE)
   if(is.character(header) & is.null(keyvalues)){
     if(length(header) > 1){
@@ -12,10 +12,6 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
     }
   }
   
-  # if(is.null(keyvalues) & is.null(header)){
-  #   stop('Need one of keyvalues or header!')  
-  # }
-  
   assertChoice(pixcen, c('R','FITS'))
   assertNumeric(loc.diff, len=2)
   assertChoice(coord.type, c('deg','sex'))
@@ -25,9 +21,11 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
     Dec = RA[,2]
     RA = RA[,1]
   }
-  if(coord.type=='sex'){RA=hms2deg(RA,sep=sep); Dec=dms2deg(Dec,sep=sep)}
-  RA = as.numeric(RA)
-  Dec = as.numeric(Dec)
+  
+  if(coord.type=='sex'){
+    RA = hms2deg(RA,sep=sep)
+    Dec = dms2deg(Dec,sep=sep)
+  }
   
   assertNumeric(RA)
   assertNumeric(Dec, len = length(RA))
@@ -49,11 +47,6 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
   if(length(header)==1){
     
     nkey = nchar(header)/80
-    #header_temp = substring(header, 1+(80*((1:nkey)-1)), 80*(1:nkey))
-    
-    #nkey_total = length(grep('=', header_temp))
-    #nkey_empty = length(grep('=                                                                       ', header_temp))
-    #nkey = nkey_total - nkey_empty
     
     if(!is.null(WCSref)){
       WCSref = tolower(WCSref)
@@ -67,78 +60,165 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
       WCSref = 0
     }
     
-    output = Cwcs_head_s2p(
-      RA = RA,
-      Dec = Dec,
-      header = header,
-      nkey = nkey,
-      WCSref = WCSref,
-      ctrl=ctrl
-    )
-    
-    if(is.null(dim(output))){
-      good = which(output == 0)
-      output = matrix(NA, length(RA), 2)
-      if(length(good) > 0){
-        output[good,] = Cwcs_head_s2p(
-          RA = RA[good],
-          Dec = Dec[good],
+    if(cores == 1L){
+      output = Cwcs_head_s2p(
+        RA = RA,
+        Dec = Dec,
+        header = header,
+        nkey = nkey,
+        WCSref = WCSref,
+        ctrl=ctrl
+      )
+      
+      if(is.null(dim(output))){
+        good = which(output == 0)
+        output = matrix(NA, length(RA), 2)
+        if(length(good) > 0){
+          output[good,] = Cwcs_head_s2p(
+            RA = RA[good],
+            Dec = Dec[good],
+            header = header,
+            nkey = nkey,
+            WCSref = WCSref
+          )
+        }
+      }
+    }else{
+      registerDoParallel(cores=cores)
+      
+      maxlen = length(RA)
+      chunk = ceiling(maxlen/cores)
+      
+      i = RAsub = Decsub = NULL
+      
+      RA = foreach(i = 1:cores)%do%{
+        lo = (i - 1L)*chunk + 1L
+        hi = min(lo + chunk - 1L, maxlen)
+        RA[lo:hi]
+      }
+      
+      Dec = foreach(i = 1:cores)%do%{
+        lo = (i - 1L)*chunk + 1L
+        hi = min(lo + chunk - 1L, maxlen)
+        Dec[lo:hi]
+      }
+      
+      output = foreach(RAsub = RA, Decsub = Dec, .combine='rbind')%dopar%{
+        temp = Cwcs_head_s2p(
+          RA = RAsub,
+          Dec = Decsub,
           header = header,
           nkey = nkey,
-          WCSref = WCSref
+          WCSref = WCSref,
+          ctrl=ctrl
         )
+        
+        if(is.null(dim(temp))){
+          good = which(temp == 0)
+          temp = matrix(NA, length(RAsub), 2)
+          if(length(good)>0){
+            temp[good,] = Cwcs_head_s2p(
+              RA = RAsub[good],
+              Dec = Decsub[good],
+              header = header,
+              nkey = nkey,
+              WCSref = WCSref
+            )
+          }
+        }
+        return(temp)
       }
     }
   }else{
     
     keyvalues = Rwcs_keypass(keyvalues, ...)
     
-    output = Cwcs_s2p(
-      RA = RA,
-      Dec = Dec,
-      CTYPE1 = keyvalues$CTYPE1,
-      CTYPE2 = keyvalues$CTYPE2,
-      CRVAL1 = keyvalues$CRVAL1,
-      CRVAL2 = keyvalues$CRVAL2,
-      CRPIX1 = keyvalues$CRPIX1,
-      CRPIX2 = keyvalues$CRPIX2,
-      CD1_1 = keyvalues$CD1_1,
-      CD1_2 = keyvalues$CD1_2,
-      CD2_1 = keyvalues$CD2_1,
-      CD2_2 = keyvalues$CD2_2,
-      RADESYS = keyvalues$RADESYS,
-      EQUINOX = keyvalues$EQUINOX,
-      PV1_0 = keyvalues$PV1_0,
-      PV1_1 = keyvalues$PV1_1,
-      PV1_2 = keyvalues$PV1_2,
-      PV1_3 = keyvalues$PV1_3,
-      PV1_4 = keyvalues$PV1_4,
-      # PV1_5 = keyvalues$PV1_5,
-      # PV1_6 = keyvalues$PV1_6,
-      # PV1_7 = keyvalues$PV1_7,
-      # PV1_8 = keyvalues$PV1_8,
-      # PV1_9 = keyvalues$PV1_9,
-      # PV1_10 = keyvalues$PV1_10,
-      PV2_0 = keyvalues$PV2_0,
-      PV2_1 = keyvalues$PV2_1,
-      PV2_2 = keyvalues$PV2_2,
-      PV2_3 = keyvalues$PV2_3,
-      PV2_4 = keyvalues$PV2_4,
-      PV2_5 = keyvalues$PV2_5
-      # PV2_6 = keyvalues$PV2_6,
-      # PV2_7 = keyvalues$PV2_7,
-      # PV2_8 = keyvalues$PV2_8,
-      # PV2_9 = keyvalues$PV2_9,
-      # PV2_10 = keyvalues$PV2_10
-    )
-    
-    if(is.null(dim(output))){
-      good = which(output == 0)
-      output = matrix(NA, length(RA), 2)
-      if(length(good)>0){
-        output[good,] = Cwcs_s2p(
-          RA = RA[good],
-          Dec = Dec[good],
+    if(cores == 1L){
+      output = Cwcs_s2p(
+        RA = RA,
+        Dec = Dec,
+        CTYPE1 = keyvalues$CTYPE1,
+        CTYPE2 = keyvalues$CTYPE2,
+        CRVAL1 = keyvalues$CRVAL1,
+        CRVAL2 = keyvalues$CRVAL2,
+        CRPIX1 = keyvalues$CRPIX1,
+        CRPIX2 = keyvalues$CRPIX2,
+        CD1_1 = keyvalues$CD1_1,
+        CD1_2 = keyvalues$CD1_2,
+        CD2_1 = keyvalues$CD2_1,
+        CD2_2 = keyvalues$CD2_2,
+        RADESYS = keyvalues$RADESYS,
+        EQUINOX = keyvalues$EQUINOX,
+        PV1_0 = keyvalues$PV1_0,
+        PV1_1 = keyvalues$PV1_1,
+        PV1_2 = keyvalues$PV1_2,
+        PV1_3 = keyvalues$PV1_3,
+        PV1_4 = keyvalues$PV1_4,
+        PV2_0 = keyvalues$PV2_0,
+        PV2_1 = keyvalues$PV2_1,
+        PV2_2 = keyvalues$PV2_2,
+        PV2_3 = keyvalues$PV2_3,
+        PV2_4 = keyvalues$PV2_4,
+        PV2_5 = keyvalues$PV2_5
+      )
+      
+      if(is.null(dim(output))){
+        good = which(output == 0)
+        output = matrix(NA, length(RA), 2)
+        if(length(good)>0){
+          output[good,] = Cwcs_s2p(
+            RA = RA[good],
+            Dec = Dec[good],
+            CTYPE1 = keyvalues$CTYPE1,
+            CTYPE2 = keyvalues$CTYPE2,
+            CRVAL1 = keyvalues$CRVAL1,
+            CRVAL2 = keyvalues$CRVAL2,
+            CRPIX1 = keyvalues$CRPIX1,
+            CRPIX2 = keyvalues$CRPIX2,
+            CD1_1 = keyvalues$CD1_1,
+            CD1_2 = keyvalues$CD1_2,
+            CD2_1 = keyvalues$CD2_1,
+            CD2_2 = keyvalues$CD2_2,
+            RADESYS = keyvalues$RADESYS,
+            EQUINOX = keyvalues$EQUINOX,
+            PV1_0 = keyvalues$PV1_0,
+            PV1_1 = keyvalues$PV1_1,
+            PV1_2 = keyvalues$PV1_2,
+            PV1_3 = keyvalues$PV1_3,
+            PV1_4 = keyvalues$PV1_4,
+            PV2_0 = keyvalues$PV2_0,
+            PV2_1 = keyvalues$PV2_1,
+            PV2_2 = keyvalues$PV2_2,
+            PV2_3 = keyvalues$PV2_3,
+            PV2_4 = keyvalues$PV2_4,
+            PV2_5 = keyvalues$PV2_5
+          )
+        }
+      }
+    }else{
+      registerDoParallel(cores=cores)
+  
+      maxlen = length(RA)
+      chunk = ceiling(maxlen/cores)
+      
+      i = RAsub = Decsub = NULL
+      
+      RA = foreach(i = 1:cores)%do%{
+        lo = (i - 1L)*chunk + 1L
+        hi = min(lo + chunk - 1L, maxlen)
+        RA[lo:hi]
+      }
+      
+      Dec = foreach(i = 1:cores)%do%{
+        lo = (i - 1L)*chunk + 1L
+        hi = min(lo + chunk - 1L, maxlen)
+        Dec[lo:hi]
+      }
+      
+      output = foreach(RAsub = RA, Decsub = Dec, .combine='rbind')%dopar%{
+        temp = Cwcs_s2p(
+          RA = RAsub,
+          Dec = Decsub,
           CTYPE1 = keyvalues$CTYPE1,
           CTYPE2 = keyvalues$CTYPE2,
           CRVAL1 = keyvalues$CRVAL1,
@@ -156,24 +236,48 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
           PV1_2 = keyvalues$PV1_2,
           PV1_3 = keyvalues$PV1_3,
           PV1_4 = keyvalues$PV1_4,
-          # PV1_5 = keyvalues$PV1_5,
-          # PV1_6 = keyvalues$PV1_6,
-          # PV1_7 = keyvalues$PV1_7,
-          # PV1_8 = keyvalues$PV1_8,
-          # PV1_9 = keyvalues$PV1_9,
-          # PV1_10 = keyvalues$PV1_10,
           PV2_0 = keyvalues$PV2_0,
           PV2_1 = keyvalues$PV2_1,
           PV2_2 = keyvalues$PV2_2,
           PV2_3 = keyvalues$PV2_3,
           PV2_4 = keyvalues$PV2_4,
           PV2_5 = keyvalues$PV2_5
-          # PV2_6 = keyvalues$PV2_6,
-          # PV2_7 = keyvalues$PV2_7,
-          # PV2_8 = keyvalues$PV2_8,
-          # PV2_9 = keyvalues$PV2_9,
-          # PV2_10 = keyvalues$PV2_10
         )
+        
+        if(is.null(dim(temp))){
+          good = which(temp == 0)
+          temp = matrix(NA, length(RAsub), 2)
+          if(length(good)>0){
+            temp[good,] = Cwcs_s2p(
+              RA = RAsub[good],
+              Dec = Decsub[good],
+              CTYPE1 = keyvalues$CTYPE1,
+              CTYPE2 = keyvalues$CTYPE2,
+              CRVAL1 = keyvalues$CRVAL1,
+              CRVAL2 = keyvalues$CRVAL2,
+              CRPIX1 = keyvalues$CRPIX1,
+              CRPIX2 = keyvalues$CRPIX2,
+              CD1_1 = keyvalues$CD1_1,
+              CD1_2 = keyvalues$CD1_2,
+              CD2_1 = keyvalues$CD2_1,
+              CD2_2 = keyvalues$CD2_2,
+              RADESYS = keyvalues$RADESYS,
+              EQUINOX = keyvalues$EQUINOX,
+              PV1_0 = keyvalues$PV1_0,
+              PV1_1 = keyvalues$PV1_1,
+              PV1_2 = keyvalues$PV1_2,
+              PV1_3 = keyvalues$PV1_3,
+              PV1_4 = keyvalues$PV1_4,
+              PV2_0 = keyvalues$PV2_0,
+              PV2_1 = keyvalues$PV2_1,
+              PV2_2 = keyvalues$PV2_2,
+              PV2_3 = keyvalues$PV2_3,
+              PV2_4 = keyvalues$PV2_4,
+              PV2_5 = keyvalues$PV2_5
+            )
+          }
+        }
+        return(temp)
       }
     }
   }
@@ -196,7 +300,7 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
 }
 
 Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg',
-                    sep=':', header=NULL, inherit=TRUE, WCSref=NULL, ctrl=2L, ...){
+                    sep=':', header=NULL, inherit=TRUE, WCSref=NULL, ctrl=2L, cores=1, ...){
   assertList(keyvalues, null.ok = TRUE)
   if(is.character(header) & is.null(keyvalues)){
     if(length(header) > 1){
@@ -208,10 +312,6 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
       }
     }
   }
-  
-  # if(is.null(keyvalues) & is.null(header)){
-  #   stop('Need one of keyvalues or header!')  
-  # }
   
   assertChoice(pixcen, c('R','FITS'))
   assertNumeric(loc.diff, len=2)
@@ -263,11 +363,6 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
   if(length(header)==1){
     
     nkey = nchar(header)/80
-    # header_temp = substring(header, 1+(80*((1:nkey)-1)), 80*(1:nkey))
-    # 
-    # nkey_total = length(grep('=', header_temp))
-    # nkey_empty = length(grep('=                                                                       ', header_temp))
-    # nkey = nkey_total - nkey_empty
     
     if(!is.null(WCSref)){
       WCSref = tolower(WCSref)
@@ -281,78 +376,165 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
       WCSref = 0
     }
     
-    output = Cwcs_head_p2s(
-      x = x,
-      y = y,
-      header = header,
-      nkey = nkey,
-      WCSref = WCSref
-    )
-    
-    if(is.null(dim(output))){
-      good = which(output == 0)
-      output = matrix(NA, length(x), 2)
-      if(length(good) > 0){
-        output[good,] = Cwcs_head_p2s(
-          x = x[good],
-          y = y[good],
+    if(cores == 1L){
+      output = Cwcs_head_p2s(
+        x = x,
+        y = y,
+        header = header,
+        nkey = nkey,
+        WCSref = WCSref,
+        ctrl=ctrl
+      )
+      
+      if(is.null(dim(output))){
+        good = which(output == 0)
+        output = matrix(NA, length(x), 2)
+        if(length(good) > 0){
+          output[good,] = Cwcs_head_p2s(
+            x = x[good],
+            y = y[good],
+            header = header,
+            nkey = nkey,
+            WCSref = WCSref
+          )
+        }
+      }
+    }else{
+      registerDoParallel(cores=cores)
+      
+      maxlen = length(x)
+      chunk = ceiling(maxlen/cores)
+      
+      i = xsub = ysub = NULL
+      
+      x = foreach(i = 1:cores)%do%{
+        lo = (i - 1L)*chunk + 1L
+        hi = min(lo + chunk - 1L, maxlen)
+        x[lo:hi]
+      }
+      
+      y = foreach(i = 1:cores)%do%{
+        lo = (i - 1L)*chunk + 1L
+        hi = min(lo + chunk - 1L, maxlen)
+        y[lo:hi]
+      }
+      
+      output = foreach(xsub = x, ysub = y, .combine='rbind')%dopar%{
+        temp = Cwcs_head_p2s(
+          x = xsub,
+          y = ysub,
           header = header,
           nkey = nkey,
           WCSref = WCSref,
           ctrl=ctrl
         )
+        
+        if(is.null(dim(temp))){
+          good = which(temp == 0)
+          temp = matrix(NA, length(xsub), 2)
+          if(length(good)>0){
+            temp[good,] = Cwcs_head_p2s(
+              x = xsub[good],
+              y = ysub[good],
+              header = header,
+              nkey = nkey,
+              WCSref = WCSref
+            )
+          }
+        }
+        return(temp)
       }
     }
   }else{
     
     keyvalues = Rwcs_keypass(keyvalues, ...)
     
-    output = Cwcs_p2s(
-      x = x,
-      y = y,
-      CTYPE1 = keyvalues$CTYPE1,
-      CTYPE2 = keyvalues$CTYPE2,
-      CRVAL1 = keyvalues$CRVAL1,
-      CRVAL2 = keyvalues$CRVAL2,
-      CRPIX1 = keyvalues$CRPIX1,
-      CRPIX2 = keyvalues$CRPIX2,
-      CD1_1 = keyvalues$CD1_1,
-      CD1_2 = keyvalues$CD1_2,
-      CD2_1 = keyvalues$CD2_1,
-      CD2_2 = keyvalues$CD2_2,
-      RADESYS = keyvalues$RADESYS,
-      EQUINOX = keyvalues$EQUINOX,
-      PV1_0 = keyvalues$PV1_0,
-      PV1_1 = keyvalues$PV1_1,
-      PV1_2 = keyvalues$PV1_2,
-      PV1_3 = keyvalues$PV1_3,
-      PV1_4 = keyvalues$PV1_4,
-      # PV1_5 = keyvalues$PV1_5,
-      # PV1_6 = keyvalues$PV1_6,
-      # PV1_7 = keyvalues$PV1_7,
-      # PV1_8 = keyvalues$PV1_8,
-      # PV1_9 = keyvalues$PV1_9,
-      # PV1_10 = keyvalues$PV1_10,
-      PV2_0 = keyvalues$PV2_0,
-      PV2_1 = keyvalues$PV2_1,
-      PV2_2 = keyvalues$PV2_2,
-      PV2_3 = keyvalues$PV2_3,
-      PV2_4 = keyvalues$PV2_4,
-      PV2_5 = keyvalues$PV2_5
-      # PV2_6 = keyvalues$PV2_6,
-      # PV2_7 = keyvalues$PV2_7,
-      # PV2_8 = keyvalues$PV2_8,
-      # PV2_9 = keyvalues$PV2_9,
-      # PV2_10 = keyvalues$PV2_10
-    )
-    
-    if(is.null(dim(output))){
-      good = which(output == 0)
-      output = matrix(NA, length(x), 2)
-      if(length(good) > 0){
-        output[good,] = Cwcs_p2s(
-          x = x[good],
-          y = y[good],
+    if(cores == 1L){
+      output = Cwcs_p2s(
+        x = x,
+        y = y,
+        CTYPE1 = keyvalues$CTYPE1,
+        CTYPE2 = keyvalues$CTYPE2,
+        CRVAL1 = keyvalues$CRVAL1,
+        CRVAL2 = keyvalues$CRVAL2,
+        CRPIX1 = keyvalues$CRPIX1,
+        CRPIX2 = keyvalues$CRPIX2,
+        CD1_1 = keyvalues$CD1_1,
+        CD1_2 = keyvalues$CD1_2,
+        CD2_1 = keyvalues$CD2_1,
+        CD2_2 = keyvalues$CD2_2,
+        RADESYS = keyvalues$RADESYS,
+        EQUINOX = keyvalues$EQUINOX,
+        PV1_0 = keyvalues$PV1_0,
+        PV1_1 = keyvalues$PV1_1,
+        PV1_2 = keyvalues$PV1_2,
+        PV1_3 = keyvalues$PV1_3,
+        PV1_4 = keyvalues$PV1_4,
+        PV2_0 = keyvalues$PV2_0,
+        PV2_1 = keyvalues$PV2_1,
+        PV2_2 = keyvalues$PV2_2,
+        PV2_3 = keyvalues$PV2_3,
+        PV2_4 = keyvalues$PV2_4,
+        PV2_5 = keyvalues$PV2_5
+      )
+      
+      if(is.null(dim(output))){
+        good = which(output == 0)
+        output = matrix(NA, length(x), 2)
+        if(length(good)>0){
+          output[good,] = Cwcs_p2s(
+            x = x[good],
+            y = y[good],
+            CTYPE1 = keyvalues$CTYPE1,
+            CTYPE2 = keyvalues$CTYPE2,
+            CRVAL1 = keyvalues$CRVAL1,
+            CRVAL2 = keyvalues$CRVAL2,
+            CRPIX1 = keyvalues$CRPIX1,
+            CRPIX2 = keyvalues$CRPIX2,
+            CD1_1 = keyvalues$CD1_1,
+            CD1_2 = keyvalues$CD1_2,
+            CD2_1 = keyvalues$CD2_1,
+            CD2_2 = keyvalues$CD2_2,
+            RADESYS = keyvalues$RADESYS,
+            EQUINOX = keyvalues$EQUINOX,
+            PV1_0 = keyvalues$PV1_0,
+            PV1_1 = keyvalues$PV1_1,
+            PV1_2 = keyvalues$PV1_2,
+            PV1_3 = keyvalues$PV1_3,
+            PV1_4 = keyvalues$PV1_4,
+            PV2_0 = keyvalues$PV2_0,
+            PV2_1 = keyvalues$PV2_1,
+            PV2_2 = keyvalues$PV2_2,
+            PV2_3 = keyvalues$PV2_3,
+            PV2_4 = keyvalues$PV2_4,
+            PV2_5 = keyvalues$PV2_5
+          )
+        }
+      }
+    }else{
+      registerDoParallel(cores=cores)
+      
+      maxlen = length(x)
+      chunk = ceiling(maxlen/cores)
+      
+      i = xsub = ysub = NULL
+      
+      x = foreach(i = 1:cores)%do%{
+        lo = (i - 1L)*chunk + 1L
+        hi = min(lo + chunk - 1L, maxlen)
+        x[lo:hi]
+      }
+      
+      y = foreach(i = 1:cores)%do%{
+        lo = (i - 1L)*chunk + 1L
+        hi = min(lo + chunk - 1L, maxlen)
+        y[lo:hi]
+      }
+
+      output = foreach(xsub = x, ysub = y, .combine='rbind')%dopar%{
+        temp = Cwcs_p2s(
+          x = xsub,
+          y = ysub,
           CTYPE1 = keyvalues$CTYPE1,
           CTYPE2 = keyvalues$CTYPE2,
           CRVAL1 = keyvalues$CRVAL1,
@@ -370,24 +552,48 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
           PV1_2 = keyvalues$PV1_2,
           PV1_3 = keyvalues$PV1_3,
           PV1_4 = keyvalues$PV1_4,
-          # PV1_5 = keyvalues$PV1_5,
-          # PV1_6 = keyvalues$PV1_6,
-          # PV1_7 = keyvalues$PV1_7,
-          # PV1_8 = keyvalues$PV1_8,
-          # PV1_9 = keyvalues$PV1_9,
-          # PV1_10 = keyvalues$PV1_10,
           PV2_0 = keyvalues$PV2_0,
           PV2_1 = keyvalues$PV2_1,
           PV2_2 = keyvalues$PV2_2,
           PV2_3 = keyvalues$PV2_3,
           PV2_4 = keyvalues$PV2_4,
           PV2_5 = keyvalues$PV2_5
-          # PV2_6 = keyvalues$PV2_6,
-          # PV2_7 = keyvalues$PV2_7,
-          # PV2_8 = keyvalues$PV2_8,
-          # PV2_9 = keyvalues$PV2_9,
-          # PV2_10 = keyvalues$PV2_10
         )
+        
+        if(is.null(dim(temp))){
+          good = which(temp == 0)
+          temp = matrix(NA, length(xsub), 2)
+          if(length(good)>0){
+            temp[good,] = Cwcs_p2s(
+              x = xsub[good],
+              y = ysub[good],
+              CTYPE1 = keyvalues$CTYPE1,
+              CTYPE2 = keyvalues$CTYPE2,
+              CRVAL1 = keyvalues$CRVAL1,
+              CRVAL2 = keyvalues$CRVAL2,
+              CRPIX1 = keyvalues$CRPIX1,
+              CRPIX2 = keyvalues$CRPIX2,
+              CD1_1 = keyvalues$CD1_1,
+              CD1_2 = keyvalues$CD1_2,
+              CD2_1 = keyvalues$CD2_1,
+              CD2_2 = keyvalues$CD2_2,
+              RADESYS = keyvalues$RADESYS,
+              EQUINOX = keyvalues$EQUINOX,
+              PV1_0 = keyvalues$PV1_0,
+              PV1_1 = keyvalues$PV1_1,
+              PV1_2 = keyvalues$PV1_2,
+              PV1_3 = keyvalues$PV1_3,
+              PV1_4 = keyvalues$PV1_4,
+              PV2_0 = keyvalues$PV2_0,
+              PV2_1 = keyvalues$PV2_1,
+              PV2_2 = keyvalues$PV2_2,
+              PV2_3 = keyvalues$PV2_3,
+              PV2_4 = keyvalues$PV2_4,
+              PV2_5 = keyvalues$PV2_5
+            )
+          }
+        }
+        return(temp)
       }
     }
   }

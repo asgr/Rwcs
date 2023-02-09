@@ -15,11 +15,11 @@ Offers basic high level access to the C \code{wcslib} library for projecting and
 \usage{
 Rwcs_s2p(RA, Dec, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
   coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, WCSref = NULL, ctrl = 2L,
-  ...)
+  cores = 1, ...)
   
 Rwcs_p2s(x, y, keyvalues = NULL, pixcen = "FITS", loc.diff = c(0, 0),
   coord.type = "deg", sep = ":", header = NULL, inherit = TRUE, WCSref = NULL, ctrl = 2L,
-  ...)
+  cores = 1, ...)
   
 Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, type = 'old',
   dim = NULL)
@@ -88,6 +88,9 @@ Scalar; either NULL for base WCS (default), or a letter [a-z] for the relevant p
 }
   \item{ctrl}{
 Integer scalar; if using raw headers, this will specify the level of verbosity printed by wcslib when passing it. 0 = none, 1 = summary, 2 = fails, 3 = fails + non-WCS, 4 = all.
+}
+  \item{cores}{
+Integer scalar; the number of cores to run on. Because of the overhead in launching jobs, running in multicore mode is rarely much faster, and always uses significantly more RAM. Probably rarely useful! The caveat would be when 1e8 length inputs are being provided (e.g. a 10k x 10k image warp)- at this scale the multicore mode can be a factor of a few faster.
 }
   \item{xlim}{
 Numeric vector; x extent of frame domain to test. If missing and \option{keyvalues} is provided then default will be c(0, NAXIS1) extent. Note domain limits should be provided in the 'R' sense, so the bottom left pixel spans x=[0,1] and y=[0,1] rather than x=[0.5,1.5] and y=[0.5,1.5] in FITS.
