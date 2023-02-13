@@ -1,3 +1,29 @@
+.sph2car = function(long, lat, radius=1, deg=TRUE){
+  if (is.matrix(long) || is.data.frame(long)) {
+    if (ncol(long) == 1) {
+      long = long[, 1]
+    }
+    else if (ncol(long) == 2) {
+      lat = long[, 2]
+      long = long[, 1]
+    }
+    else if (ncol(long) == 3) {
+      radius = long[, 3]
+      lat = long[, 2]
+      long = long[, 1]
+    }
+  }
+  if (missing(long) | missing(lat)) {
+    stop("Missing full spherical 3D input data.")
+  }
+  if (deg) {
+    long = long * pi/180
+    lat = lat * pi/180
+  }
+  return = cbind(x = radius * cos(long) * cos(lat), y = radius * 
+                   sin(long) * cos(lat), z = radius * sin(lat))
+}
+
 Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.type='deg',
                     sep=':', header=NULL, inherit=TRUE, WCSref=NULL, ctrl=2L, cores=1, ...){
   assertList(keyvalues, null.ok = TRUE)
@@ -1013,6 +1039,29 @@ Rwcs_overlap = function(keyvalues_test, keyvalues_ref=NULL, buffer=0.5, plot=FAL
   }else{
     NAXIS1_ref = keyvalues_ref$NAXIS1
     NAXIS2_ref = keyvalues_ref$NAXIS2
+  }
+  
+  suppressMessages({
+    pixscale_test = Rwcs_pixscale(keyvalues_test) # in asec
+    pixscale_ref = Rwcs_pixscale(keyvalues_ref) # in asec
+    
+    centre_test = Rwcs_p2s(NAXIS1_test/2, NAXIS2_test/2, keyvalues=keyvalues_test, pixcen='R')
+    centre_ref = Rwcs_p2s(NAXIS1_ref/2, NAXIS2_ref/2, keyvalues=keyvalues_ref, pixcen='R')
+  })
+  
+  sph_test = .sph2car(centre_test)[1,]
+  sph_ref = .sph2car(centre_ref)[1,]
+  
+  dot_prod = sph_test[1]*sph_ref[1] + sph_test[2]*sph_ref[2] + sph_test[3]*sph_ref[3]
+  dot_prod[dot_prod < -1] = -1
+  dot_prod[dot_prod > 1] = 1
+  ang_sep = acos(dot_prod)/((pi/180)/3600) # in asec
+  
+  #using a 10% buffer to be safe
+  max_sep = 1.1*(sqrt(NAXIS1_test^2 + NAXIS2_test^2)*pixscale_test + sqrt(NAXIS1_ref^2 + NAXIS2_ref^2)*pixscale_ref)/2
+  
+  if(ang_sep > max_sep){
+    return(FALSE)
   }
   
   suppressMessages({
