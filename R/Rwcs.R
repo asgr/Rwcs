@@ -929,6 +929,8 @@ Rwcs_keypass=function(keyvalues=NULL,
   # keyvalues$PV2_9 = PV2_9
   # keyvalues$PV2_10 = PV2_10
   
+  class(keyvalues) = 'Rfits_keylist'
+  
   return(keyvalues)
 }
 
