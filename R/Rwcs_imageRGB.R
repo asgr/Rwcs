@@ -1,4 +1,9 @@
-Rwcs_imageRGB=function(R, G, B, keyvalues_out=NULL, Rkeyvalues=NULL, Gkeyvalues=NULL, Bkeyvalues=NULL, dowarp='auto', direction = "auto", boundary = "dirichlet", interpolation = "cubic", n, grid.col='grey', grid.lty=2, grid.lwd=0.5, lab.col='green', coord.type='sex', margin=TRUE, loc.diff=c(0,0), xlab='Right Ascension', ylab='Declination', mgp=c(2,0.5,0), mtline=2, position='topright', com.col="green", com.length=0.05, coord.axis='auto', pretty='auto', decorate=TRUE, ...){
+Rwcs_imageRGB=function(R, G, B, keyvalues_out=NULL, Rkeyvalues=NULL, Gkeyvalues=NULL, Bkeyvalues=NULL,
+                       dowarp='auto', direction = "auto", boundary = "dirichlet", interpolation = "cubic",
+                       n, grid.col='grey', grid.lty=2, grid.lwd=0.5, lab.col='green', coord.type='sex',
+                       margin=TRUE, loc.diff=c(0,0), xlab='Right Ascension', ylab='Declination',
+                       mgp=c(2,0.5,0), mtline=2, position='topright', com.col="green", com.length=0.05,
+                       coord.axis='auto', pretty='auto', decorate=TRUE, ...){
   
   if(missing(xlab)){
     if(coord.type=='sex'){

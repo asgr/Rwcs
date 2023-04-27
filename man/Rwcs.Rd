@@ -27,7 +27,7 @@ Rwcs_pixscale(keyvalues = NULL, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, type
 Rwcs_in_image(RA, Dec, xlim, ylim, buffer = 0, plot = FALSE, style = 'points', pad = 0,
   add = FALSE, ...)
 
-Rwcs_overlap(keyvalues_test, keyvalues_ref, buffer = 0.5, plot = FALSE, pad = 0,
+Rwcs_overlap(keyvalues_test, keyvalues_ref, buffer = 0, plot = FALSE, pad = 0,
   add = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.

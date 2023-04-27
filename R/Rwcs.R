@@ -1015,7 +1015,7 @@ Rwcs_in_image = function(RA, Dec, xlim, ylim, buffer=0, plot=FALSE, style='point
   return(as.logical(test_xy[,'x'] >= xlim[1] - buffer & test_xy[,'x'] <= xlim[2] + buffer & test_xy[,'y'] >= ylim[1] - buffer & test_xy[,'y'] <= ylim[2] + buffer))
 }
 
-Rwcs_overlap = function(keyvalues_test, keyvalues_ref=NULL, buffer=0.5, plot=FALSE, pad=0, add=FALSE){
+Rwcs_overlap = function(keyvalues_test, keyvalues_ref=NULL, buffer=0, plot=FALSE, pad=0, add=FALSE){
   
   if(is.null(keyvalues_ref)){
     message('Using last provided keyvalues_ref!')
