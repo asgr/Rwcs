@@ -109,6 +109,17 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
           )
         }
       }
+      
+      if(anyInfinite(output)){ #catch for weird inversion problems
+        bad = unique(which(is.infinite(output), arr.ind = TRUE)[,1])
+        output[bad,] = Cwcs_head_s2p(
+          RA = RA[bad] + 1e-12,
+          Dec = Dec[bad] + 1e-12,
+          header = header,
+          nkey = nkey,
+          WCSref = WCSref
+        )
+      }
     }else{
       registerDoParallel(cores=cores)
       
@@ -152,6 +163,18 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
             )
           }
         }
+        
+        if(anyInfinite(temp)){ #catch for weird inversion problems
+          bad = unique(which(is.infinite(temp), arr.ind = TRUE)[,1])
+          temp[bad,] = Cwcs_head_s2p(
+            RA = RAsub[bad] + 1e-12,
+            Dec = Decsub[bad] + 1e-12,
+            header = header,
+            nkey = nkey,
+            WCSref = WCSref
+          )
+        }
+        
         return(temp)
       }
     }
@@ -425,6 +448,17 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
           )
         }
       }
+      
+      if(anyInfinite(output)){ #catch for weird inversion problems
+        bad = unique(which(is.infinite(output), arr.ind = TRUE)[,1])
+        output[bad,] = Cwcs_head_p2s(
+          x = x[bad] + 1e-6,
+          y = y[bad] + 1e-6,
+          header = header,
+          nkey = nkey,
+          WCSref = WCSref
+        )
+      }
     }else{
       registerDoParallel(cores=cores)
       
@@ -468,6 +502,18 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
             )
           }
         }
+        
+        if(anyInfinite(temp)){ #catch for weird inversion problems
+          bad = unique(which(is.infinite(temp), arr.ind = TRUE)[,1])
+          temp[bad,] = Cwcs_head_p2s(
+            x = xsub[bad] + 1e-6,
+            y = ysub[bad] + 1e-6,
+            header = header,
+            nkey = nkey,
+            WCSref = WCSref
+          )
+        }
+        
         return(temp)
       }
     }
