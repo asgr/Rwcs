@@ -711,6 +711,9 @@ Rwcs_keypass=function(keyvalues=NULL,
         if((!is.null(keyvalues$CDELT1)) & (!is.null(keyvalues$PC1_1)) &  (!is.null(keyvalues$PC2_1))){
           CD1_1 = keyvalues$CDELT1 * keyvalues$PC1_1
           CD2_1 = keyvalues$CDELT1 * keyvalues$PC2_1
+        }else if((!is.null(keyvalues$CDELT1)) & (!is.null(keyvalues$PC1_1)) &  (is.null(keyvalues$PC2_1))){
+          CD1_1 = keyvalues$CDELT1 * keyvalues$PC1_1
+          CD2_1 = 0
         }else if((!is.null(keyvalues$CDELT1)) & (!is.null(keyvalues$CROTA2))){
           CD1_1 = keyvalues$CDELT1 * cos(keyvalues$CROTA2*pi/180)
           CD2_1 = keyvalues$CDELT1 * sin(keyvalues$CROTA2*pi/180)
@@ -729,6 +732,9 @@ Rwcs_keypass=function(keyvalues=NULL,
         if((!is.null(keyvalues$CDELT2)) & (!is.null(keyvalues$PC2_2)) & (!is.null(keyvalues$PC1_2))){
           CD2_2 = keyvalues$CDELT2 * keyvalues$PC2_2
           CD1_2 = keyvalues$CDELT2 * keyvalues$PC1_2
+        }else if((!is.null(keyvalues$CDELT2)) & (!is.null(keyvalues$PC2_2)) & (is.null(keyvalues$PC1_2))){
+          CD2_2 = keyvalues$CDELT2 * keyvalues$PC2_2
+          CD1_2 = 0
         }else if((!is.null(keyvalues$CDELT2)) & (!is.null(keyvalues$CROTA2))){
           CD2_2 = keyvalues$CDELT2 * cos(keyvalues$CROTA2*pi/180)
           CD1_2 = -keyvalues$CDELT2 * sin(keyvalues$CROTA2*pi/180)
@@ -790,6 +796,7 @@ Rwcs_keypass=function(keyvalues=NULL,
     if(is.null(PV1_2)){if(!is.null(keyvalues$PV1_2)){PV1_2 = keyvalues$PV1_2}else{PV1_2 = NA}}
     if(is.null(PV1_3)){if(!is.null(keyvalues$PV1_3)){PV1_3 = keyvalues$PV1_3}else{PV1_3 = NA}}
     if(is.null(PV1_4)){if(!is.null(keyvalues$PV1_4)){PV1_4 = keyvalues$PV1_4}else{PV1_4 = NA}}
+    # Beyond this appears to be non-standard
     # if(is.null(PV1_5)){if(!is.null(keyvalues$PV1_5)){PV1_5 = keyvalues$PV1_5}else{PV1_5 = NA}}
     # if(is.null(PV1_6)){if(!is.null(keyvalues$PV1_6)){PV1_6 = keyvalues$PV1_6}else{PV1_6 = NA}}
     # if(is.null(PV1_7)){if(!is.null(keyvalues$PV1_7)){PV1_7 = keyvalues$PV1_7}else{PV1_7 = NA}}
@@ -803,6 +810,7 @@ Rwcs_keypass=function(keyvalues=NULL,
     if(is.null(PV2_3)){if(!is.null(keyvalues$PV2_3)){PV2_3 = keyvalues$PV2_3}else{PV2_3 = NA}}
     if(is.null(PV2_4)){if(!is.null(keyvalues$PV2_4)){PV2_4 = keyvalues$PV2_4}else{PV2_4 = NA}}
     if(is.null(PV2_5)){if(!is.null(keyvalues$PV2_5)){PV2_5 = keyvalues$PV2_5}else{PV2_5 = NA}}
+    # Beyond this appears to be non-standard
     # if(is.null(PV2_6)){if(!is.null(keyvalues$PV2_6)){PV2_6 = keyvalues$PV2_6}else{PV2_6 = NA}}
     # if(is.null(PV2_7)){if(!is.null(keyvalues$PV2_7)){PV2_7 = keyvalues$PV2_7}else{PV2_7 = NA}}
     # if(is.null(PV2_8)){if(!is.null(keyvalues$PV2_8)){PV2_8 = keyvalues$PV2_8}else{PV2_8 = NA}}
