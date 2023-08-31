@@ -124,7 +124,7 @@ SZP  \tab slant zenithal perspective \cr
 TAN  \tab gnomonic \cr
 STG  \tab stereographic \cr
 SIN  \tab orthographic/synthesis \cr
-NCP  \tab unofficially supported SIN-like projectio \cr
+NCP  \tab unofficially supported SIN-like projection \cr
 ARC  \tab zenithal/azimuthal equidistant \cr
 ZPN  \tab zenithal/azimuthal polynomial \cr
 ZEA  \tab zenithal/azimuthal equal area \cr
