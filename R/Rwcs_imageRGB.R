@@ -23,63 +23,33 @@ Rwcs_imageRGB=function(R, G, B, keyvalues_out=NULL, Rkeyvalues=NULL, Gkeyvalues=
   }
   
   if(!missing(R)){
-    if(any(names(R)=='imDat') | any(names(R)=='image')){
-      if(is.null(Rkeyvalues)){
-        Rkeyvalues = R$keyvalues
-      }
-      
-      if(any(names(R)=='imDat')){
-        Rim = R$imDat
-      }
-      
-      if(any(names(image)=='image')){
-        Rim = R$image
-      }
+    if(is.null(Rkeyvalues)){
+      Rkeyvalues = R$keyvalues
     }
   }
   
   if(!missing(G)){
-    if(any(names(G)=='imDat') | any(names(G)=='image')){
-      if(is.null(Gkeyvalues)){
-        Gkeyvalues = G$keyvalues
-      }
-      
-      if(any(names(G)=='imDat')){
-        Gim = G$imDat
-      }
-      
-      if(any(names(image)=='image')){
-        Gim = G$image
-      }
+    if(is.null(Gkeyvalues)){
+      Gkeyvalues = G$keyvalues
     }
   }
   
   if(!missing(B)){
-    if(any(names(B)=='imDat') | any(names(B)=='image')){
-      if(is.null(Bkeyvalues)){
-        Bkeyvalues = B$keyvalues
-      }
-      
-      if(any(names(B)=='imDat')){
-        Bim = B$imDat
-      }
-      
-      if(any(names(image)=='image')){
-        Bim = B$image
-      }
+    if(is.null(Bkeyvalues)){
+      Bkeyvalues = B$keyvalues
     }
   }
   
   if(is.null(keyvalues_out)){
     if(exists('Rkeyvalues')){
       keyvalues_out = Rkeyvalues
-      dim_out = dim(Rim)
+      dim_out = dim(R)
     }else if(exists('Gkeyvalues')){
       keyvalues_out = Gkeyvalues
-      dim_out = dim(Gim)
+      dim_out = dim(G)
     }else if(exists('Bkeyvalues')){
       keyvalues_out = Bkeyvalues
-      dim_out = dim(Bim)
+      dim_out = dim(B)
     }
   }else{
     dim_out = NULL
@@ -94,10 +64,13 @@ Rwcs_imageRGB=function(R, G, B, keyvalues_out=NULL, Rkeyvalues=NULL, Gkeyvalues=
   }
   
   if(dowarp){
+    if(!requireNamespace("ProPane", quietly = TRUE)){
+      stop("The ProPane package is needed for this function to work. Please install it from GitHub asgr/ProPane", call. = FALSE)
+    }
     suppressMessages({
-      Rim = Rwcs_warp(image_in=Rim, keyvalues_out=keyvalues_out, keyvalues_in=Rkeyvalues, dim_out=dim_out, direction=direction, boundary=boundary, interpolation=interpolation)$imDat
-      Gim = Rwcs_warp(image_in=Gim, keyvalues_out=keyvalues_out, keyvalues_in=Gkeyvalues, dim_out=dim_out, direction=direction, boundary=boundary, interpolation=interpolation)$imDat
-      Bim = Rwcs_warp(image_in=Bim, keyvalues_out=keyvalues_out, keyvalues_in=Bkeyvalues, dim_out=dim_out, direction=direction, boundary=boundary, interpolation=interpolation)$imDat
+      Rim = ProPane::propaneWarp(image_in=R, keyvalues_out=keyvalues_out, keyvalues_in=Rkeyvalues, dim_out=dim_out, direction=direction, boundary=boundary, interpolation=interpolation)$imDat
+      Gim = ProPane::propaneWarp(image_in=G, keyvalues_out=keyvalues_out, keyvalues_in=Gkeyvalues, dim_out=dim_out, direction=direction, boundary=boundary, interpolation=interpolation)$imDat
+      Bim = ProPane::propaneWarp(image_in=B, keyvalues_out=keyvalues_out, keyvalues_in=Bkeyvalues, dim_out=dim_out, direction=direction, boundary=boundary, interpolation=interpolation)$imDat
     })
   }
   

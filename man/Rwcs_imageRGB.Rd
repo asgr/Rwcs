@@ -43,13 +43,13 @@ List; input B header values to be used for the WCS. This should be the header WC
 Image warping flag, either TRUE, FALSE or 'auto' (default). If TRUE then the images will be warped onto the \option{keyvalues_out} WCS scheme, if FALSE they will not be (which will break if the WCSs are not truly the same and the iamges are pixel matched). 'auto' tries to detect if the headers are all the same, and if they are then it will set \option{dowarp}=FALSE, otherwise it will set to TRUE. This can be fooled by small (and unimportant) differences in the headers, e.g. they have different SWarp dates etc, since it just checks if the text differs anywhere. If in doubt set this manually.
 }
   \item{direction}{
-Only used if re-mapping via \code{\link{Rwcs_warp}}. "auto" (default), "forward" or "backward", see \code{imwarp}. Since it is usally better to go from the higher resolution image and map this onto the lower resolution grid, "auto" selects the better direction given the pixel scales recovered from the header information.
+Only used if re-mapping via \code{propaneWarp}. "auto" (default), "forward" or "backward", see \code{imwarp}. Since it is usally better to go from the higher resolution image and map this onto the lower resolution grid, "auto" selects the better direction given the pixel scales recovered from the header information.
 }
   \item{boundary}{
-Only used if re-mapping via \code{\link{Rwcs_warp}}. Boundary conditions: "dirichlet", "neumann", "periodic" (default "dirichlet"), see \code{imwarp}.
+Only used if re-mapping via \code{propaneWarp}. Boundary conditions: "dirichlet", "neumann", "periodic" (default "dirichlet"), see \code{imwarp}.
 }
   \item{interpolation}{
-Only used if re-mapping via \code{\link{Rwcs_warp}}. "nearest", "linear", "cubic" (default "linear"), see \code{imwarp}.
+Only used if re-mapping via \code{propaneWarp}. "nearest", "linear", "cubic" (default "linear"), see \code{imwarp}.
 }
   \item{n}{
 The target number of major-axis sub-divisions. Will not necessarily be achieved.
@@ -110,7 +110,7 @@ Logical; should image decorations be shown (like axes labels, tick, grid line an
 }
 }
 \details{
-\code{Rwcs_imageRGB} can be used in a few different ways, but the recommended route is to supply combined image and header list objects to the \option{R}, \option{G} and \option{B} arguments. If \option{keyvalues_out} is not supplied then by default it will project the three images onto the first available WCS header it finds searching \option{R}, \option{G} and \option{B} in order. If you are happy to map the colour image into the \option{R} WCS then you do not need to supply \option{keyvalues_out} at all. Note if image remapping is required (the images are different sizes or the headers differ) then the \code{imager} library will need to be installed in order to use \code{\link{Rwcs_warp}}.
+\code{Rwcs_imageRGB} can be used in a few different ways, but the recommended route is to supply combined image and header list objects to the \option{R}, \option{G} and \option{B} arguments. If \option{keyvalues_out} is not supplied then by default it will project the three images onto the first available WCS header it finds searching \option{R}, \option{G} and \option{B} in order. If you are happy to map the colour image into the \option{R} WCS then you do not need to supply \option{keyvalues_out} at all. Note if image remapping is required (the images are different sizes or the headers differ) then the \code{imager} library will need to be installed in order to use \code{propaneWarp}.
 }
 \value{
 Outputs the final image list x and y vectors and R/G/B matrices. Generally run for the side effect of producing rapid and well-scaled image plots.
@@ -125,16 +125,19 @@ By R convention the bottom-left part of the bottom-left pixel when plotting the 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{Rwcs_image}}, \code{\link{Rwcs_warp}}, \code{\link{magimageRGB}}
+\code{\link{Rwcs_image}}, \code{\link{magimageRGB}}
 }
 \examples{
+\dontrun{
 library(Rfits)
+library(ProPane)
 
 VISTA_K = Rfits_read_image(system.file("extdata", 'VISTA_K.fits', package="magicaxis"))
 VST_r = Rfits_read_image(system.file("extdata", 'VST_r.fits', package="magicaxis"))
 GALEX_NUV = Rfits_read_image(system.file("extdata", 'GALEX_NUV.fits', package="magicaxis"))
 
 Rwcs_imageRGB(VISTA_K, VST_r, GALEX_NUV)
+}
 }
 
 \concept{ WCS }% use one of  RShowDoc("KEYWORDS")

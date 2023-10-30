@@ -95,7 +95,7 @@ To aid backwards compatibility, you can also pass in a 1D character vector of he
 Logical; should the target image be added to the current sky view?  
 }
 \item{direction}{
-Character scalar; "auto" (default), "forward" or "backward", see \code{imwarp}. Since it is usally better to go from the higher resolution image and map this onto the lower resolution grid, "auto" selects the better direction given the pixel scales recovered from the header information. This is passed to \code{\link{Rwcs_warp}} when using the option \option{add} = TRUE to add an image to the current WCS view.
+Character scalar; "auto" (default), "forward" or "backward", see \code{imwarp}. Since it is usally better to go from the higher resolution image and map this onto the lower resolution grid, "auto" selects the better direction given the pixel scales recovered from the header information. This is passed to \code{propaneWarp} when using the option \option{add} = TRUE to add an image to the current WCS view.
 }
   \item{dotightcrop}{
 Logical; should an internal tight crop be made. If the images are approximately the same angular size this should be left as FALSE (it will run faster), but when there is a big difference between the input and output WCS (the latter being much larger) then setting this to TRUE might speed the warping up a lot.  
@@ -129,13 +129,6 @@ library(Rfits)
 
 file_image = system.file('extdata', 'image.fits', package = "Rfits")
 temp_image = Rfits_read_image(file_image)
-Rwcs_image(temp_image)
-
-#This will also work for the time being (perhaps not in the future):
-
-library(FITSio)
-
-temp_image = readFITS(file_image)
 Rwcs_image(temp_image)
 
 #we can see the curvature better if we ramp up the size of the image, but keep WCS:

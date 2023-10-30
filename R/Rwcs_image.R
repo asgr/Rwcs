@@ -26,30 +26,11 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
   
   if(!missing(image)){
     
-    if(any(names(image)=='imDat') | any(names(image)=='image')){
-      if(is.null(keyvalues)){
-        keyvalues = image$keyvalues
-      }
-      
-      if(is.null(header)){
-        if(is.null(image$raw)){
-          header = image$hdr
-        }else{
-          header = image$raw
-        }
-      }
-      
-      if(any(names(image)=='imDat')){
-        image = image$imDat
-      }
-      
-      if(any(names(image)=='image')){
-        image = image$image
-      }
-    }
-    
     if(add){
-      image = Rwcs_warp(image, keyvalues_in=keyvalues, header_in=header, direction=direction, dotightcrop=dotightcrop)
+      if(!requireNamespace("ProPane", quietly = TRUE)){
+        stop("The ProPane package is needed for this function to work. Please install it from GitHub asgr/ProPane", call. = FALSE)
+      }
+      image = ProPane::propaneWarp(image, keyvalues_in=keyvalues, header_in=header, direction=direction, dotightcrop=dotightcrop)
       keyvalues = image$keyvalues
       if(is.null(image$raw)){
         header = image$hdr

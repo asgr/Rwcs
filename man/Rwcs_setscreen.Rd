@@ -7,7 +7,7 @@
 Create a WCS Projection
 }
 \description{
-This is useful for creating a simple reference WCS to plot various images on top of, e.g. if you have many images that overlap on the sky and they have a complex WCS geometry- it is usually best to use \code{\link{Rwcs_warp}} to warp to a common simple WCS.
+This is useful for creating a simple reference WCS to plot various images on top of, e.g. if you have many images that overlap on the sky and they have a complex WCS geometry- it is usually best to use \code{propaneWarp} to warp to a common simple WCS.
 }
 \usage{
 Rwcs_setscreen(CRVAL1 = 0, CRVAL2 = 0, pixscale = 1, NAXIS1 = 1000, NAXIS2 = 1000,
@@ -100,8 +100,7 @@ Aaron Robotham
 \code{\link{Rwcs_image}}
 }
 \examples{
-#Recommended to use Rfits (will be supported longer term):
-
+\dontrun{
 library(Rfits)
 file_image = system.file('extdata', 'image.fits', package = "Rfits")
 temp_image = Rfits_read_image(file_image)
@@ -111,5 +110,6 @@ Rwcs_image(temp_image, add=TRUE)
 
 Rwcs_setscreen(352.2914, -31.82235, 0.5, 400, 400, CD1_2 = 1/3600, CD2_1 = -1/3600)
 Rwcs_image(temp_image, add=TRUE)
+}
 }
 
