@@ -57,34 +57,34 @@ const char prj_codes[28][4] =
    "CEA", "CAR", "MER", "COP", "COE", "COD", "COO", "SFL", "PAR", "MOL",
    "AIT", "BON", "PCO", "TSC", "CSC", "QSC", "HPX", "XPH"};
 
-const int AZP = 101;
-const int SZP = 102;
-const int TAN = 103;
-const int STG = 104;
-const int SIN = 105;
-const int ARC = 106;
-const int ZPN = 107;
-const int ZEA = 108;
-const int AIR = 109;
-const int CYP = 201;
-const int CEA = 202;
-const int CAR = 203;
-const int MER = 204;
-const int SFL = 301;
-const int PAR = 302;
-const int MOL = 303;
-const int AIT = 401;
-const int COP = 501;
-const int COE = 502;
-const int COD = 503;
-const int COO = 504;
-const int BON = 601;
-const int PCO = 602;
-const int TSC = 701;
-const int CSC = 702;
-const int QSC = 703;
-const int HPX = 801;
-const int XPH = 802;
+static const int AZP = 101;
+static const int SZP = 102;
+static const int TAN = 103;
+static const int STG = 104;
+static const int SIN = 105;
+static const int ARC = 106;
+static const int ZPN = 107;
+static const int ZEA = 108;
+static const int AIR = 109;
+static const int CYP = 201;
+static const int CEA = 202;
+static const int CAR = 203;
+static const int MER = 204;
+static const int SFL = 301;
+static const int PAR = 302;
+static const int MOL = 303;
+static const int AIT = 401;
+static const int COP = 501;
+static const int COE = 502;
+static const int COD = 503;
+static const int COO = 504;
+static const int BON = 601;
+static const int PCO = 602;
+static const int TSC = 701;
+static const int CSC = 702;
+static const int QSC = 703;
+static const int HPX = 801;
+static const int XPH = 802;
 
 
 // Map status return value to message.
