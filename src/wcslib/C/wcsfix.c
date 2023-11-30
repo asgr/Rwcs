@@ -1,6 +1,6 @@
 /*============================================================================
-  WCSLIB 7.9 - an implementation of the FITS WCS standard.
-  Copyright (C) 1995-2022, Mark Calabretta
+  WCSLIB 8.2 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2023, Mark Calabretta
 
   This file is part of WCSLIB.
 
@@ -19,10 +19,9 @@
 
   Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
   http://www.atnf.csiro.au/people/Mark.Calabretta
-  $Id: wcsfix.c,v 7.9 2022/03/25 15:14:48 mcalabre Exp $
+  $Id: wcsfix.c,v 8.2.1.2 2023/11/29 07:40:24 mcalabre Exp mcalabre $
 *===========================================================================*/
 
-#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,8 +38,6 @@
 #include "wcsunits.h"
 #include "wcsutil.h"
 #include "wtbarr.h"
-
-extern const int WCSSET;
 
 // Maximum number of coordinate axes that can be handled.
 #define NMAX 16
@@ -84,6 +81,8 @@ const int fix_wcserr[] = {
   FIXERR_NO_REF_PIX_VAL 	// 10: WCSERR_BAD_WORLD_COORD
 				//     ...others not used
 };
+
+static const int WCSSET = 137;		// Matching wcs.c
 
 // Convenience macro for invoking wcserr_set().
 #define WCSFIX_ERRMSG(status) WCSERR_SET(status), wcsfix_errmsg[status]
@@ -337,8 +336,7 @@ int datfix(struct wcsprm *wcs)
       dateid = "-AVG";
       date   = wcs->dateavg;
       wcsmjd = &(wcs->mjdavg);
-    } else {
-      assert(i == 4);
+    } else if (i == 4) {
       dateid = "-END";
       date   = wcs->dateend;
       wcsmjd = &(wcs->mjdend);
