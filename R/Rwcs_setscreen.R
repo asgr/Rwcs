@@ -60,6 +60,8 @@ Rwcs_setkeyvalues = function(CRVAL1=0, CRVAL2=0,
     CUNIT2 = CUNIT1
   )
   
+  class(keyvalues) = 'Rfits_keylist'
+  
   return(keyvalues)
 }
 
@@ -74,5 +76,8 @@ Rwcs_keyvalues_sub = function(keyvalues=NULL, xsub=NULL, ysub=NULL){
     keyvalues$NAXIS1 = diff(range(xsub)) + 1L
     keyvalues$NAXIS2 = diff(range(ysub)) + 1L
   }
+  
+  class(keyvalues) = 'Rfits_keylist'
+  
   return(keyvalues)
 }

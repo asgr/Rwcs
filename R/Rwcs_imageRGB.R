@@ -72,6 +72,10 @@ Rwcs_imageRGB=function(R, G, B, keyvalues_out=NULL, Rkeyvalues=NULL, Gkeyvalues=
       Gim = ProPane::propaneWarp(image_in=G, keyvalues_out=keyvalues_out, keyvalues_in=Gkeyvalues, dim_out=dim_out, direction=direction, boundary=boundary, interpolation=interpolation)$imDat
       Bim = ProPane::propaneWarp(image_in=B, keyvalues_out=keyvalues_out, keyvalues_in=Bkeyvalues, dim_out=dim_out, direction=direction, boundary=boundary, interpolation=interpolation)$imDat
     })
+  }else{
+    Rim = R$imDat
+    Gim = G$imDat
+    Bim = B$imDat
   }
   
   output = magimageRGB(R=Rim, G=Gim, B=Bim, axes=FALSE, ...)
