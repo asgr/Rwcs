@@ -75,7 +75,7 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
     nkey = nchar(header)/80
     
     if(!is.null(WCSref)){
-      WCSref = c(0, tolower(WCSref))
+      WCSref = tolower(WCSref)
       reflet = 0:26
       names(reflet) = letters
       if(! WCSref %in% letters){
@@ -436,7 +436,7 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
     nkey = nchar(header)/80
     
     if(!is.null(WCSref)){
-      WCSref = c(0, tolower(WCSref))
+      WCSref = tolower(WCSref)
       reflet = 0:26
       names(reflet) = letters
       if(! WCSref %in% letters){
