@@ -88,7 +88,7 @@ This is mostly useful for creating a simple projection of multiple over-lapping 
 \value{
 \code{Rwcs_setscreen} is run for the side effect of creating a new WCS view, updating the global options for current_keyvalues in the process.
 
-\code{Rwcs_setkevalues} returns a keyvalues list based on the user inputs.
+\code{Rwcs_setkevalues} returns a keyvalues list based on the user inputs. This is designed for 2D image data (hence NAXIS = 2 in the output).
 
 \code{Rwcs_keyvalues_sub} returns the requested subset WCS.
 }

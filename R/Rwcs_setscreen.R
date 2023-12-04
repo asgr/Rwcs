@@ -42,6 +42,7 @@ Rwcs_setkeyvalues = function(CRVAL1=0, CRVAL2=0,
                              CD1_1=-pixscale/3600, CD1_2=0, CD2_1=0, CD2_2=pixscale/3600,
                              CUNIT1 = "deg", CUNIT2 = "deg"){
   keyvalues = list(
+    NAXIS = 2,
     NAXIS1 = NAXIS1,
     NAXIS2 = NAXIS2,
     CTYPE1 = CTYPE1,
