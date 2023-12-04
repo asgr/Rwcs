@@ -1,6 +1,6 @@
 /*============================================================================
-  WCSLIB 7.9 - an implementation of the FITS WCS standard.
-  Copyright (C) 1995-2022, Mark Calabretta
+  WCSLIB 8.2 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2023, Mark Calabretta
 
   This file is part of WCSLIB.
 
@@ -19,7 +19,7 @@
 
   Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
   http://www.atnf.csiro.au/people/Mark.Calabretta
-  $Id: tab.c,v 7.9 2022/03/25 15:14:48 mcalabre Exp $
+  $Id: tab.c,v 8.2.1.2 2023/11/29 07:39:44 mcalabre Exp mcalabre $
 *===========================================================================*/
 
 #include <math.h>
@@ -33,8 +33,6 @@
 #include "wcsutil.h"
 #include "tab.h"
 
-const int TABSET = 137;
-
 // Map status return value to message.
 const char *tab_errmsg[] = {
   "Success",
@@ -43,6 +41,8 @@ const char *tab_errmsg[] = {
   "Invalid tabular parameters",
   "One or more of the x coordinates were invalid",
   "One or more of the world coordinates were invalid"};
+
+static const int TABSET = 137;
 
 // Convenience macro for invoking wcserr_set().
 #define TAB_ERRMSG(status) WCSERR_SET(status), tab_errmsg[status]
@@ -246,7 +246,8 @@ int tabini(int alloc, int M, const int K[], struct tabprm *tab)
       tab->K[m] = K[m];
       double *dp;
       if ((dp = tab->index[m])) {
-        for (int k = 0; k < K[m]; k++) {
+        // Table indexes are 1-relative.
+        for (int k = 1; k <= K[m]; k++) {
           *(dp++) = k;
         }
       }
@@ -388,6 +389,12 @@ int tabcpy(int alloc, const struct tabprm *tabsrc, struct tabprm *tabdst)
       dstp = tabdst->index[m];
       for (int k = 0; k < tabsrc->K[m]; k++) {
         *(dstp++) = *(srcp++);
+      }
+    } else {
+      if (tabdst->m_indxs && tabdst->m_indxs[m]) {
+        free(tabdst->m_indxs[m]);
+        tabdst->index[m]   = 0x0;
+        tabdst->m_indxs[m] = 0x0;
       }
     }
   }
@@ -643,8 +650,8 @@ int tabprt(const struct tabprm *tab)
         }
         wcsprintf("  %#- 11.5g", tab->index[m][k]);
       }
-      wcsprintf("\n");
     }
+    wcsprintf("\n");
   }
 
   // Coordinate array.
