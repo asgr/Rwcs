@@ -78,7 +78,7 @@ Rwcs_s2p = function(RA, Dec, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coo
       WCSref = tolower(WCSref)
       reflet = 0:26
       names(reflet) = c('0',letters)
-      if(! WCSref %in% letters){
+      if(! WCSref %in% names(reflet)){
         stop('WCS ref must be 0 (base WCS) or a letter [a-z]!')
       }
       WCSref = reflet[WCSref]
@@ -439,7 +439,7 @@ Rwcs_p2s = function(x, y, keyvalues=NULL, pixcen='FITS', loc.diff=c(0,0), coord.
       WCSref = tolower(WCSref)
       reflet = 0:26
       names(reflet) = c('0',letters)
-      if(! WCSref %in% letters){
+      if(! WCSref %in% names(reflet)){
         stop('WCS ref must be 0 (base WCS) or a letter [a-z]!')
       }
       WCSref = reflet[WCSref]
