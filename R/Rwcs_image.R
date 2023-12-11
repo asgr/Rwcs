@@ -40,6 +40,19 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
       image = image$imDat
     }
     
+    if(!inherits(image, 'Rfits_image')){
+      keyvalues = image$keyvalues
+      header = image$raw
+      image = image$imDat
+    }
+    
+    if(!inherits(image, 'Rfits_pointer')){
+      image = image[,]
+      keyvalues = image$keyvalues
+      header = image$raw
+      image = image$imDat
+    }
+    
     output = magimage(image, axes=FALSE, add=add, ...)
     if(add == FALSE){
       box()
