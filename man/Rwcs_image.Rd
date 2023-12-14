@@ -16,7 +16,7 @@ Rwcs_image(image, keyvalues = NULL, n, grid.col = "grey", grid.lty = 2, grid.lwd
   xlab = "Right Ascension", ylab = "Declination", mgp = c(2, 0.5, 0), mtline = 2,
   position = "topright", com.col = "green", com.length = 0.05, coord.axis = 'auto',
   pretty = 'auto', header = NULL, add = FALSE, direction = 'auto', dotightcrop = TRUE,
-  WCSref = NULL, ...)
+  WCSref = NULL, interactive = FALSE, ...)
 
 Rwcs_grid(keyvalues = NULL, n, grid.col = "grey", grid.lty = 2, grid.lwd = 0.5,
   coord.type = "sex", loc.diff = c(0, 0), pretty= 'auto', header = NULL, WCSref = NULL,
@@ -102,6 +102,9 @@ Logical; should an internal tight crop be made. If the images are approximately 
 }
   \item{WCSref}{
 Scalar; either NULL for base WCS (default), or a letter [a-z] for the relevant projection desired. Only used if using a raw \option{header}, and obviously this has to exist within the provided raw \option{header}.  
+}
+  \item{interactive}{
+Logical; if TRUE then the input image (in \option{x}) is saved ready for future interaction with \code{Rwcs_interact}.  
 }
   \item{\dots}{
 These are parsed to \code{\link{magimage}}, (\code{Rwcs_image}), \code{\link{lines}} (\code{Rwcs_grid}), \code{\link{axis}} (\code{Rwcs_labels}) or \code{\link{arrows}} (\code{Rwcs_compass}).

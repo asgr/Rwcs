@@ -20,6 +20,7 @@ export(Rwcs_imageRGB)
 export(Rwcs_grid)
 export(Rwcs_labels)
 export(Rwcs_compass)
+export(Rwcs_interact)
 
 #export(Rwcs_warp)
 #export(Rwcs_rebin)
@@ -42,8 +43,8 @@ import("doParallel")
 import("data.table")
 
 importFrom(celestial, hms2deg, dms2deg, deg2hms, deg2dms)
-importFrom("graphics", "arrows", "axis", "box", "lines", "mtext",
-               "par", "text", "image", "points", "polygon", "rect")
+importFrom("graphics", "arrows", "axis", "box", "lines", "mtext", "par", "text", "image",
+           "points", "polygon", "rect", "locator")
 importFrom("grDevices", "hsv")
 importFrom("stats", "median", "optim", "quantile")
 importFrom("utils", "packageVersion")

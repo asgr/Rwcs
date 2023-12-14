@@ -3,7 +3,7 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
                     xlab='Right Ascension', ylab='Declination', mgp=c(2,0.5,0), mtline=2,
                     position='topright', com.col="green", com.length=0.05,
                     coord.axis='auto', pretty='auto', header=NULL, add=FALSE,
-                    direction='auto', dotightcrop=TRUE, WCSref=NULL, ...){
+                    direction='auto', dotightcrop=TRUE, WCSref=NULL, interactive=FALSE, ...){
   
   if(missing(xlab)){
     if(coord.type=='sex'){
@@ -40,13 +40,19 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
       image = image$imDat
     }
     
-    if(!inherits(image, 'Rfits_image')){
+    if(inherits(image, 'Rfits_image')){
+      if(interactive){
+        assign(".current_image", image, envir = .GlobalEnv)
+      }
       keyvalues = image$keyvalues
       header = image$raw
       image = image$imDat
     }
     
-    if(!inherits(image, 'Rfits_pointer')){
+    if(inherits(image, 'Rfits_pointer')){
+      if(interactive){
+        assign(".current_image", image, envir = .GlobalEnv)
+      }
       image = image[,]
       keyvalues = image$keyvalues
       header = image$raw
