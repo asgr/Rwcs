@@ -147,7 +147,14 @@ TSC  \tab tangential spherical cube \cr
 CSC  \tab COBE quadrilateralized spherical cube \cr
 QSC  \tab quadrilateralized spherical cube \cr
 HPX  \tab HEALPix \cr
-XPH  \tab HEALPix polar, aka “butterfly”
+XPH  \tab HEALPix polar, aka “butterfly” \cr
+SIP  \tab SIP distortions \cr
+TPV  \tab TPV distortions \cr
+DSS  \tab DSS distortions \cr
+WAT  \tab WAT distortions \cr
+TPD  \tab TPD distortions \cr
+TNX  \tab TNX distortions \cr
+ZPX  \tab ZPX distortions
 }
 
 The following RA-DEC systems are supported:

@@ -910,7 +910,14 @@ Rwcs_keypass=function(keyvalues=NULL,
     "CSC", #COBE quadrilateralized spherical cube
     "QSC", #quadrilateralized spherical cube
     "HPX", #HEALPix
-    "XPH"  #HEALPix polar, aka “butterfly”
+    "XPH", #HEALPix polar, aka “butterfly”
+    "SIP", #SIP distortions
+    "TPV", #TPV distortions
+    "DSS", #DSS distortions
+    "WAT", #WAT distortions
+    "TPD", #TPD distortions
+    "TNX", #TNX distortions
+    "ZPX" #ZPX distortions
   )
   
   allowed_axes = c(
@@ -936,16 +943,17 @@ Rwcs_keypass=function(keyvalues=NULL,
   
   assertCharacter(CTYPE1, len=1)
   assertCharacter(CTYPE2, len=1)
-  if(grepl('-SIP', CTYPE1)){message('SIP not supported for CTYPE1 and ignored!'); CTYPE1=gsub('-SIP', '', CTYPE1)}
-  if(grepl('-SIP', CTYPE2)){message('SIP not supported for CTYPE2 and ignored!'); CTYPE2=gsub('-SIP', '', CTYPE2)}
-  if(grepl('-TPV', CTYPE1)){message('TPV not supported for CTYPE1 and ignored!'); CTYPE1=gsub('-TPV', '', CTYPE1)}
-  if(grepl('-TPV', CTYPE2)){message('TPV not supported for CTYPE2 and ignored!'); CTYPE2=gsub('-TPV', '', CTYPE2)}
-  if(grepl('-DSS', CTYPE1)){message('DSS not supported for CTYPE1 and ignored!'); CTYPE1=gsub('-DSS', '', CTYPE1)}
-  if(grepl('-DSS', CTYPE2)){message('DSS not supported for CTYPE2 and ignored!'); CTYPE2=gsub('-DSS', '', CTYPE2)}
-  if(grepl('-WAT', CTYPE1)){message('WAT not supported for CTYPE1 and ignored!'); CTYPE1=gsub('-WAT', '', CTYPE1)}
-  if(grepl('-WAT', CTYPE2)){message('WAT not supported for CTYPE2 and ignored!'); CTYPE2=gsub('-WAT', '', CTYPE2)}
-  if(grepl('-TPD', CTYPE1)){message('TPD not supported for CTYPE1 and ignored!'); CTYPE1=gsub('-TPD', '', CTYPE1)}
-  if(grepl('-TPD', CTYPE2)){message('TPD not supported for CTYPE2 and ignored!'); CTYPE2=gsub('-TPD', '', CTYPE2)}
+  # Shouldn't need to ignore these now we are msotly using raw header processing in wcslib
+  # if(grepl('-SIP', CTYPE1)){message('SIP not supported for CTYPE1 and ignored!'); CTYPE1=gsub('-SIP', '-TAN', CTYPE1)}
+  # if(grepl('-SIP', CTYPE2)){message('SIP not supported for CTYPE2 and ignored!'); CTYPE2=gsub('-SIP', '-TAN', CTYPE2)}
+  # if(grepl('-TPV', CTYPE1)){message('TPV not supported for CTYPE1 and ignored!'); CTYPE1=gsub('-TPV', '-TAN', CTYPE1)}
+  # if(grepl('-TPV', CTYPE2)){message('TPV not supported for CTYPE2 and ignored!'); CTYPE2=gsub('-TPV', '-TAN', CTYPE2)}
+  # if(grepl('-DSS', CTYPE1)){message('DSS not supported for CTYPE1 and ignored!'); CTYPE1=gsub('-DSS', '-TAN', CTYPE1)}
+  # if(grepl('-DSS', CTYPE2)){message('DSS not supported for CTYPE2 and ignored!'); CTYPE2=gsub('-DSS', '-TAN', CTYPE2)}
+  # if(grepl('-WAT', CTYPE1)){message('WAT not supported for CTYPE1 and ignored!'); CTYPE1=gsub('-WAT', '-TAN', CTYPE1)}
+  # if(grepl('-WAT', CTYPE2)){message('WAT not supported for CTYPE2 and ignored!'); CTYPE2=gsub('-WAT', '-TAN', CTYPE2)}
+  # if(grepl('-TPD', CTYPE1)){message('TPD not supported for CTYPE1 and ignored!'); CTYPE1=gsub('-TPD', '-TAN', CTYPE1)}
+  # if(grepl('-TPD', CTYPE2)){message('TPD not supported for CTYPE2 and ignored!'); CTYPE2=gsub('-TPD', '-TAN', CTYPE2)}
   if(nchar(CTYPE1) != 8){stop('CTYPE1 must be 8 characters!')}
   if(nchar(CTYPE2) != 8){stop('CTYPE2 must be 8 characters!')}
   split1=strsplit(CTYPE1, '-+')[[1]]
