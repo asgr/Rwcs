@@ -954,16 +954,16 @@ Rwcs_keypass=function(keyvalues=NULL,
   # if(grepl('-WAT', CTYPE2)){message('WAT not supported for CTYPE2 and ignored!'); CTYPE2=gsub('-WAT', '-TAN', CTYPE2)}
   # if(grepl('-TPD', CTYPE1)){message('TPD not supported for CTYPE1 and ignored!'); CTYPE1=gsub('-TPD', '-TAN', CTYPE1)}
   # if(grepl('-TPD', CTYPE2)){message('TPD not supported for CTYPE2 and ignored!'); CTYPE2=gsub('-TPD', '-TAN', CTYPE2)}
-  if(nchar(CTYPE1) != 8){stop('CTYPE1 must be 8 characters!')}
-  if(nchar(CTYPE2) != 8){stop('CTYPE2 must be 8 characters!')}
+  if(!nchar(CTYPE1) %in% c(8,12)){stop('CTYPE1 must be 8 or 12 characters!')}
+  if(!nchar(CTYPE2) %in% c(8,12)){stop('CTYPE2 must be 8 or 12 characters!')}
   split1=strsplit(CTYPE1, '-+')[[1]]
   split2=strsplit(CTYPE2, '-+')[[1]]
   assertCharacter(split1, len = 2)
   assertCharacter(split2, len = 2)
   assertChoice(split1[1], allowed_axes)
   assertChoice(split2[1], allowed_axes)
-  assertChoice(split1[2], allowed_proj)
-  assertChoice(split2[2], allowed_proj)
+  for(x in split1[2:length(split1)]){assertChoice(x, allowed_proj)}
+  for(x in split2[2:length(split2)]){assertChoice(x, allowed_proj)}
   assertNumeric(CRVAL1, len=1)
   assertNumeric(CRVAL2, len=1)
   assertNumeric(CRPIX1, len=1)
