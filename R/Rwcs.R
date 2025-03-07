@@ -958,8 +958,8 @@ Rwcs_keypass=function(keyvalues=NULL,
   if(!nchar(CTYPE2) %in% c(8,12)){stop('CTYPE2 must be 8 or 12 characters!')}
   split1=strsplit(CTYPE1, '-+')[[1]]
   split2=strsplit(CTYPE2, '-+')[[1]]
-  assertCharacter(split1, len = 2)
-  assertCharacter(split2, len = 2)
+  assertCharacter(split1, min.len = 2, max.len=3)
+  assertCharacter(split2, min.len = 2, max.len=3)
   assertChoice(split1[1], allowed_axes)
   assertChoice(split2[1], allowed_axes)
   for(x in split1[2:length(split1)]){assertChoice(x, allowed_proj)}
