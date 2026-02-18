@@ -42,7 +42,8 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
     
     if(inherits(image, 'Rfits_image')){
       if(interactive){
-        assign(".current_image", image, envir = .GlobalEnv)
+        #assign(".current_image", image, envir = .GlobalEnv)
+        options(Rwcs.current_image = image)
       }
       keyvalues = image$keyvalues
       header = image$raw
@@ -51,7 +52,8 @@ Rwcs_image=function(image, keyvalues=NULL, n, grid.col='grey', grid.lty=2, grid.
     
     if(inherits(image, 'Rfits_pointer')){
       if(interactive){
-        assign(".current_image", image, envir = .GlobalEnv)
+        #assign(".current_image", image, envir = .GlobalEnv)
+        options(Rwcs.current_image = image)
       }
       image = image[,]
       keyvalues = image$keyvalues

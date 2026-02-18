@@ -13,7 +13,8 @@ Rwcs_interact = function(mode='zoom', coord.type="sex", col='green', point.pch=4
   }
   
   if(mode == 'zoom'){
-    image = get(".current_image", envir = .GlobalEnv)
+    #image = get(".current_image", envir = .GlobalEnv)
+    image = options()$Rwcs.current_image
     temp_loc = locator(n=2, type='p', pch=point.pch, col=col, cex=point.cex)
     
     if(is.null(temp_loc)){
