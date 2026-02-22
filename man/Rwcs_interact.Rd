@@ -16,7 +16,7 @@ Rwcs_interact(mode = "zoom", coord.type = "sex", col = "green", point.pch = 4,
 Character scalar; either 'zoom' (the default, which allows zooming and scrolling) or 'coord' (which extracts the coordinates of locations on an image).
 }
   \item{coord.type}{
-Character scalar; the format of the output RA and Dec. Allowed options are 'deg' for degress (default) and 'sex' for sexigesimal (i.e. HMS for RA and DMS for Deg).
+Character scalar; the format of the output RA and Dec. Allowed options are 'deg' for degrees (default) and 'sex' for sexigesimal (i.e. HMS for RA and DMS for Dec).
 }
   \item{col}{
 Scalar; the colour of information plotted on top of the image 

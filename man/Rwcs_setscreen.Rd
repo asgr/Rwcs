@@ -88,7 +88,7 @@ This is mostly useful for creating a simple projection of multiple over-lapping 
 \value{
 \code{Rwcs_setscreen} is run for the side effect of creating a new WCS view, updating the global options for current_keyvalues in the process.
 
-\code{Rwcs_setkevalues} returns a keyvalues list based on the user inputs. This is designed for 2D image data (hence NAXIS = 2 in the output).
+\code{Rwcs_setkeyvalues} returns a keyvalues list based on the user inputs. This is designed for 2D image data (hence NAXIS = 2 in the output).
 
 \code{Rwcs_keyvalues_sub} returns the requested subset WCS.
 }
@@ -100,6 +100,18 @@ Aaron Robotham
 \code{\link{Rwcs_image}}
 }
 \examples{
+#Create a simple WCS keyvalues object:
+keyvalues = Rwcs_setkeyvalues(CRVAL1=180, CRVAL2=0, pixscale=1, NAXIS1=100, NAXIS2=100)
+keyvalues$CTYPE1
+keyvalues$CRVAL1
+
+#Compute coordinates at a specific pixel using the new keyvalues:
+Rwcs_p2s(50, 50, keyvalues=keyvalues, inherit=FALSE)
+
+#Extract a WCS subset:
+keyvalues_sub = Rwcs_keyvalues_sub(keyvalues, xsub=c(1,50), ysub=c(1,50))
+keyvalues_sub$NAXIS1
+
 \dontrun{
 library(Rfits)
 file_image = system.file('extdata', 'image.fits', package = "Rfits")

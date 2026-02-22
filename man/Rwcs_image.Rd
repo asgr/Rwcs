@@ -77,7 +77,7 @@ Number of lines separating axis name from axis. For \option{margin}=FALSE \optio
 Integer vector; specifies whether the RA and Dec axes should be 1 or 2 (i.e. x or y axis). The default 'auto' tries to guess based on the header information (and this usually works okay). Otherwise \option{coord.axis}=c(1,2) would be sensible for a N/S vertical aligend frame and \option{coord.axis}=c(2,1) would be sensible for a E/W vertically aligned frame. When the orientation is between the two then it is not always obvious which will work better.
 }
 \item{pretty}{
-If 'auto' then it will try to compute the prettiest grid and label scaling *usually this is pretty good). Otherwise set to 1 to be degrees major ticks, 60 for minutes (DMS or HMS) and 3600 for seconds (DMS or HMS).
+If 'auto' then it will try to compute the prettiest grid and label scaling (usually this is pretty good). Otherwise set to 1 to be degrees major ticks, 60 for minutes (DMS or HMS) and 3600 for seconds (DMS or HMS).
 }
   \item{position}{
 Relative position of the compass bar. This argument is used like the 'legend' function. Specify one of 'bottom', 'bottomleft', 'left', 'topleft', 'top', 'topright', 'right', 'bottomright' and 'centre'. 
@@ -104,7 +104,7 @@ Logical; should an internal tight crop be made. If the images are approximately 
 Scalar; either NULL for base WCS (default), or a letter [a-z] for the relevant projection desired. Only used if using a raw \option{header}, and obviously this has to exist within the provided raw \option{header}.  
 }
   \item{interactive}{
-Logical; if TRUE then the input image (in \option{x}) is saved ready for future interaction with \code{Rwcs_interact}.  
+Logical; if TRUE then the input image (in \option{image}) is saved ready for future interaction with \code{Rwcs_interact}.  
 }
   \item{\dots}{
 These are parsed to \code{\link{magimage}}, (\code{Rwcs_image}), \code{\link{lines}} (\code{Rwcs_grid}), \code{\link{axis}} (\code{Rwcs_labels}) or \code{\link{arrows}} (\code{Rwcs_compass}).
