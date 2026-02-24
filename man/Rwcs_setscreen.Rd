@@ -31,7 +31,7 @@ Numeric scalar; FITS header CRVAL1 for the CTYPE1 projection system. This is the
 Numeric scalar; FITS header CRVAL2 for the CTYPE2 projection system. This is the Dec in degrees at the location of \option{NAXIS2}/2. This should be chosen to be near the centre of the target projection (i.e. the average Dec of the frames to be overlaid).
 }
   \item{pixscale}{
-Numeric scalar; the target pixel scale in arc seconds. By default \option{CD1_1} and \option{CD2_2} inherit this in degress (i.e. divided by 3600). Note the standard convention is to have RA increasing as you move left on an image, therefore \option{CD1_1} = -\option{pixscale}/3600 by default (as seen in the arguments).
+Numeric scalar; the target pixel scale in arc seconds. By default \option{CD1_1} and \option{CD2_2} inherit this in degrees (i.e. divided by 3600). Note the standard convention is to have RA increasing as you move left on an image, therefore \option{CD1_1} = -\option{pixscale}/3600 by default (as seen in the arguments).
 }
   \item{NAXIS1}{
 Numeric scalar; the number of pixels to display on the x-axis.
