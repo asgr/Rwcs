@@ -180,6 +180,16 @@ Note that SIP / TPV / DSS / WAT / TPD is only supported with the use of raw head
 \code{\link{Rwcs}}
 }
 \examples{
+#Create a fresh WCS header from scratch:
+keyvalues = Rwcs_keypass(CRVAL1=180, CRVAL2=0, CRPIX1=50, CRPIX2=50,
+  CD1_1=-1/3600, CD2_2=1/3600)
+keyvalues$CTYPE1
+keyvalues$CRVAL1
+
+#Modify the projection type:
+keyvalues_sin = Rwcs_keypass(keyvalues, CTYPE1='RA---SIN', CTYPE2='DEC--SIN')
+keyvalues_sin$CTYPE1
+
 \dontrun{
 library(Rfits)
 file_image=system.file('extdata', 'image.fits', package = "Rfits")

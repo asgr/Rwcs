@@ -31,7 +31,7 @@ Numeric scalar; FITS header CRVAL1 for the CTYPE1 projection system. This is the
 Numeric scalar; FITS header CRVAL2 for the CTYPE2 projection system. This is the Dec in degrees at the location of \option{NAXIS2}/2. This should be chosen to be near the centre of the target projection (i.e. the average Dec of the frames to be overlaid).
 }
   \item{pixscale}{
-Numeric scalar; the target pixel scale in arc seconds. By default \option{CD1_1} and \option{CD2_2} inherit this in degress (i.e. divided by 3600). Note the standard convention is to have RA increasing as you move left on an image, therefore \option{CD1_1} = -\option{pixscale}/3600 by default (as seen in the arguments).
+Numeric scalar; the target pixel scale in arc seconds. By default \option{CD1_1} and \option{CD2_2} inherit this in degrees (i.e. divided by 3600). Note the standard convention is to have RA increasing as you move left on an image, therefore \option{CD1_1} = -\option{pixscale}/3600 by default (as seen in the arguments).
 }
   \item{NAXIS1}{
 Numeric scalar; the number of pixels to display on the x-axis.
@@ -88,7 +88,7 @@ This is mostly useful for creating a simple projection of multiple over-lapping 
 \value{
 \code{Rwcs_setscreen} is run for the side effect of creating a new WCS view, updating the global options for current_keyvalues in the process.
 
-\code{Rwcs_setkevalues} returns a keyvalues list based on the user inputs. This is designed for 2D image data (hence NAXIS = 2 in the output).
+\code{Rwcs_setkeyvalues} returns a keyvalues list based on the user inputs. This is designed for 2D image data (hence NAXIS = 2 in the output).
 
 \code{Rwcs_keyvalues_sub} returns the requested subset WCS.
 }
@@ -100,6 +100,18 @@ Aaron Robotham
 \code{\link{Rwcs_image}}
 }
 \examples{
+#Create a simple WCS keyvalues object:
+keyvalues = Rwcs_setkeyvalues(CRVAL1=180, CRVAL2=0, pixscale=1, NAXIS1=100, NAXIS2=100)
+keyvalues$CTYPE1
+keyvalues$CRVAL1
+
+#Compute coordinates at a specific pixel using the new keyvalues:
+Rwcs_p2s(50, 50, keyvalues=keyvalues, inherit=FALSE)
+
+#Extract a WCS subset:
+keyvalues_sub = Rwcs_keyvalues_sub(keyvalues, xsub=c(1,50), ysub=c(1,50))
+keyvalues_sub$NAXIS1
+
 \dontrun{
 library(Rfits)
 file_image = system.file('extdata', 'image.fits', package = "Rfits")

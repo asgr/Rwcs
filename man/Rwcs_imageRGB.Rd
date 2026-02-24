@@ -2,7 +2,7 @@
 \alias{Rwcs_imageRGB}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-RBG Images with WCS
+RGB Images with WCS
 }
 \description{
 Create 3-band colour RGB images with pretty WCS projection labels.
@@ -22,10 +22,10 @@ Rwcs_imageRGB(R, G, B, keyvalues_out = NULL, Rkeyvalues = NULL, Gkeyvalues = NUL
 Numeric matrix; containing the red colour values to be plotted (NAs are allowed). If \option{R} is a list as created by \code{Rfits_read_image} then the image part of the list is parsed to \option{R} and the correct header part is parsed to \option{Rkeyvalues}.
 }
   \item{G}{
-Numeric matrix; containing the red colour values to be plotted (NAs are allowed). If \option{G} is a list as created by \code{Rfits_read_image} then the image part of the list is parsed to \option{G} and the correct header part is parsed to \option{Gkeyvalues}.
+Numeric matrix; containing the green colour values to be plotted (NAs are allowed). If \option{G} is a list as created by \code{Rfits_read_image} then the image part of the list is parsed to \option{G} and the correct header part is parsed to \option{Gkeyvalues}.
 }
   \item{B}{
-Numeric matrix; containing the red colour values to be plotted (NAs are allowed). If \option{B} is a list as created by \code{Rfits_read_image} then the image part of the list is parsed to \option{B} and the correct header part is parsed to \option{Bkeyvalues}.
+Numeric matrix; containing the blue colour values to be plotted (NAs are allowed). If \option{B} is a list as created by \code{Rfits_read_image} then the image part of the list is parsed to \option{B} and the correct header part is parsed to \option{Bkeyvalues}.
 }
   \item{keyvalues_out}{
 List; output header values to be used for the WCS. This is the target WCS projection that the input images will be mapped onto.
@@ -40,16 +40,16 @@ List; input G header values to be used for the WCS. This should be the header WC
 List; input B header values to be used for the WCS. This should be the header WCS that matches \option{B}.
 }
   \item{dowarp}{
-Image warping flag, either TRUE, FALSE or 'auto' (default). If TRUE then the images will be warped onto the \option{keyvalues_out} WCS scheme, if FALSE they will not be (which will break if the WCSs are not truly the same and the iamges are pixel matched). 'auto' tries to detect if the headers are all the same, and if they are then it will set \option{dowarp}=FALSE, otherwise it will set to TRUE. This can be fooled by small (and unimportant) differences in the headers, e.g. they have different SWarp dates etc, since it just checks if the text differs anywhere. If in doubt set this manually.
+Image warping flag, either TRUE, FALSE or 'auto' (default). If TRUE then the images will be warped onto the \option{keyvalues_out} WCS scheme, if FALSE they will not be (which will break if the WCSs are not truly the same and the images are pixel matched). 'auto' tries to detect if the headers are all the same, and if they are then it will set \option{dowarp}=FALSE, otherwise it will set to TRUE. This can be fooled by small (and unimportant) differences in the headers, e.g. they have different SWarp dates etc, since it just checks if the text differs anywhere. If in doubt set this manually.
 }
   \item{direction}{
-Only used if re-mapping via \code{propaneWarp}. "auto" (default), "forward" or "backward", see \code{imwarp}. Since it is usally better to go from the higher resolution image and map this onto the lower resolution grid, "auto" selects the better direction given the pixel scales recovered from the header information.
+Only used if re-mapping via \code{propaneWarp}. "auto" (default), "forward" or "backward", see \code{imwarp}. Since it is usually better to go from the higher resolution image and map this onto the lower resolution grid, "auto" selects the better direction given the pixel scales recovered from the header information.
 }
   \item{boundary}{
 Only used if re-mapping via \code{propaneWarp}. Boundary conditions: "dirichlet", "neumann", "periodic" (default "dirichlet"), see \code{imwarp}.
 }
   \item{interpolation}{
-Only used if re-mapping via \code{propaneWarp}. "nearest", "linear", "cubic" (default "linear"), see \code{imwarp}.
+Only used if re-mapping via \code{propaneWarp}. "nearest", "linear", "cubic" (default "cubic"), see \code{imwarp}.
 }
   \item{n}{
 The target number of major-axis sub-divisions. Will not necessarily be achieved.

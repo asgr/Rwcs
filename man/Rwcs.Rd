@@ -54,7 +54,7 @@ Character scalar; either 'FITS' (pixel centres are integer, e.g. the centre of t
 Numeric vector; additional [x,y] pixel offset to apply. For \code{Rwcs_p2s} the input \option{x} is seen internally as x + \option{loc.diff}[1]. For \code{Rwcs_s2p} the output \option{x} is given as  x - \option{loc.diff}[1]. This is useful if using a cutout from a larger image when the WCS has not been fixed.
 }
   \item{coord.type}{
-Character scalar; the format of the input/output RA and Dec. Allowed options are 'deg' for degress (default) and 'sex' for sexigesimal (i.e. HMS for RA and DMS for Deg).
+Character scalar; the format of the input/output RA and Dec. Allowed options are 'deg' for degrees (default) and 'sex' for sexigesimal (i.e. HMS for RA and DMS for Dec).
 }
   \item{sep}{
 Character scalar; when coord.type='sex', \option{sep} defines the type of separator used for the HMS and DMS strings (i.e. H:M:S and D:M:S would be \option{sep}=':', which is the default). See \code{\link{hms2deg}} and \code{\link{dms2deg}} for more details.
@@ -75,7 +75,7 @@ Numeric scalar; FITS header CD2_2 for the CTYPE2 projection system. Change in CT
 Character scalar; either 'old' style pixel scale computed from CD matrix, or 'new' that detects the pixel scale in the centre of the image.
 }
   \item{dim}{
-Numeric vector; the image dimensions. This is only relevant for \option{type} = 'new', and if not provided it is taken from NAXIS1 / NAXIS2 from the \option{keyvalues}. The only tie this tends to be wrong (when you shoudl enter it manually) is when the image has been compressed and these key values have different meanings (check for ZNAXIS1 and ZNAXIS2 in that case).
+Numeric vector; the image dimensions. This is only relevant for \option{type} = 'new', and if not provided it is taken from NAXIS1 / NAXIS2 from the \option{keyvalues}. The only time this tends to be wrong (when you should enter it manually) is when the image has been compressed and these key values have different meanings (check for ZNAXIS1 and ZNAXIS2 in that case).
 }
   \item{header}{
 To aid backwards compatibility, you can also pass in a 1D character vector of header values, e.g. the \option{hdr} component of \option{readFITS} from the \code{FITSio} package. \option{keyvalues} must be left as NULL in this case. If you want to use all distortion terms you can also pass in the raw header output of \code{Rfits_read_header_raw}.
@@ -99,7 +99,7 @@ Numeric vector; x extent of frame domain to test. If missing and \option{keyvalu
 Numeric vector; y extent of frame domain to test. If missing and \option{keyvalues} is provided then default will be c(0, NAXIS2) extent.
 }
   \item{buffer}{
-Numeric scalar; an additional buffer to apply to the 'in domain' test. You might want to set this to a low value (like 1e-9) to avoid spurious overlap error due to inperfections in forward and inverse WCS projections.
+Numeric scalar; an additional buffer to apply to the 'in domain' test. You might want to set this to a low value (like 1e-9) to avoid spurious overlap error due to imperfections in forward and inverse WCS projections.
 }
   \item{plot}{
 Logical; should a plot be shown showing the location of test points on the WCS of interest?  
@@ -126,7 +126,7 @@ For \code{Rwcs_in_image} arguments to pass into \code{Rwcs_s2p} to project your 
 }
 }
 \details{
-The function input and output is deliberately simple. The important thing is to pass in a senesible WCS to the \option{keyvalues} argument. This would be the same \option{keyvalues} output supplied by the \code{Rfits} package when reading in an image.
+The function input and output is deliberately simple. The important thing is to pass in a sensible WCS to the \option{keyvalues} argument. This would be the same \option{keyvalues} output supplied by the \code{Rfits} package when reading in an image.
 
 For convenience the last used \option{keyvalues} is written to options()$keyvalues. \code{Rwcs_s2p} and \code{Rwcs_p2s} will look for this object if neither \option{keyvalues} or any \dots are passed in (which in both cases will prevent this happening). The Examples shows an example of this being used in practice, where the \code{lines} functions after each all sky projection correctly pick up the last used WCS.
 
@@ -153,7 +153,7 @@ SZP  \tab slant zenithal perspective \cr
 TAN  \tab gnomonic \cr
 STG  \tab stereographic \cr
 SIN  \tab orthographic/synthesis \cr
-NCP  \tab unofficially supported SIN-like projectio \cr
+NCP  \tab unofficially supported SIN-like projection \cr
 ARC  \tab zenithal/azimuthal equidistant \cr
 ZPN  \tab zenithal/azimuthal polynomial \cr
 ZEA  \tab zenithal/azimuthal equal area \cr
@@ -206,7 +206,7 @@ Calabretta, M.R., & Greisen, E.W., (2002), Astronomy & Astrophysics, 395, 1077-1
 }
 \author{
 Aaron Robotham \cr
-Rodrgio Tobar
+Rodrigo Tobar
 }
 \note{
 By R convention the bottom-left part of the bottom-left pixel when plotting the image matrix is c(0,0) and the top-right part of the bottom-left pixel is c(1,1), i.e. the mid-point of pixels are half integer values in x and y. This differs to the FITS convention of pixel mid points being integer values. As such the R [x,y] = FITS [x-0.5,y-0.5]. This rarely matters too much in practice, but for accurate overlays you will want to get it right.
@@ -280,6 +280,9 @@ magplot(Rwcs_s2p(world.grid, CTYPE1='RA---XPH', CTYPE2='DEC--XPH'), pch='.', cex
 lines(Rwcs_s2p(cbind(-50:50,-50:50)), col='red')
 
 #check pixscale
+
+#Create a simple WCS and check pixel scale (1 arcsec/pixel):
+Rwcs_pixscale(CD1_1=-1/3600, CD2_2=1/3600)
 
 \dontrun{
 library(Rfits)

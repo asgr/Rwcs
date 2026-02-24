@@ -148,7 +148,7 @@ SZP  \tab slant zenithal perspective \cr
 TAN  \tab gnomonic \cr
 STG  \tab stereographic \cr
 SIN  \tab orthographic/synthesis \cr
-NCP  \tab unofficially supported SIN-like projectio \cr
+NCP  \tab unofficially supported SIN-like projection \cr
 ARC  \tab zenithal/azimuthal equidistant \cr
 ZPN  \tab zenithal/azimuthal polynomial \cr
 ZEA  \tab zenithal/azimuthal equal area \cr
@@ -199,7 +199,7 @@ Calabretta, M.R., & Greisen, E.W., (2002), Astronomy & Astrophysics, 395, 1077-1
 }
 \author{
 Aaron Robotham \cr
-Rodrgio Tobar \cr
+Rodrigo Tobar \cr
 Mark Calabretta (main \code{wcslib} author, not responsible for mistakes in the \code{Rwcs} package)
 }
 \note{
@@ -211,6 +211,16 @@ Note that SIP / TPV / DSS / WAT / TPD is only supported with the use of raw head
 \examples{
 Cwcs_s2p(10:20, 20:30)
 Cwcs_p2s(10:20, 20:30)
+
+#Round-trip projection and deprojection:
+xy = Cwcs_s2p(10:20, 20:30)
+Cwcs_p2s(xy[,1], xy[,2])
+
+#A more complex WCS with rotation:
+xy = Cwcs_s2p(10:20, 20:30, CRVAL1=20, CRPIX1=100, CRVAL2=30, CRPIX2=130,
+  CD1_1=0.1, CD1_2=-0.05, CD2_1=0.05, CD2_2=0.1)
+Cwcs_p2s(xy[,1], xy[,2], CRVAL1=20, CRPIX1=100, CRVAL2=30, CRPIX2=130,
+  CD1_1=0.1, CD1_2=-0.05, CD2_1=0.05, CD2_2=0.1)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
