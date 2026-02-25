@@ -10,34 +10,6 @@ Core package providing a high level interface to the C **wcslib** library for pr
 
 ## Installation
 
-### Getting R
-
-First things first, you will probably want to install a recent version of **R** that lets you build packages from source. The advantage of choosing this route is you can then update bleeding edge versions directly from GitHub. If you rely on the pre-built binaries on CRAN you might be waiting much longer.
-
-#### Mac
-
-For Mac just get the latest binaries from the **R** project pages:
-
-<https://cloud.r-project.org/bin/macosx/>
-
-#### Windows
-
-For Windows just get the latest binaries from the **R** project pages:
-
-<https://cloud.r-project.org/bin/windows/>
-
-#### Linux
-
-Debian: `sudo apt-get install r-base r-base-dev`
-
-Fedora: `sudo yum install R`
-
-Suse: More of a pain, see here <https://cloud.r-project.org/bin/linux/suse/README.html>
-
-Ubuntu: `sudo apt-get install r-base-dev`
-
-All the info on binaries is here: <https://cloud.r-project.org/bin/linux/>
-
 ### Build Tools
 
 **Rwcs** requires compilation, so here is what you might need depending on your platform.
