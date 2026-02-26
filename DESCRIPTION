@@ -1,8 +1,8 @@
 Package: Rwcs
 Type: Package
 Title: High Level 'WCSlib' Interface
-Version: 1.8.8
-Date: 2026-02-24
+Version: 1.8.9
+Date: 2026-02-26
 Authors@R: c(
     person(given='Aaron', family='Robotham', email='aaron.robotham@uwa.edu.au',
         role=c('aut', 'cre'), comment=c(ORCID='0000-0003-0429-3579')),
@@ -13,6 +13,10 @@ Description: Offers basic high level access to the C 'wcslib' library for projec
 License: LGPL-3
 Imports: Rcpp, checkmate, celestial, magicaxis, foreach, doParallel, data.table
 Suggests: testthat, Rfits (>= 1.10.7), imager, ProPane
+Remotes:
+  asgr/imager,
+  asgr/Rfits,
+  asgr/ProPane
 Encoding: UTF-8
 LazyData: true
 LinkingTo: Rcpp
