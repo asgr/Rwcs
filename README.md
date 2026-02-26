@@ -10,28 +10,6 @@ Core package providing a high level interface to the C **wcslib** library for pr
 
 ## Installation
 
-### Build Tools
-
-**Rwcs** requires compilation, so here is what you might need depending on your platform.
-
-#### Linux Users
-
-You know what you are doing. You do you!
-
-#### Mac Users
-
-You should not need to install separate compilers with any **R** after v4.0.0, but in case you are stuck on a museum version you can follow the extra instructions here:
-
-[https://mac.r-project.org/tools/](https://mac.r-project.org/tools/)
-
-#### Windows Users
-
-Windows users might need to install *Rtools*, which are available at [https://cran.r-project.org/bin/windows/Rtools/](https://cran.r-project.org/bin/windows/Rtools/). You will know it is working because the following will not be empty:
-
-```R
-Sys.which("make")
-```
-
 ### Getting Rwcs
 
 Source installation from GitHub should be easy:
