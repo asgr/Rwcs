@@ -43,6 +43,7 @@ jobs:
         run: |
           install.packages('imager')
           install.packages('remotes')
+          install.packages('data.table')
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
           remotes::install_github("asgr/Rfits", ref="master")
