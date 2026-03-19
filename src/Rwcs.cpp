@@ -98,7 +98,11 @@ static void _wcsset(struct wcsprm* wcs,
 {
   //setup wcs
   wcs->flag = -1;
-  wcsini(1, naxis, wcs);
+  int status = wcsini(1, naxis, wcs);
+  if (status) {
+    Rcpp::Rcerr << "wcsini failed with status " << status << "\n";
+    return;
+  }
 
   //insert wcs val
   wcs->crval[0] = CRVAL1;
@@ -108,22 +112,28 @@ static void _wcsset(struct wcsprm* wcs,
   wcs->crpix[0] = CRPIX1;
   wcs->crpix[1] = CRPIX2;
 
-  //insert wcs pix
-  wcs->crpix[0] = CRPIX1;
-  wcs->crpix[1] = CRPIX2;
-
   //insert wcs cd matrix
+  #ifdef HAVE_CD_MATRIX
+  wcs->cd[0] = CD1_1;
+  wcs->cd[1] = CD1_2;
+  wcs->cd[2] = CD2_1;
+  wcs->cd[3] = CD2_2;
+  #else
   wcs->pc[0] = CD1_1;
   wcs->pc[1] = CD1_2;
   wcs->pc[2] = CD2_1;
   wcs->pc[3] = CD2_2;
+  #endif
 
-  //insert ctype
-  strcpy(wcs->ctype[0], CTYPE1.get_cstring());
-  strcpy(wcs->ctype[1], CTYPE2.get_cstring());
+  //insert ctype safely
+  strncpy(wcs->ctype[0], CTYPE1.get_cstring(), sizeof(wcs->ctype[0]) - 1);
+  wcs->ctype[0][sizeof(wcs->ctype[0]) - 1] = '\0';
+  strncpy(wcs->ctype[1], CTYPE2.get_cstring(), sizeof(wcs->ctype[1]) - 1);
+  wcs->ctype[1][sizeof(wcs->ctype[1]) - 1] = '\0';
 
-  //insert radesys and equinox
-  strcpy(wcs->radesys, RADESYS.get_cstring());
+  //insert radesys and equinox safely
+  strncpy(wcs->radesys, RADESYS.get_cstring(), sizeof(wcs->radesys) - 1);
+  wcs->radesys[sizeof(wcs->radesys) - 1] = '\0';
   wcs->equinox = EQUINOX;
 
   //insert wcs pv
@@ -163,7 +173,11 @@ static void _wcsset(struct wcsprm* wcs,
   wcs->lng = 0;
   wcs->lat = 1;
 
-  wcsset(wcs);
+  status = wcsset(wcs);
+  if (status) {
+    Rcpp::Rcerr << "wcsset failed with status " << status << "\n";
+    return;
+  }
 }
 
 // [[Rcpp::export]]
@@ -224,6 +238,7 @@ struct wcsprm* _read_from_header(int *nwcs, struct wcsprm** wcs, Rcpp::String he
   if (status) {
     Rcerr << "Failed WCS header read :(\n";
     Rcerr << "ERROR " << status << " from wcspih(): " << wcs_errmsg[status] << '\n';
+    wcsvfree(nwcs, wcs);
     return nullptr;
   }
   
@@ -231,11 +246,13 @@ struct wcsprm* _read_from_header(int *nwcs, struct wcsprm** wcs, Rcpp::String he
   status = wcsidx(*nwcs, wcs, alts);
   if (status) {
     Rcerr << "ERROR " << status << " from wcsidx()(\n";
+    wcsvfree(nwcs, wcs);
     return nullptr;
   }
   
   if (alts[WCSref] < 0) {
     Rcout << "Bad WCS projection selection!" << "\n";
+    wcsvfree(nwcs, wcs);
     return nullptr;
   }
   
