@@ -27,3 +27,5 @@ wcslib.Rproj
 .Rhistory
 
 src/wcslib/C_old6p4/
+.positai
+.posit/assistant
