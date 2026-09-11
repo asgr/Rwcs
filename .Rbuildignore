@@ -2,3 +2,6 @@ src/wcslib/C/libwcs.so.*
 ^.*\.Rproj$
 ^\.Rproj\.user$
 .github
+^\.positai$
+^\.claude$
+^\.posit/assistant$
